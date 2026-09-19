@@ -5,5 +5,5 @@ dist/
 .env.*
 *.log
 .DS_Store
-demo/*.gif
 demo/*.mp4
+demo/*.frames/

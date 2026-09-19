@@ -1,0 +1,3 @@
+ [31m▌[39m [1mWhop returned an error[22m                                                                                            [31m1ms[39m
+
+   Unknown flag: --first

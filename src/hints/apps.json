@@ -1,0 +1,8 @@
+{
+  "primary": "name",
+  "status": "status",
+  "relation": "creator",
+  "columns": ["name", "status", "app_type", "creator", "hosted_url", "id"],
+  "hidden": ["previous_hosted_urls", "businesses_created_logo_urls", "businesses_created_count", "icon", "banner_image", "experience_path", "discover_path", "dashboard_path", "skills_path", "openapi_path", "domain_id", "domains"],
+  "labels": { "app_type": "type", "hosted_url": "url" }
+}

@@ -1,0 +1,9 @@
+ [31m▌[39m [1mDelete a product[22m                                         [31mwrites to production[39m
+
+   [2mwhop products delete prod_DQf7IZAtveRoK[22m
+
+   [2mtarget[22m  [2mprod_DQf7IZAtveRoK[22m
+   [2mfrom  [22m  Hypermotion  biz_VraUMckluH8dzV
+
+   [2mThe Whop CLI has no sandbox or dry-run.[22m
+

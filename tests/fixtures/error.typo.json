@@ -1,0 +1,23 @@
+{
+  "ok": false,
+  "error": {
+    "code": "COMMAND_NOT_FOUND",
+    "message": "'prodcts' is not a command for 'whop'. Did you mean 'products'?"
+  },
+  "meta": {
+    "command": "prodcts",
+    "cta": {
+      "description": "Suggested commands:",
+      "commands": [
+        {
+          "command": "whop products list --format json --full-output"
+        },
+        {
+          "command": "whop --help",
+          "description": "see all available commands"
+        }
+      ]
+    },
+    "duration": "0ms"
+  }
+}

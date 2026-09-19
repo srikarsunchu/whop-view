@@ -1,0 +1,36 @@
+ Hypermotion  prod_iQ2Zub6GFQS5Q
+
+ Identity
+   route  frame-creator
+
+ Status
+   visibility  visible
+   verified    no
+
+ Money
+   plan  $29.00/mo  plan_ozEZmitgc8tjB
+
+ Dates
+   created  Sep 11, 2026 01:58 UTC · 8d ago
+   updated  Sep 16, 2026 00:06 UTC · 4d ago
+
+ Relations
+   account             Hypermotion  biz_VraUMckluH8dzV
+   owner user          sri @designedbysri  user_ICLAwIXM9zFfz
+   marketplace status  not_available
+
+ Details
+   headline                     Words, into motion.
+   description                  Create motion graphics with words. Choose Flex
+                                for a one-time credit purchase, or Creator for
+                                monthly credits and reference video and design
+                                system features. Generation and rendering use
+                                credits. No automatic top-ups.
+   members                      2
+   custom cta                   subscribe
+   global affiliate percentage  30
+   global affiliate status      enabled
+   member affiliate percentage  0
+   member affiliate status      disabled
+
+ json  whop products get prod_iQ2Zub6GFQS5Q --format json

@@ -1,0 +1,9 @@
+{
+  "primary": "id",
+  "status": "status",
+  "money": ["amount"],
+  "date": "respond_by",
+  "relation": "user",
+  "columns": ["id", "status", "amount", "reason", "respond_by", "created_at"],
+  "labels": { "respond_by": "respond by" }
+}

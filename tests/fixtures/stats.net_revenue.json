@@ -1,0 +1,42 @@
+{
+  "ok": true,
+  "data": {
+    "data": {
+      "points": [
+        {
+          "timestamp": 1789171200,
+          "value": 0
+        },
+        {
+          "timestamp": 1789257600,
+          "value": 9.28
+        },
+        {
+          "timestamp": 1789344000,
+          "value": 0
+        },
+        {
+          "timestamp": 1789430400,
+          "value": 0
+        },
+        {
+          "timestamp": 1789516800,
+          "value": 9.28
+        },
+        {
+          "timestamp": 1789603200,
+          "value": 0
+        },
+        {
+          "timestamp": 1789689600,
+          "value": 0
+        }
+      ],
+      "currency": "usd"
+    }
+  },
+  "meta": {
+    "command": "stats get",
+    "duration": "366ms"
+  }
+}

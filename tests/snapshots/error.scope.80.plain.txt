@@ -1,0 +1,5 @@
+ ▌ Missing permission
+
+   Missing required permission: developer:manage_webhook
+
+   fix  whop login --api-key  (needs developer:manage_webhook)

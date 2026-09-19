@@ -1,0 +1,29 @@
+{
+  "ok": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input: expected string, received undefined; Invalid input: expected string, received undefined\n\nDetails: [\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"from\"\n    ],\n    \"message\": \"Invalid input: expected string, received undefined\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"to\"\n    ],\n    \"message\": \"Invalid input: expected string, received undefined\"\n  }\n]",
+    "fieldErrors": [
+      {
+        "code": "invalid_type",
+        "missing": true,
+        "path": "from",
+        "expected": "string",
+        "received": "",
+        "message": "Invalid input: expected string, received undefined"
+      },
+      {
+        "code": "invalid_type",
+        "missing": true,
+        "path": "to",
+        "expected": "string",
+        "received": "",
+        "message": "Invalid input: expected string, received undefined"
+      }
+    ]
+  },
+  "meta": {
+    "command": "stats get",
+    "duration": "1ms"
+  }
+}

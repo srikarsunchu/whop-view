@@ -1,0 +1,5 @@
+ [31m▌[39m [1mWhop CLI not found[22m
+
+   spawn whop ENOENT
+
+   [2mfix[22m  [2mcurl -fsSL https://whop.com/install.sh | sh[22m

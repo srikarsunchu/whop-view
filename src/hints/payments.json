@@ -1,0 +1,8 @@
+{
+  "primary": "id",
+  "status": "status",
+  "money": ["amount", "payment_amount", "refunded_amount"],
+  "date": "created_at",
+  "relation": "user",
+  "labels": { "payment_method_type": "method" }
+}

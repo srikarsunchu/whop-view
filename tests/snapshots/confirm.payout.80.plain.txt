@@ -1,0 +1,12 @@
+ ▌ Create a payout                                          writes to production
+
+   whop payouts create --amount 250 --currency usd --payout_method_id potk_x1
+   --speed standard
+
+   amount            $250.00 usd
+   payout method id  potk_x1
+   speed             standard
+   from              Hypermotion  biz_VraUMckluH8dzV
+
+   The Whop CLI has no sandbox or dry-run. This moves real money.
+

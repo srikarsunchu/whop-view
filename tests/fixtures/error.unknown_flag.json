@@ -1,0 +1,11 @@
+{
+  "ok": false,
+  "error": {
+    "code": "UNKNOWN",
+    "message": "Unknown flag: --first"
+  },
+  "meta": {
+    "command": "ledgers list",
+    "duration": "1ms"
+  }
+}

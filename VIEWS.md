@@ -273,7 +273,10 @@ Three calls run in parallel: `auth status`, `ledgers report --report_type balanc
 - Two money shapes exist: `{ currency, amount: "10.00" }` objects and plain numbers with a sibling `formatted_price`. Rules 3 and 4 cover both.
 - `--full-output` is also a passthrough trigger, since a person asking for the envelope wants the envelope.
 - Local Node is 25.8. `engines` says 22 or newer. Tests run with `--experimental-strip-types` so there is no build step for the test loop.
-- `vhs` is not installed. Step 3 needs `brew install vhs`.
+- Rule 7 (status) runs before rule 2 (id). `needs_response` is five lowercase letters, an underscore, and eight more, which is the id shape. Status keys are known, so they win.
+- The teaching footer names the columns that survived width pressure, not the ones the hints asked for. The table reports what it kept.
+- `tsc` does not copy JSON, so `pnpm build` copies `src/hints` into `dist/hints`.
+- Homebrew's vhs 0.12 writes no GIF against ffmpeg 9 and says nothing. Tapes emit frames and `scripts/gif.sh` encodes them.
 
 ## Tests
 

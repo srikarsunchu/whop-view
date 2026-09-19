@@ -1,0 +1,9 @@
+{
+  "primary": "line_type",
+  "money": ["amount"],
+  "date": "posted_at",
+  "relation": "product_name",
+  "columns": ["line_type", "amount", "product_name", "user_name", "posted_at", "id"],
+  "hidden": ["currency", "usd_amount", "resource", "payment", "source", "user_email", "available_at"],
+  "labels": { "line_type": "activity", "product_name": "product", "user_name": "user", "posted_at": "posted" }
+}

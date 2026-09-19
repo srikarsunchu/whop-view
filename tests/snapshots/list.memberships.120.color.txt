@@ -1,0 +1,9 @@
+ [1mmemberships[22m[2m · 2[22m
+
+ [2muser              [22m  [2mstatus   [22m  [2mproduct           [22m  [2mplan              [22m  [2mrenews[22m  [2mcreated[22m  [2mid[22m
+ [2muser_3meX572iT5dAg[22m  [32mcompleted[39m  [2mprod_iQ2Zub6GFQS5Q[22m  [2mplan_NrjXyj6yTetff[22m  [2m—     [22m  4d ago   [2mmem_kfT4Jl8Pb8DlWE[22m
+ [2muser_ICLAwIXM9zFfz[22m  [32mcompleted[39m  [2mprod_iQ2Zub6GFQS5Q[22m  [2mplan_NrjXyj6yTetff[22m  [2m—     [22m  6d ago   [2mmem_GqEp26jmlkNcQ0[22m
+
+ [2m2 rows · no more pages[22m
+ [2mjson[22m  [2mwhop memberships list --account_id <biz_id> --format json --filter-output[22m
+       [2muser_id,status,product_id,plan_id,current_period_end,created_at,id[22m

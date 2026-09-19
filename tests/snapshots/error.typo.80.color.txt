@@ -1,0 +1,7 @@
+ [31m▌[39m [1mNot a command[22m                                                             [31m0ms[39m
+
+   'prodcts' is not a command for 'whop'. Did you mean 'products'?
+
+   [2mSuggested commands:[22m
+     [2mwhop products list[22m
+     [2mwhop --help       [22m  [2msee all available commands[22m

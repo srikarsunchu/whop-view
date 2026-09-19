@@ -1,0 +1,9 @@
+ ▌ Delete a product                                         writes to production
+
+   whop products delete prod_DQf7IZAtveRoK
+
+   target  prod_DQf7IZAtveRoK
+   from    Hypermotion  biz_VraUMckluH8dzV
+
+   The Whop CLI has no sandbox or dry-run.
+

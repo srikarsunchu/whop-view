@@ -1,0 +1,17 @@
+ [1mledgers[22m[2m · 10[22m
+
+ [2mactivity                         [22m  [2mamount[22m  [2mproduct    [22m  [2mid[22m
+ Payment Processing Percentage Fee  [31m-$0.27[39m  Hypermotion  [2mline_WmoyQ2IwTGtRU3JT…[22m
+ Fraud Prevention Fee               [31m-$0.07[39m  Hypermotion  [2mline_UzF4aENXUk9LdDNv…[22m
+ Payment Gross                      $10.00  Hypermotion  [2mline_UmxpbHdrM1JqMEtR…[22m
+ Payment Processing Fixed Fee       [31m-$0.30[39m  Hypermotion  [2mline_SlJpanpOZGpBRTdU…[22m
+ Orchestration Percentage Fee       [31m-$0.08[39m  Hypermotion  [2mline_MW43akVFMFhVdjB5…[22m
+ Fraud Prevention Fee               [31m-$0.07[39m  Hypermotion  [2mline_cjZkZkhQczQ2VE5D…[22m
+ Orchestration Percentage Fee       [31m-$0.08[39m  Hypermotion  [2mline_a2U2dG1QRDNzcWNV…[22m
+ Payment Gross                      $10.00  Hypermotion  [2mline_RFBNZFN2Y2F0QzAy…[22m
+ Payment Processing Percentage Fee  [31m-$0.27[39m  Hypermotion  [2mline_REh6Z3pzb0k1V0pN…[22m
+ Payment Processing Fixed Fee       [31m-$0.30[39m  Hypermotion  [2mline_QXZYRVNNSGhNSnFY…[22m
+
+ [2m10 rows · no more pages[22m
+ [2mjson[22m  [2mwhop ledgers list --account_id <biz_id> --format json --filter-output[22m
+       [2mline_type,amount,product_name,id[22m

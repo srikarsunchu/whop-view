@@ -1,0 +1,11 @@
+ [31m▌[39m [1mCreate a payout[22m                                                                                  [31mwrites to production[39m
+
+   [2mwhop payouts create --amount 250 --currency usd --payout_method_id potk_x1 --speed standard[22m
+
+   [2mamount          [22m  $250.00 usd
+   [2mpayout method id[22m  potk_x1
+   [2mspeed           [22m  standard
+   [2mfrom            [22m  Hypermotion  biz_VraUMckluH8dzV
+
+   [2mThe Whop CLI has no sandbox or dry-run. This moves real money.[22m
+

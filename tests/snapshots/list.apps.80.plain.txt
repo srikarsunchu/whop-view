@@ -1,0 +1,8 @@
+ apps · 1
+
+ name   status  type     creator             url  id
+ Frame  hidden  b2c_app  sri @designedbysri  —    app_HKnLpw6UGGEqk6
+
+ 1 row · no more pages
+ json  whop apps list --account_id <biz_id> --format json --filter-output
+       name,status,app_type,creator,hosted_url,id

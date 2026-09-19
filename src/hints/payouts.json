@@ -1,0 +1,8 @@
+{
+  "primary": "id",
+  "status": "status",
+  "money": ["amount", "fee", "net_amount"],
+  "date": "created_at",
+  "columns": ["id", "status", "amount", "speed", "created_at"],
+  "labels": { "payout_method_id": "method" }
+}

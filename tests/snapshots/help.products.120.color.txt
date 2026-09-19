@@ -1,0 +1,10 @@
+ [1mwhop products — The things you sell. Each owns plans and a store page.[22m                [2mtype wv products <command> --help[22m
+
+ [1mCOMMANDS[22m                                                   
+   create     [2mCreate Product[22m                                
+   delete     [2mDelete Product[22m                                
+   get        [2mRetrieve Product[22m                              
+   list       [2mList Products[22m                                 
+   publish    [2mPublish Product[22m                               
+   unpublish  [2mUnpublish Product[22m                             
+   update     [2mUpdate Product[22m                                

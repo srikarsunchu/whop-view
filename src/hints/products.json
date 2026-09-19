@@ -1,0 +1,9 @@
+{
+  "primary": "title",
+  "status": "visibility",
+  "plan": "default_plan",
+  "date": "created_at",
+  "columns": ["title", "visibility", "default_plan", "member_count", "created_at", "id"],
+  "hidden": ["gallery_images", "external_identifier", "published_reviews_count", "average_review_rating"],
+  "labels": { "member_count": "members", "default_plan": "plan" }
+}

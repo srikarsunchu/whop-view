@@ -1,0 +1,10 @@
+ [1mplans[22m[2m · 3[22m
+
+ [2mtitle                  [22m  [2mvisibility[22m  [2m initial price[22m  [2mid[22m
+ Flex — 300 credits       [2mhidden    [22m          $10.00  [2mplan_NrjXyj6yTetff[22m
+ [2m—                      [22m  [32mvisible   [39m            Free  [2mplan_oLCTaWVWJc79O[22m
+ Creator — 1,000 credits  [32mvisible   [39m  $29.00 / month  [2mplan_ozEZmitgc8tjB[22m
+
+ [2m3 rows · no more pages[22m
+ [2mjson[22m  [2mwhop plans list --account_id <biz_id> --format json --filter-output[22m
+       [2mtitle,visibility,initial_price,id[22m

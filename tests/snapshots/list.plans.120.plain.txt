@@ -1,0 +1,10 @@
+ plans · 3
+
+ title                    visibility   initial price  billing   product      members  created  id
+ Flex — 300 credits       hidden              $10.00  One Time  Hypermotion        2  6d ago   plan_NrjXyj6yTetff
+ —                        visible               Free  One Time  Frame              0  8d ago   plan_oLCTaWVWJc79O
+ Creator — 1,000 credits  visible     $29.00 / month  Renewal   Hypermotion        0  8d ago   plan_ozEZmitgc8tjB
+
+ 3 rows · no more pages
+ json  whop plans list --account_id <biz_id> --format json --filter-output
+       title,visibility,initial_price,plan_type,product,member_count,created_at,id

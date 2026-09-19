@@ -1,0 +1,5 @@
+ ▌ Whop CLI not found
+
+   spawn whop ENOENT
+
+   fix  curl -fsSL https://whop.com/install.sh | sh

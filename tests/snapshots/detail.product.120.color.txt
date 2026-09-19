@@ -1,0 +1,34 @@
+ [1mHypermotion[22m  [2mprod_iQ2Zub6GFQS5Q[22m
+
+ [1mIdentity[22m
+   [2mroute[22m  frame-creator
+
+ [1mStatus[22m
+   [2mvisibility[22m  [32mvisible[39m
+   [2mverified  [22m  [2mno[22m
+
+ [1mMoney[22m
+   [2mplan[22m  $29.00/mo  plan_ozEZmitgc8tjB
+
+ [1mDates[22m
+   [2mcreated[22m  Sep 11, 2026 01:58 UTC · 8d ago
+   [2mupdated[22m  Sep 16, 2026 00:06 UTC · 4d ago
+
+ [1mRelations[22m
+   [2maccount           [22m  Hypermotion  biz_VraUMckluH8dzV
+   [2mowner user        [22m  sri @designedbysri  user_ICLAwIXM9zFfz
+   [2mmarketplace status[22m  [2mnot_available[22m
+
+ [1mDetails[22m
+   [2mheadline                   [22m  Words, into motion.
+   [2mdescription                [22m  Create motion graphics with words. Choose Flex for a one-time credit purchase, or
+                                Creator for monthly credits and reference video and design system features. Generation
+                                and rendering use credits. No automatic top-ups.
+   [2mmembers                    [22m  2
+   [2mcustom cta                 [22m  subscribe
+   [2mglobal affiliate percentage[22m  30
+   [2mglobal affiliate status    [22m  enabled
+   [2mmember affiliate percentage[22m  0
+   [2mmember affiliate status    [22m  disabled
+
+ [2mjson[22m  [2mwhop products get prod_iQ2Zub6GFQS5Q --format json[22m

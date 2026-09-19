@@ -1,0 +1,11 @@
+{
+  "ok": false,
+  "error": {
+    "code": "HTTP_404",
+    "message": "Resource not found"
+  },
+  "meta": {
+    "command": "products get",
+    "duration": "214ms"
+  }
+}

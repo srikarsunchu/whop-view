@@ -1,0 +1,4 @@
+ [31m▌[39m [1mMissing or invalid flags[22m                                                                                          [31m1ms[39m
+
+   --from  Invalid input: expected string, received undefined
+   --to  Invalid input: expected string, received undefined

@@ -1,0 +1,9 @@
+ memberships · 2
+
+ user                status     product             plan                renews  created  id
+ user_3meX572iT5dAg  completed  prod_iQ2Zub6GFQS5Q  plan_NrjXyj6yTetff  —       4d ago   mem_kfT4Jl8Pb8DlWE
+ user_ICLAwIXM9zFfz  completed  prod_iQ2Zub6GFQS5Q  plan_NrjXyj6yTetff  —       6d ago   mem_GqEp26jmlkNcQ0
+
+ 2 rows · no more pages
+ json  whop memberships list --account_id <biz_id> --format json --filter-output
+       user_id,status,product_id,plan_id,current_period_end,created_at,id

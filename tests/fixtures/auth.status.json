@@ -1,0 +1,22 @@
+{
+  "ok": true,
+  "data": {
+    "loggedIn": true,
+    "profile": "sunchusrikar",
+    "method": "oauth",
+    "identity": {
+      "id": "user_ICLAwIXM9zFfz",
+      "email": "sunchusrikar@gmail.com"
+    },
+    "account": {
+      "id": "biz_VraUMckluH8dzV",
+      "title": "Frame",
+      "route": "biz_VraUMckluH8dzV"
+    },
+    "hasSecret": true
+  },
+  "meta": {
+    "command": "auth status",
+    "duration": "17ms"
+  }
+}

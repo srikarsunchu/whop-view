@@ -1,0 +1,8 @@
+ [1mapps[22m[2m · 1[22m
+
+ [2mname [22m  [2mstatus[22m  [2mtype   [22m  [2mcreator           [22m  [2murl[22m  [2mid[22m
+ Frame  [2mhidden[22m  b2c_app  sri @designedbysri  [2m—  [22m  [2mapp_HKnLpw6UGGEqk6[22m
+
+ [2m1 row · no more pages[22m
+ [2mjson[22m  [2mwhop apps list --account_id <biz_id> --format json --filter-output[22m
+       [2mname,status,app_type,creator,hosted_url,id[22m

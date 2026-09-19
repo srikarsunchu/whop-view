@@ -1,0 +1,5 @@
+ [31m▌[39m [1mMissing permission[22m
+
+   Missing required permission: developer:manage_webhook
+
+   [2mfix[22m  [2mwhop login --api-key[22m[2m  (needs developer:manage_webhook)[22m

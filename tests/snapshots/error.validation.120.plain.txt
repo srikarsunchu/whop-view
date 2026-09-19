@@ -1,0 +1,4 @@
+ ▌ Missing or invalid flags                                                                                          1ms
+
+   --from  Invalid input: expected string, received undefined
+   --to  Invalid input: expected string, received undefined

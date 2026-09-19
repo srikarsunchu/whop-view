@@ -1,0 +1,9 @@
+ [1mmembers[22m[2m · 2[22m
+
+ [2muser              [22m  [2mstatus[22m  [2mrole    [22m  [2mlast seen[22m  [2mjoined[22m  [2mid[22m
+ baasil @bossil      [32mjoined[39m  customer  4d ago     4d ago  [2mmber_ZGAeDMkmbieVQ[22m
+ sri @designedbysri  [32mjoined[39m  admin     6d ago     8d ago  [2mmber_YUdhdWtTg6wcB[22m
+
+ [2m2 rows · no more pages[22m
+ [2mjson[22m  [2mwhop members list --account_id <biz_id> --format json --filter-output[22m
+       [2muser,status,access_level,last_accessed_at,joined_at,id[22m

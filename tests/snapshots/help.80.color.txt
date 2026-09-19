@@ -1,0 +1,79 @@
+ [1mwhop 0.16.3[22m[2m · API 2026-08-25-2[22m                           [2mtype wv <group> --help[22m
+
+ [1mGET STARTED[22m
+   quickstart               [2mStart here — choose or create the business used by…[22m
+   apps                     [2mBuild and deploy fully-hosted web apps (*.whop.app)[22m
+   upgrade                  [2mUpdate the CLI to the latest version[22m
+
+ [1mCOMMERCE[22m
+   products                 [2mThe things you sell. Each owns plans and a store pa…[22m
+   plans                    [2mPricing for a product: one-time, recurring, trials,…[22m
+   promo-codes              [2mDiscounts that creators configure for checkout.[22m
+   memberships              [2mA customer's purchase of a plan, from checkout thro…[22m
+   checkout-configurations  [2mTurn a plan into a shareable, prefilled checkout li…[22m
+   payment-method-domains   [2mDomains verified to show wallet payment methods lik…[22m
+   shipments                [2mTrack the delivery of an order by its carrier track…[22m
+
+ [1mCORE RESOURCES[22m
+   accounts                 [2mA business on Whop: profile, wallet, capabilities,…[22m
+   users                    [2mA person on Whop: profile and connected identities.[22m
+   team-members             [2mAn account's team members and the roles that scope…[22m
+   members                  [2mOne buyer's relationship with an account, across al…[22m
+   webhooks                 [2mEvent notifications pushed to your server as things…[22m
+   stats                    [2mAggregated financial, audience, and traffic reporti…[22m
+   verifications            [2mLegal identity required before payouts and card iss…[22m
+   exports                  [2mAsynchronous CSV dumps of an account's dashboard da…[22m
+
+ [1mNOTIFICATIONS[22m
+   notifications            [2mThe user's notification feed: unread badges, mark-r…[22m
+
+ [1mMONEY[22m
+   payments                 [2mA charge against a buyer, and the step they still o…[22m
+   setup-intents            [2mSaving a buyer's payment method without charging it.[22m
+   ledgers                  [2mThe activity feed behind an account or user's balan…[22m
+   payouts                  [2mSend money from a balance to a bank or wallet.[22m
+   cards                    [2mIssue cards that spend from a balance.[22m
+   transfers                [2mMove funds between Whop accounts and users.[22m
+   disputes                 [2mChargebacks filed against an account, with evidence…[22m
+   dispute-alerts           [2mIssuer warnings that arrive before a chargeback doe…[22m
+   deposits                 [2mAdd funds to a balance.[22m
+   swaps                    [2mConvert a balance between currencies.[22m
+   resolution-center-cases  [2mFile or respond to a case against a payment, as the…[22m
+
+ [1mPARTNERS[22m
+   partners                 [2mThe users and businesses you referred to Whop, and…[22m
+
+ [1mWORKFORCE[22m
+   bounties                 [2mPaid tasks with reviewed submissions and escrowed r…[22m
+   bounty-submissions       [2mWork submitted to a bounty, from attempt to payout.[22m
+
+ [1mTRACKING[22m
+   people                   [2mVisitors and customers of an account, with identity…[22m
+   events                   [2mConversion and engagement events tracked for attrib…[22m
+   recommended-actions      [2mSuggested next-step action chains for an account.[22m
+
+ [1mADS[22m
+   ads                      [2mThe creative: copy, assets, and destination URL.[22m
+   ad-campaigns             [2mPlatform, objective, and budget for a set of ads.[22m
+   ad-groups                [2mAudience, placements, and schedule within a campaig…[22m
+   audiences                [2mReusable targeting lists for ad groups.[22m
+
+ [1mMEDIA[22m
+   files                    [2mUpload files and attach them wherever Whop accepts…[22m
+   media                    [2mAI-generated assets, billed from a balance, attacha…[22m
+
+ [1mIDENTITY[22m
+   social-accounts          [2mConnected Facebook and Instagram accounts that run…[22m
+
+ [1mDEVELOPER[22m
+   app-builds               [2mVersioned build artifacts deployed to an app's plat…[22m
+   api-keys                 [2mProgrammatic credentials for an account or app.[22m
+   permissions              [2mWhat your credential is allowed to do on a resource.[22m
+   files                    [2mCreate file uploads and retrieve uploaded file deta…[22m
+
+ [1mAUTH[22m
+   auth                     [2mManage authentication[22m
+   login                    [2mSign in to Whop[22m
+   logout                   [2mSign out[22m
+   completions              [2mGenerate shell completion script[22m
+   skills                   [2mSync skill files to agents (add, list)[22m

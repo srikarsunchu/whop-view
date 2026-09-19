@@ -1,0 +1,8 @@
+{
+  "primary": "name",
+  "status": "status",
+  "money": ["daily_budget", "lifetime_budget", "spend"],
+  "date": "created_at",
+  "columns": ["name", "status", "daily_budget", "spend", "objective", "created_at", "id"],
+  "labels": { "daily_budget": "daily budget" }
+}

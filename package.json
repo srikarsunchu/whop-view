@@ -6,13 +6,19 @@
   "license": "MIT",
   "type": "module",
   "private": true,
-  "engines": { "node": ">=22" },
-  "bin": { "wv": "./dist/bin.js" },
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "wv": "./dist/bin.js"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "node --experimental-strip-types src/bin.ts",
-    "test": "node --test --experimental-strip-types tests/**/*.test.ts",
-    "fixtures": "node --experimental-strip-types scripts/fixtures.ts"
+    "build": "tsc -p tsconfig.json && rm -rf dist/hints && cp -R src/hints dist/hints",
+    "dev": "node --experimental-strip-types --no-warnings src/bin.ts",
+    "test": "node --test --experimental-strip-types --no-warnings tests/*.test.ts",
+    "fixtures": "node --experimental-strip-types --no-warnings scripts/fixtures.ts",
+    "demo": "pnpm build && for t in demo/*.tape; do case $t in *_common*) ;; *) vhs \"$t\";; esac; done && sh scripts/gif.sh",
+    "render": "node --experimental-strip-types --no-warnings tests/render.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

@@ -1,0 +1,669 @@
+{
+  "ok": true,
+  "data": {
+    "data": [
+      {
+        "object": "ledger_activity",
+        "id": "line_WmoyQ2IwTGtRU3JTZDAycFIwUzZ5OmxpOkNvR085Y0VWMGFrbWJIcnMyZXczUDphYzpVY0NPdkdDUVRHOGE5amxBMms1SzM6bGU6MTp2OmlrOnJlY2VpcHRfMTA2NDU5MjAy",
+        "line_type": "payment_processing_percentage_fee",
+        "amount": "-27000000",
+        "usd_amount": "-0.27",
+        "currency": {
+          "code": "usd",
+          "precision": "100000000"
+        },
+        "posted_at": "2026-09-16T02:04:42+02:00",
+        "available_at": null,
+        "resource": null,
+        "source": {
+          "object": "payment",
+          "id": "pay_JFHAhioMdPL1ts",
+          "status": "succeeded",
+          "payment_amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "mastercard"
+        },
+        "payment_id": "pay_JFHAhioMdPL1ts",
+        "user_id": "user_3meX572iT5dAg",
+        "user_name": "baasil",
+        "user_email": "baasil.ali@gmail.com",
+        "product_id": "prod_iQ2Zub6GFQS5Q",
+        "product_name": "Hypermotion",
+        "plan_id": "plan_NrjXyj6yTetff",
+        "plan_name": "Flex — 300 credits",
+        "payment": {
+          "object": "payment",
+          "id": "pay_JFHAhioMdPL1ts",
+          "amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "mastercard",
+          "card_last4": "1396",
+          "user": {
+            "id": "user_3meX572iT5dAg",
+            "name": "baasil",
+            "email": "baasil.ali@gmail.com"
+          },
+          "product": {
+            "id": "prod_iQ2Zub6GFQS5Q",
+            "name": "Hypermotion"
+          },
+          "plan": {
+            "id": "plan_NrjXyj6yTetff",
+            "name": "Flex — 300 credits"
+          },
+          "created_at": "2026-09-16T00:04:37.707Z"
+        }
+      },
+      {
+        "object": "ledger_activity",
+        "id": "line_UzF4aENXUk9LdDNvVjU3cE55TzFwOmxpOkNvR085Y0VWMGFrbWJIcnMyZXczUDphYzpVY0NPdkdDUVRHOGE5amxBMms1SzM6bGU6MTp2OmlrOnJlY2VpcHRfMTA2NDU5MjAy",
+        "line_type": "fraud_prevention_fee",
+        "amount": "-7000000",
+        "usd_amount": "-0.07",
+        "currency": {
+          "code": "usd",
+          "precision": "100000000"
+        },
+        "posted_at": "2026-09-16T02:04:42+02:00",
+        "available_at": null,
+        "resource": null,
+        "source": {
+          "object": "payment",
+          "id": "pay_JFHAhioMdPL1ts",
+          "status": "succeeded",
+          "payment_amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "mastercard"
+        },
+        "payment_id": "pay_JFHAhioMdPL1ts",
+        "user_id": "user_3meX572iT5dAg",
+        "user_name": "baasil",
+        "user_email": "baasil.ali@gmail.com",
+        "product_id": "prod_iQ2Zub6GFQS5Q",
+        "product_name": "Hypermotion",
+        "plan_id": "plan_NrjXyj6yTetff",
+        "plan_name": "Flex — 300 credits",
+        "payment": {
+          "object": "payment",
+          "id": "pay_JFHAhioMdPL1ts",
+          "amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "mastercard",
+          "card_last4": "1396",
+          "user": {
+            "id": "user_3meX572iT5dAg",
+            "name": "baasil",
+            "email": "baasil.ali@gmail.com"
+          },
+          "product": {
+            "id": "prod_iQ2Zub6GFQS5Q",
+            "name": "Hypermotion"
+          },
+          "plan": {
+            "id": "plan_NrjXyj6yTetff",
+            "name": "Flex — 300 credits"
+          },
+          "created_at": "2026-09-16T00:04:37.707Z"
+        }
+      },
+      {
+        "object": "ledger_activity",
+        "id": "line_UmxpbHdrM1JqMEtRazJlWm1RTTFDOmxpOkNvR085Y0VWMGFrbWJIcnMyZXczUDphYzpVY0NPdkdDUVRHOGE5amxBMms1SzM6bGU6MTp2OmlrOnJlY2VpcHRfMTA2NDU5MjAy",
+        "line_type": "payment_gross",
+        "amount": "1000000000",
+        "usd_amount": "10.0",
+        "currency": {
+          "code": "usd",
+          "precision": "100000000"
+        },
+        "posted_at": "2026-09-16T02:04:42+02:00",
+        "available_at": "2026-09-17T00:00:00Z",
+        "resource": {
+          "object": "user",
+          "id": "user_3meX572iT5dAg",
+          "name": "baasil",
+          "username": "bossil",
+          "profile_picture_url": "https://ui-avatars.com/api/?name=baasil&background=535961&color=fff&format=png"
+        },
+        "source": {
+          "object": "payment",
+          "id": "pay_JFHAhioMdPL1ts",
+          "status": "succeeded",
+          "payment_amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "mastercard"
+        },
+        "payment_id": "pay_JFHAhioMdPL1ts",
+        "user_id": "user_3meX572iT5dAg",
+        "user_name": "baasil",
+        "user_email": "baasil.ali@gmail.com",
+        "product_id": "prod_iQ2Zub6GFQS5Q",
+        "product_name": "Hypermotion",
+        "plan_id": "plan_NrjXyj6yTetff",
+        "plan_name": "Flex — 300 credits",
+        "payment": {
+          "object": "payment",
+          "id": "pay_JFHAhioMdPL1ts",
+          "amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "mastercard",
+          "card_last4": "1396",
+          "user": {
+            "id": "user_3meX572iT5dAg",
+            "name": "baasil",
+            "email": "baasil.ali@gmail.com"
+          },
+          "product": {
+            "id": "prod_iQ2Zub6GFQS5Q",
+            "name": "Hypermotion"
+          },
+          "plan": {
+            "id": "plan_NrjXyj6yTetff",
+            "name": "Flex — 300 credits"
+          },
+          "created_at": "2026-09-16T00:04:37.707Z"
+        }
+      },
+      {
+        "object": "ledger_activity",
+        "id": "line_SlJpanpOZGpBRTdUWkU2WkUyS0FuOmxpOkNvR085Y0VWMGFrbWJIcnMyZXczUDphYzpVY0NPdkdDUVRHOGE5amxBMms1SzM6bGU6MTp2OmlrOnJlY2VpcHRfMTA2NDU5MjAy",
+        "line_type": "payment_processing_fixed_fee",
+        "amount": "-30000000",
+        "usd_amount": "-0.3",
+        "currency": {
+          "code": "usd",
+          "precision": "100000000"
+        },
+        "posted_at": "2026-09-16T02:04:42+02:00",
+        "available_at": null,
+        "resource": null,
+        "source": {
+          "object": "payment",
+          "id": "pay_JFHAhioMdPL1ts",
+          "status": "succeeded",
+          "payment_amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "mastercard"
+        },
+        "payment_id": "pay_JFHAhioMdPL1ts",
+        "user_id": "user_3meX572iT5dAg",
+        "user_name": "baasil",
+        "user_email": "baasil.ali@gmail.com",
+        "product_id": "prod_iQ2Zub6GFQS5Q",
+        "product_name": "Hypermotion",
+        "plan_id": "plan_NrjXyj6yTetff",
+        "plan_name": "Flex — 300 credits",
+        "payment": {
+          "object": "payment",
+          "id": "pay_JFHAhioMdPL1ts",
+          "amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "mastercard",
+          "card_last4": "1396",
+          "user": {
+            "id": "user_3meX572iT5dAg",
+            "name": "baasil",
+            "email": "baasil.ali@gmail.com"
+          },
+          "product": {
+            "id": "prod_iQ2Zub6GFQS5Q",
+            "name": "Hypermotion"
+          },
+          "plan": {
+            "id": "plan_NrjXyj6yTetff",
+            "name": "Flex — 300 credits"
+          },
+          "created_at": "2026-09-16T00:04:37.707Z"
+        }
+      },
+      {
+        "object": "ledger_activity",
+        "id": "line_MW43akVFMFhVdjB5UHBvT1JtbXliOmxpOkNvR085Y0VWMGFrbWJIcnMyZXczUDphYzpVY0NPdkdDUVRHOGE5amxBMms1SzM6bGU6MTp2OmlrOnJlY2VpcHRfMTA2NDU5MjAy",
+        "line_type": "orchestration_percentage_fee",
+        "amount": "-8000000",
+        "usd_amount": "-0.08",
+        "currency": {
+          "code": "usd",
+          "precision": "100000000"
+        },
+        "posted_at": "2026-09-16T02:04:42+02:00",
+        "available_at": null,
+        "resource": null,
+        "source": {
+          "object": "payment",
+          "id": "pay_JFHAhioMdPL1ts",
+          "status": "succeeded",
+          "payment_amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "mastercard"
+        },
+        "payment_id": "pay_JFHAhioMdPL1ts",
+        "user_id": "user_3meX572iT5dAg",
+        "user_name": "baasil",
+        "user_email": "baasil.ali@gmail.com",
+        "product_id": "prod_iQ2Zub6GFQS5Q",
+        "product_name": "Hypermotion",
+        "plan_id": "plan_NrjXyj6yTetff",
+        "plan_name": "Flex — 300 credits",
+        "payment": {
+          "object": "payment",
+          "id": "pay_JFHAhioMdPL1ts",
+          "amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "mastercard",
+          "card_last4": "1396",
+          "user": {
+            "id": "user_3meX572iT5dAg",
+            "name": "baasil",
+            "email": "baasil.ali@gmail.com"
+          },
+          "product": {
+            "id": "prod_iQ2Zub6GFQS5Q",
+            "name": "Hypermotion"
+          },
+          "plan": {
+            "id": "plan_NrjXyj6yTetff",
+            "name": "Flex — 300 credits"
+          },
+          "created_at": "2026-09-16T00:04:37.707Z"
+        }
+      },
+      {
+        "object": "ledger_activity",
+        "id": "line_cjZkZkhQczQ2VE5DMXJpeUVIaVJLOmxpOlgwdUJtWGNvbTg1YmYxUmllQ0RiRTphYzpVY0NPdkdDUVRHOGE5amxBMms1SzM6bGU6MTp2OmlrOnJlY2VpcHRfMTA1MjA0NTk3",
+        "line_type": "fraud_prevention_fee",
+        "amount": "-7000000",
+        "usd_amount": "-0.07",
+        "currency": {
+          "code": "usd",
+          "precision": "100000000"
+        },
+        "posted_at": "2026-09-13T12:52:52+02:00",
+        "available_at": null,
+        "resource": null,
+        "source": {
+          "object": "payment",
+          "id": "pay_Ggv9MYVQ9AHppk",
+          "status": "succeeded",
+          "payment_amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "visa"
+        },
+        "payment_id": "pay_Ggv9MYVQ9AHppk",
+        "user_id": "user_ICLAwIXM9zFfz",
+        "user_name": "sri",
+        "user_email": "sunchusrikar@gmail.com",
+        "product_id": "prod_iQ2Zub6GFQS5Q",
+        "product_name": "Hypermotion",
+        "plan_id": "plan_NrjXyj6yTetff",
+        "plan_name": "Flex — 300 credits",
+        "payment": {
+          "object": "payment",
+          "id": "pay_Ggv9MYVQ9AHppk",
+          "amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "visa",
+          "card_last4": "5827",
+          "user": {
+            "id": "user_ICLAwIXM9zFfz",
+            "name": "sri",
+            "email": "sunchusrikar@gmail.com"
+          },
+          "product": {
+            "id": "prod_iQ2Zub6GFQS5Q",
+            "name": "Hypermotion"
+          },
+          "plan": {
+            "id": "plan_NrjXyj6yTetff",
+            "name": "Flex — 300 credits"
+          },
+          "created_at": "2026-09-13T10:52:48.129Z"
+        }
+      },
+      {
+        "object": "ledger_activity",
+        "id": "line_a2U2dG1QRDNzcWNVanQ4SmhLS3RyOmxpOlgwdUJtWGNvbTg1YmYxUmllQ0RiRTphYzpVY0NPdkdDUVRHOGE5amxBMms1SzM6bGU6MTp2OmlrOnJlY2VpcHRfMTA1MjA0NTk3",
+        "line_type": "orchestration_percentage_fee",
+        "amount": "-8000000",
+        "usd_amount": "-0.08",
+        "currency": {
+          "code": "usd",
+          "precision": "100000000"
+        },
+        "posted_at": "2026-09-13T12:52:52+02:00",
+        "available_at": null,
+        "resource": null,
+        "source": {
+          "object": "payment",
+          "id": "pay_Ggv9MYVQ9AHppk",
+          "status": "succeeded",
+          "payment_amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "visa"
+        },
+        "payment_id": "pay_Ggv9MYVQ9AHppk",
+        "user_id": "user_ICLAwIXM9zFfz",
+        "user_name": "sri",
+        "user_email": "sunchusrikar@gmail.com",
+        "product_id": "prod_iQ2Zub6GFQS5Q",
+        "product_name": "Hypermotion",
+        "plan_id": "plan_NrjXyj6yTetff",
+        "plan_name": "Flex — 300 credits",
+        "payment": {
+          "object": "payment",
+          "id": "pay_Ggv9MYVQ9AHppk",
+          "amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "visa",
+          "card_last4": "5827",
+          "user": {
+            "id": "user_ICLAwIXM9zFfz",
+            "name": "sri",
+            "email": "sunchusrikar@gmail.com"
+          },
+          "product": {
+            "id": "prod_iQ2Zub6GFQS5Q",
+            "name": "Hypermotion"
+          },
+          "plan": {
+            "id": "plan_NrjXyj6yTetff",
+            "name": "Flex — 300 credits"
+          },
+          "created_at": "2026-09-13T10:52:48.129Z"
+        }
+      },
+      {
+        "object": "ledger_activity",
+        "id": "line_RFBNZFN2Y2F0QzAya1Q5ZENSSUZuOmxpOlgwdUJtWGNvbTg1YmYxUmllQ0RiRTphYzpVY0NPdkdDUVRHOGE5amxBMms1SzM6bGU6MTp2OmlrOnJlY2VpcHRfMTA1MjA0NTk3",
+        "line_type": "payment_gross",
+        "amount": "1000000000",
+        "usd_amount": "10.0",
+        "currency": {
+          "code": "usd",
+          "precision": "100000000"
+        },
+        "posted_at": "2026-09-13T12:52:52+02:00",
+        "available_at": "2026-09-16T00:00:00Z",
+        "resource": {
+          "object": "user",
+          "id": "user_ICLAwIXM9zFfz",
+          "name": "sri",
+          "username": "designedbysri",
+          "profile_picture_url": "https://assets-2-prod.whop.com/public/uploads/2026-09-10/4ecfe691-b4df-4ae3-93f5-8c4ef03d37a9/image.png"
+        },
+        "source": {
+          "object": "payment",
+          "id": "pay_Ggv9MYVQ9AHppk",
+          "status": "succeeded",
+          "payment_amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "visa"
+        },
+        "payment_id": "pay_Ggv9MYVQ9AHppk",
+        "user_id": "user_ICLAwIXM9zFfz",
+        "user_name": "sri",
+        "user_email": "sunchusrikar@gmail.com",
+        "product_id": "prod_iQ2Zub6GFQS5Q",
+        "product_name": "Hypermotion",
+        "plan_id": "plan_NrjXyj6yTetff",
+        "plan_name": "Flex — 300 credits",
+        "payment": {
+          "object": "payment",
+          "id": "pay_Ggv9MYVQ9AHppk",
+          "amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "visa",
+          "card_last4": "5827",
+          "user": {
+            "id": "user_ICLAwIXM9zFfz",
+            "name": "sri",
+            "email": "sunchusrikar@gmail.com"
+          },
+          "product": {
+            "id": "prod_iQ2Zub6GFQS5Q",
+            "name": "Hypermotion"
+          },
+          "plan": {
+            "id": "plan_NrjXyj6yTetff",
+            "name": "Flex — 300 credits"
+          },
+          "created_at": "2026-09-13T10:52:48.129Z"
+        }
+      },
+      {
+        "object": "ledger_activity",
+        "id": "line_REh6Z3pzb0k1V0pNSXpkWHFLTUFPOmxpOlgwdUJtWGNvbTg1YmYxUmllQ0RiRTphYzpVY0NPdkdDUVRHOGE5amxBMms1SzM6bGU6MTp2OmlrOnJlY2VpcHRfMTA1MjA0NTk3",
+        "line_type": "payment_processing_percentage_fee",
+        "amount": "-27000000",
+        "usd_amount": "-0.27",
+        "currency": {
+          "code": "usd",
+          "precision": "100000000"
+        },
+        "posted_at": "2026-09-13T12:52:52+02:00",
+        "available_at": null,
+        "resource": null,
+        "source": {
+          "object": "payment",
+          "id": "pay_Ggv9MYVQ9AHppk",
+          "status": "succeeded",
+          "payment_amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "visa"
+        },
+        "payment_id": "pay_Ggv9MYVQ9AHppk",
+        "user_id": "user_ICLAwIXM9zFfz",
+        "user_name": "sri",
+        "user_email": "sunchusrikar@gmail.com",
+        "product_id": "prod_iQ2Zub6GFQS5Q",
+        "product_name": "Hypermotion",
+        "plan_id": "plan_NrjXyj6yTetff",
+        "plan_name": "Flex — 300 credits",
+        "payment": {
+          "object": "payment",
+          "id": "pay_Ggv9MYVQ9AHppk",
+          "amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "visa",
+          "card_last4": "5827",
+          "user": {
+            "id": "user_ICLAwIXM9zFfz",
+            "name": "sri",
+            "email": "sunchusrikar@gmail.com"
+          },
+          "product": {
+            "id": "prod_iQ2Zub6GFQS5Q",
+            "name": "Hypermotion"
+          },
+          "plan": {
+            "id": "plan_NrjXyj6yTetff",
+            "name": "Flex — 300 credits"
+          },
+          "created_at": "2026-09-13T10:52:48.129Z"
+        }
+      },
+      {
+        "object": "ledger_activity",
+        "id": "line_QXZYRVNNSGhNSnFYdWdRMHJiTXkzOmxpOlgwdUJtWGNvbTg1YmYxUmllQ0RiRTphYzpVY0NPdkdDUVRHOGE5amxBMms1SzM6bGU6MTp2OmlrOnJlY2VpcHRfMTA1MjA0NTk3",
+        "line_type": "payment_processing_fixed_fee",
+        "amount": "-30000000",
+        "usd_amount": "-0.3",
+        "currency": {
+          "code": "usd",
+          "precision": "100000000"
+        },
+        "posted_at": "2026-09-13T12:52:52+02:00",
+        "available_at": null,
+        "resource": null,
+        "source": {
+          "object": "payment",
+          "id": "pay_Ggv9MYVQ9AHppk",
+          "status": "succeeded",
+          "payment_amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "visa"
+        },
+        "payment_id": "pay_Ggv9MYVQ9AHppk",
+        "user_id": "user_ICLAwIXM9zFfz",
+        "user_name": "sri",
+        "user_email": "sunchusrikar@gmail.com",
+        "product_id": "prod_iQ2Zub6GFQS5Q",
+        "product_name": "Hypermotion",
+        "plan_id": "plan_NrjXyj6yTetff",
+        "plan_name": "Flex — 300 credits",
+        "payment": {
+          "object": "payment",
+          "id": "pay_Ggv9MYVQ9AHppk",
+          "amount": {
+            "currency": "usd",
+            "amount": "10.00",
+            "decimals": 2,
+            "display_decimals": 2
+          },
+          "payment_method_type": "card",
+          "payment_processor": "multi_psp",
+          "card_brand": "visa",
+          "card_last4": "5827",
+          "user": {
+            "id": "user_ICLAwIXM9zFfz",
+            "name": "sri",
+            "email": "sunchusrikar@gmail.com"
+          },
+          "product": {
+            "id": "prod_iQ2Zub6GFQS5Q",
+            "name": "Hypermotion"
+          },
+          "plan": {
+            "id": "plan_NrjXyj6yTetff",
+            "name": "Flex — 300 credits"
+          },
+          "created_at": "2026-09-13T10:52:48.129Z"
+        }
+      }
+    ],
+    "page_info": {
+      "has_next_page": false,
+      "end_cursor": null,
+      "has_previous_page": false,
+      "start_cursor": null
+    }
+  },
+  "meta": {
+    "command": "ledgers list",
+    "duration": "457ms"
+  }
+}

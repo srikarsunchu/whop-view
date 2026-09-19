@@ -1,0 +1,3 @@
+ [31m▌[39m [1mNot found[22m                                                               [31m214ms[39m
+
+   Resource not found

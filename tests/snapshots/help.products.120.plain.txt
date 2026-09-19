@@ -1,0 +1,10 @@
+ whop products — The things you sell. Each owns plans and a store page.                type wv products <command> --help
+
+ COMMANDS                                                   
+   create     Create Product                                
+   delete     Delete Product                                
+   get        Retrieve Product                              
+   list       List Products                                 
+   publish    Publish Product                               
+   unpublish  Unpublish Product                             
+   update     Update Product                                
