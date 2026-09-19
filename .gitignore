@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.pnpm-store/
+.env
+.env.*
+*.log
+.DS_Store
+demo/*.gif
+demo/*.mp4
