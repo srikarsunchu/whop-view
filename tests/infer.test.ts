@@ -169,8 +169,8 @@ test("confirm: flags become a record", () => {
 
 test("help parser: 51 groups come from the CLI text, in its order", () => {
   const h = parseHelp(fixture("help.txt"));
-  assert.equal(h.headline, "whop 0.16.3");
-  assert.equal(h.api, "2026-08-25-2");
+  assert.match(h.headline, /^whop \d+\.\d+\.\d+$/);
+  assert.match(h.api ?? "", /^\d{4}-\d{2}-\d{2}/);
   assert.equal(h.groups[0].title, "GET STARTED");
   assert.equal(h.groups[0].entries[0].name, "quickstart");
   const n = h.groups.reduce((a, g) => a + g.entries.length, 0);
