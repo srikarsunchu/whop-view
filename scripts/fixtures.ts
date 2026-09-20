@@ -31,11 +31,14 @@ const CASES: [string, string[]][] = [
   ["error.unknown_flag", ["ledgers", "list", "--first", "2"]],
 ];
 
+// Fixtures are committed. Email addresses are the one field no view renders and the one that must not leak.
+const redact = (text: string) => text.replace(/("(?:user_)?email":\s*")[^"@]+@[^"]+(")/g, "$1redacted@example.com$2");
+
 const dir = join(import.meta.dirname, "..", "tests", "fixtures");
 mkdirSync(dir, { recursive: true });
 for (const [name, args] of CASES) {
   const r = spawnSync("whop", [...args, "--format", "json", "--full-output"], { encoding: "utf8" });
-  writeFileSync(join(dir, `${name}.json`), r.stdout);
+  writeFileSync(join(dir, `${name}.json`), redact(r.stdout));
   console.log(`${name}: exit ${r.status}, ${r.stdout.length} bytes`);
 }
 // Help text is parsed at runtime; keep a copy so the help view can be snapshotted offline.

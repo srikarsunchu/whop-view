@@ -32,7 +32,7 @@
         "payment_id": "pay_JFHAhioMdPL1ts",
         "user_id": "user_3meX572iT5dAg",
         "user_name": "baasil",
-        "user_email": "baasil.ali@gmail.com",
+        "user_email": "redacted@example.com",
         "product_id": "prod_iQ2Zub6GFQS5Q",
         "product_name": "Hypermotion",
         "plan_id": "plan_NrjXyj6yTetff",
@@ -53,7 +53,7 @@
           "user": {
             "id": "user_3meX572iT5dAg",
             "name": "baasil",
-            "email": "baasil.ali@gmail.com"
+            "email": "redacted@example.com"
           },
           "product": {
             "id": "prod_iQ2Zub6GFQS5Q",
@@ -96,7 +96,7 @@
         "payment_id": "pay_JFHAhioMdPL1ts",
         "user_id": "user_3meX572iT5dAg",
         "user_name": "baasil",
-        "user_email": "baasil.ali@gmail.com",
+        "user_email": "redacted@example.com",
         "product_id": "prod_iQ2Zub6GFQS5Q",
         "product_name": "Hypermotion",
         "plan_id": "plan_NrjXyj6yTetff",
@@ -117,7 +117,7 @@
           "user": {
             "id": "user_3meX572iT5dAg",
             "name": "baasil",
-            "email": "baasil.ali@gmail.com"
+            "email": "redacted@example.com"
           },
           "product": {
             "id": "prod_iQ2Zub6GFQS5Q",
@@ -166,7 +166,7 @@
         "payment_id": "pay_JFHAhioMdPL1ts",
         "user_id": "user_3meX572iT5dAg",
         "user_name": "baasil",
-        "user_email": "baasil.ali@gmail.com",
+        "user_email": "redacted@example.com",
         "product_id": "prod_iQ2Zub6GFQS5Q",
         "product_name": "Hypermotion",
         "plan_id": "plan_NrjXyj6yTetff",
@@ -187,7 +187,7 @@
           "user": {
             "id": "user_3meX572iT5dAg",
             "name": "baasil",
-            "email": "baasil.ali@gmail.com"
+            "email": "redacted@example.com"
           },
           "product": {
             "id": "prod_iQ2Zub6GFQS5Q",
@@ -230,7 +230,7 @@
         "payment_id": "pay_JFHAhioMdPL1ts",
         "user_id": "user_3meX572iT5dAg",
         "user_name": "baasil",
-        "user_email": "baasil.ali@gmail.com",
+        "user_email": "redacted@example.com",
         "product_id": "prod_iQ2Zub6GFQS5Q",
         "product_name": "Hypermotion",
         "plan_id": "plan_NrjXyj6yTetff",
@@ -251,7 +251,7 @@
           "user": {
             "id": "user_3meX572iT5dAg",
             "name": "baasil",
-            "email": "baasil.ali@gmail.com"
+            "email": "redacted@example.com"
           },
           "product": {
             "id": "prod_iQ2Zub6GFQS5Q",
@@ -294,7 +294,7 @@
         "payment_id": "pay_JFHAhioMdPL1ts",
         "user_id": "user_3meX572iT5dAg",
         "user_name": "baasil",
-        "user_email": "baasil.ali@gmail.com",
+        "user_email": "redacted@example.com",
         "product_id": "prod_iQ2Zub6GFQS5Q",
         "product_name": "Hypermotion",
         "plan_id": "plan_NrjXyj6yTetff",
@@ -315,7 +315,7 @@
           "user": {
             "id": "user_3meX572iT5dAg",
             "name": "baasil",
-            "email": "baasil.ali@gmail.com"
+            "email": "redacted@example.com"
           },
           "product": {
             "id": "prod_iQ2Zub6GFQS5Q",
@@ -358,7 +358,7 @@
         "payment_id": "pay_Ggv9MYVQ9AHppk",
         "user_id": "user_ICLAwIXM9zFfz",
         "user_name": "sri",
-        "user_email": "sunchusrikar@gmail.com",
+        "user_email": "redacted@example.com",
         "product_id": "prod_iQ2Zub6GFQS5Q",
         "product_name": "Hypermotion",
         "plan_id": "plan_NrjXyj6yTetff",
@@ -379,7 +379,7 @@
           "user": {
             "id": "user_ICLAwIXM9zFfz",
             "name": "sri",
-            "email": "sunchusrikar@gmail.com"
+            "email": "redacted@example.com"
           },
           "product": {
             "id": "prod_iQ2Zub6GFQS5Q",
@@ -422,7 +422,7 @@
         "payment_id": "pay_Ggv9MYVQ9AHppk",
         "user_id": "user_ICLAwIXM9zFfz",
         "user_name": "sri",
-        "user_email": "sunchusrikar@gmail.com",
+        "user_email": "redacted@example.com",
         "product_id": "prod_iQ2Zub6GFQS5Q",
         "product_name": "Hypermotion",
         "plan_id": "plan_NrjXyj6yTetff",
@@ -443,7 +443,7 @@
           "user": {
             "id": "user_ICLAwIXM9zFfz",
             "name": "sri",
-            "email": "sunchusrikar@gmail.com"
+            "email": "redacted@example.com"
           },
           "product": {
             "id": "prod_iQ2Zub6GFQS5Q",
@@ -492,7 +492,7 @@
         "payment_id": "pay_Ggv9MYVQ9AHppk",
         "user_id": "user_ICLAwIXM9zFfz",
         "user_name": "sri",
-        "user_email": "sunchusrikar@gmail.com",
+        "user_email": "redacted@example.com",
         "product_id": "prod_iQ2Zub6GFQS5Q",
         "product_name": "Hypermotion",
         "plan_id": "plan_NrjXyj6yTetff",
@@ -513,7 +513,7 @@
           "user": {
             "id": "user_ICLAwIXM9zFfz",
             "name": "sri",
-            "email": "sunchusrikar@gmail.com"
+            "email": "redacted@example.com"
           },
           "product": {
             "id": "prod_iQ2Zub6GFQS5Q",
@@ -556,7 +556,7 @@
         "payment_id": "pay_Ggv9MYVQ9AHppk",
         "user_id": "user_ICLAwIXM9zFfz",
         "user_name": "sri",
-        "user_email": "sunchusrikar@gmail.com",
+        "user_email": "redacted@example.com",
         "product_id": "prod_iQ2Zub6GFQS5Q",
         "product_name": "Hypermotion",
         "plan_id": "plan_NrjXyj6yTetff",
@@ -577,7 +577,7 @@
           "user": {
             "id": "user_ICLAwIXM9zFfz",
             "name": "sri",
-            "email": "sunchusrikar@gmail.com"
+            "email": "redacted@example.com"
           },
           "product": {
             "id": "prod_iQ2Zub6GFQS5Q",
@@ -620,7 +620,7 @@
         "payment_id": "pay_Ggv9MYVQ9AHppk",
         "user_id": "user_ICLAwIXM9zFfz",
         "user_name": "sri",
-        "user_email": "sunchusrikar@gmail.com",
+        "user_email": "redacted@example.com",
         "product_id": "prod_iQ2Zub6GFQS5Q",
         "product_name": "Hypermotion",
         "plan_id": "plan_NrjXyj6yTetff",
@@ -641,7 +641,7 @@
           "user": {
             "id": "user_ICLAwIXM9zFfz",
             "name": "sri",
-            "email": "sunchusrikar@gmail.com"
+            "email": "redacted@example.com"
           },
           "product": {
             "id": "prod_iQ2Zub6GFQS5Q",
