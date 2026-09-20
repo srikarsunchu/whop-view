@@ -34,7 +34,10 @@ export const copy = {
   error: {
     titles: {
       COMMAND_NOT_FOUND: "Not a command",
+      HTTP_400: "Whop refused the request",
       HTTP_404: "Not found",
+      HTTP_422: "Whop refused the request",
+      UNAVAILABLE: "Not available on this business yet",
       HTTP_401: "Not signed in",
       HTTP_403: "Missing permission",
       HTTP_429: "Rate limited",

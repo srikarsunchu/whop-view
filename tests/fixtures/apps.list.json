@@ -50,6 +50,6 @@
   },
   "meta": {
     "command": "apps list",
-    "duration": "246ms"
+    "duration": "357ms"
   }
 }

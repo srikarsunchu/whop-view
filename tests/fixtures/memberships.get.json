@@ -23,6 +23,6 @@
   },
   "meta": {
     "command": "memberships get",
-    "duration": "290ms"
+    "duration": "271ms"
   }
 }

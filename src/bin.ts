@@ -65,7 +65,7 @@ function render(parsed: Parsed, group: string, argv: string[], theme: ReturnType
   const p = parsed.payload;
   switch (p.kind) {
     case "page":
-      return print(listView({ group, argv, rows: p.rows, page: p.page, hints }, theme));
+      return print(listView({ group, argv, rows: p.rows, page: p.page, hints, canCreate: p.rows.length ? undefined : canCreate(group) }, theme));
     case "record":
     case "status":
     case "other":
@@ -78,6 +78,8 @@ function render(parsed: Parsed, group: string, argv: string[], theme: ReturnType
     }
   }
 }
+
+const canCreate = (group: string) => /^\s{2,}create\s{2,}/m.test(helpText([group]));
 
 const reportToRecord = (rows: Rec[], total?: number): Rec => {
   const rec: Rec = {};

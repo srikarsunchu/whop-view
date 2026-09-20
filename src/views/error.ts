@@ -13,8 +13,11 @@ const PATTERNS: { match: RegExp; code: string }[] = [
   { match: /ENOENT|Install it/i, code: "ENOENT" },
 ];
 
+const UNAVAILABLE = /don't have access|not available|not enabled|internal access|yet\.?$/i;
+
 export function errorView(error: WhopError, theme: Theme): string[] {
-  const code = copy.error.titles[error.code] ? error.code : (PATTERNS.find((p) => p.match.test(error.message))?.code ?? error.code);
+  const gated = UNAVAILABLE.test(error.message.split("\n")[0]);
+  const code = gated ? "UNAVAILABLE" : copy.error.titles[error.code] ? error.code : (PATTERNS.find((p) => p.match.test(error.message))?.code ?? error.code);
   const title = copy.error.titles[code] ?? code;
   const lines: string[] = [];
   const first = error.message.split("\n")[0].trim();
@@ -36,7 +39,7 @@ export function errorView(error: WhopError, theme: Theme): string[] {
     for (const c of cmds) lines.push("  " + paint(theme, "mono", padEnd(c.cmd, w)) + (c.desc ? "  " + paint(theme, "muted", c.desc) : ""));
   }
   const tag = error.durationMs != null ? `${error.durationMs}ms` : undefined;
-  return callout("bad", title, lines, theme, tag);
+  return callout(gated ? "muted" : "bad", title, lines, theme, tag);
 }
 
 /** The CLI suggests its own agent form. People get the human form. */

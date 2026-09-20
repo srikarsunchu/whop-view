@@ -1,0 +1,12 @@
+{
+  "primary": "user",
+  "status": "status",
+  "date": "created_at",
+  "columns": [
+    "user",
+    "role",
+    "status",
+    "created_at",
+    "id"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "primary": "user",
+  "date": "last_seen_at",
+  "columns": [
+    "user",
+    "purchase_count",
+    "event_count",
+    "first_seen_at",
+    "last_seen_at",
+    "id"
+  ],
+  "hidden": [
+    "last_ip",
+    "phone",
+    "timezone",
+    "member"
+  ],
+  "labels": {
+    "purchase_count": "purchases",
+    "event_count": "events",
+    "first_seen_at": "first seen",
+    "last_seen_at": "last seen"
+  }
+}

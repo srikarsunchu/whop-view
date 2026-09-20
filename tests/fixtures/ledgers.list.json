@@ -664,6 +664,6 @@
   },
   "meta": {
     "command": "ledgers list",
-    "duration": "457ms"
+    "duration": "696ms"
   }
 }

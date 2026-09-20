@@ -1,0 +1,96 @@
+ stats · 90
+
+ key                                   name                          unit      properties
+ account_balance                       Total balance                 currency  2 properties
+ ad_delivery                           Ad delivery                   currency  12 properties
+ ad_spend                              Ad spend                      currency  1 properties
+ affiliate_fees                        Affiliate fees                currency  1 properties
+ annual_recurring_revenue              ARR                           currency  2 properties
+ auth_rate                             Auth rate                     percent   1 properties
+ average_revenue_per_subscription      Average revenue per subscri…  currency  3 properties
+ average_revenue_per_user              Average revenue per user      currency  3 properties
+ balance_activity                      Balance activity              currency  2 properties
+ balance_transaction_count             Balance transaction count     count     —
+ bank_deposit_markup_revenue           Bank deposit markup revenue   currency  —
+ card_spend                            Card spend                    currency  1 properties
+ card_spend_markup_revenue             Card spend markup revenue     currency  —
+ card_transaction_count                Card transaction count        count     —
+ cashback                              Cashback                      currency  1 properties
+ cashback_qualified_spend              Cashback qualified spend      currency  1 properties
+ checkout_gtv                          Checkout GTV                  currency  3 properties
+ churn_rate                            Churn rate                    percent   —
+ churned_revenue                       Churned revenue               currency  1 properties
+ crypto_deposit_markup_revenue         Crypto deposit markup reven…  currency  —
+ dispute_alerts                        Dispute alerts                count     1 properties
+ dispute_count                         Dispute count                 count     1 properties
+ dispute_fees                          Dispute fees                  currency  1 properties
+ dispute_rate                          Dispute rate                  percent   2 properties
+ disputes                              Disputes                      count     1 properties
+ events                                Events                        currency  13 properties
+ fees                                  Fees                          currency  2 properties
+ gross_earnings                        Gross earnings                currency  1 properties
+ gross_revenue                         Gross revenue                 currency  3 properties
+ gross_transaction_value               GMV                           currency  2 properties
+ market_prices                         Market prices                 currency  1 properties
+ marketplace_fees                      Marketplace fees              currency  1 properties
+ marketplace_revenue                   Marketplace revenue           currency  3 properties
+ markup_earning_estimate               Estimated markup earnings     currency  1 properties
+ markup_fee_count                      Markup fee count              count     1 properties
+ monthly_recurring_revenue             MRR                           currency  2 properties
+ net_revenue                           Net revenue                   currency  1 properties
+ net_volume                            Net volume                    currency  —
+ new_users                             New users                     count     3 properties
+ page_visits                           Page visits                   count     —
+ paid_active_members                   Paid active members           count     —
+ paid_ad_campaign_count                Paid ad campaign count        count     —
+ partner_earnings                      Partner referral earnings     currency  9 properties
+ partner_link_clicks                   Partner link clicks           count     2 properties
+ partner_payouts                       Partner referral payouts      currency  9 properties
+ partner_referred_businesses           Partner referred businesses   count     1 properties
+ partner_volume                        Partner referral volume       currency  9 properties
+ payment_markup_revenue                Payment markup revenue        currency  —
+ payment_processing_fees               Payment processing fees       currency  1 properties
+ payment_rule_matched_volume           Payment rule matched volume   currency  2 properties
+ payment_rule_matches                  Payment rule matches          count     2 properties
+ people                                People                        count     13 properties
+ platform_gtv                          Platform GTV                  currency  9 properties
+ platform_markup_amount                Collected platform markup     currency  1 properties
+ platform_revenue                      Platform revenue              currency  9 properties
+ product_affiliate_fees                Product affiliate fees        currency  2 properties
+ product_fees                          Product fees                  currency  2 properties
+ product_new_users                     New product users             count     2 properties
+ product_payment_processing_fees       Product payment processing…   currency  2 properties
+ product_sales_tax_withheld            Product sales tax withheld    currency  2 properties
+ refund_count                          Refund count                  count     —
+ refund_rate                           Refund rate                   percent   2 properties
+ sales_tax_withheld                    Sales tax withheld            currency  1 properties
+ snapshot_approved_authorizations      Approved authorizations       count     —
+ snapshot_auth_rate                    Auth rate                     percent   —
+ snapshot_cohorted_dispute_rate_14d_…  Cohorted dispute rate (14-d…  percent   2 properties
+ snapshot_cohorted_dispute_rate_28d_…  Cohorted dispute rate (28-d…  percent   2 properties
+ snapshot_cohorted_dispute_rate_7d_a…  Cohorted dispute rate (7-da…  percent   2 properties
+ snapshot_decided_authorizations       Decided authorizations        count     —
+ snapshot_dispute_rate                 Dispute rate                  percent   2 properties
+ snapshot_disputes                     Disputes                      count     3 properties
+ snapshot_receipts                     Paid receipts                 count     2 properties
+ snapshot_refund_rate                  Refund rate                   percent   —
+ snapshot_refunds                      Refunds                       count     —
+ snapshot_resolution_center_case_rate  Resolution center case rate   percent   —
+ snapshot_resolution_center_cases      Resolution center cases       count     —
+ successful_payments                   Successful payments           count     3 properties
+ swap_markup_revenue                   Swap markup revenue           currency  —
+ total_markup_revenue                  Total markup revenue          currency  —
+ total_net_earnings                    Total net earnings            currency  1 properties
+ total_refunded                        Total refunded                currency  3 properties
+ traffic_events                        Traffic events                count     8 properties
+ traffic_people                        Traffic people                count     5 properties
+ transfer_count                        Transfer count                count     1 properties
+ transfer_markup_revenue               Transfer markup revenue       currency  —
+ trial_conversion_rate                 Trial conversion rate         percent   1 properties
+ users_breakdown                       Users breakdown               count     1 properties
+ users_growth                          Active members                count     —
+ whop_processing_fees                  Whop processing fees          currency  1 properties
+ withdrawal_markup_revenue             Withdrawal markup revenue     currency  —
+
+ 90 rows · no more pages
+ json  whop stats list --account_id <biz_id> --format json --filter-output key,name,unit,properties

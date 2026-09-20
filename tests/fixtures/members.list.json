@@ -51,6 +51,6 @@
   },
   "meta": {
     "command": "members list",
-    "duration": "287ms"
+    "duration": "266ms"
   }
 }

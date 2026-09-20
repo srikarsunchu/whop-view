@@ -1,8 +1,8 @@
- [1mwhop 0.16.3[22m[2m · API 2026-08-25-2[22m                           [2mtype wv <group> --help[22m
+ [1mwhop 0.18.2[22m[2m · API 2026-09-15[22m                             [2mtype wv <group> --help[22m
 
  [1mGET STARTED[22m
    quickstart               [2mStart here — choose or create the business used by…[22m
-   apps                     [2mBuild and deploy fully-hosted web apps (*.whop.app)[22m
+   apps                     [2mBuild and deploy fully-hosted web apps (*.whop.site)[22m
    upgrade                  [2mUpdate the CLI to the latest version[22m
 
  [1mCOMMERCE[22m
@@ -19,6 +19,7 @@
    users                    [2mA person on Whop: profile and connected identities.[22m
    team-members             [2mAn account's team members and the roles that scope…[22m
    members                  [2mOne buyer's relationship with an account, across al…[22m
+   economic-intelligence    [2mWhat an account should do next to grow, generated f…[22m
    webhooks                 [2mEvent notifications pushed to your server as things…[22m
    stats                    [2mAggregated financial, audience, and traffic reporti…[22m
    verifications            [2mLegal identity required before payouts and card iss…[22m
@@ -27,21 +28,27 @@
  [1mNOTIFICATIONS[22m
    notifications            [2mThe user's notification feed: unread badges, mark-r…[22m
 
- [1mMONEY[22m
+ [1mPAYMENTS[22m
    payments                 [2mA charge against a buyer, and the step they still o…[22m
+   refunds                  [2mMoney returned to a buyer from a payment.[22m
+   confirmation-tokens      [2mA short-lived reference to payment details collecte…[22m
    setup-intents            [2mSaving a buyer's payment method without charging it.[22m
+   payment-rules            [2mRules an account writes to decide its own payments.[22m
+   disputes                 [2mChargebacks filed against an account, with evidence…[22m
+   dispute-alerts           [2mIssuer warnings that arrive before a chargeback doe…[22m
+   resolution-center-cases  [2mFile or respond to a case against a payment, as the…[22m
+
+ [1mMONEY[22m
    ledgers                  [2mThe activity feed behind an account or user's balan…[22m
    payouts                  [2mSend money from a balance to a bank or wallet.[22m
    cards                    [2mIssue cards that spend from a balance.[22m
+   cashback-rules           [2mConfigure platform-sponsored card cashback.[22m
    transfers                [2mMove funds between Whop accounts and users.[22m
-   disputes                 [2mChargebacks filed against an account, with evidence…[22m
-   dispute-alerts           [2mIssuer warnings that arrive before a chargeback doe…[22m
    deposits                 [2mAdd funds to a balance.[22m
    swaps                    [2mConvert a balance between currencies.[22m
-   resolution-center-cases  [2mFile or respond to a case against a payment, as the…[22m
 
  [1mPARTNERS[22m
-   partners                 [2mThe users and businesses you referred to Whop, and…[22m
+   partners                 [2mYour partner profile, referral links, payout rates,…[22m
 
  [1mWORKFORCE[22m
    bounties                 [2mPaid tasks with reviewed submissions and escrowed r…[22m
@@ -50,7 +57,6 @@
  [1mTRACKING[22m
    people                   [2mVisitors and customers of an account, with identity…[22m
    events                   [2mConversion and engagement events tracked for attrib…[22m
-   recommended-actions      [2mSuggested next-step action chains for an account.[22m
 
  [1mADS[22m
    ads                      [2mThe creative: copy, assets, and destination URL.[22m
@@ -66,9 +72,14 @@
    social-accounts          [2mConnected Facebook and Instagram accounts that run…[22m
 
  [1mDEVELOPER[22m
+   domains                  [2mCustom domains assigned to hosted apps.[22m
    app-builds               [2mVersioned build artifacts deployed to an app's plat…[22m
    api-keys                 [2mProgrammatic credentials for an account or app.[22m
+   api-logs                 [2mRequests made to Whop's API with your account's API…[22m
    permissions              [2mWhat your credential is allowed to do on a resource.[22m
+   experiments              [2mFeature flags and A/B experiments for gradual rollo…[22m
+   report-feedback          [2mReport a Whop problem for internal review[22m
+   ask-question             [2mRecord an unanswered Whop question for internal rev…[22m
    files                    [2mCreate file uploads and retrieve uploaded file deta…[22m
 
  [1mAUTH[22m

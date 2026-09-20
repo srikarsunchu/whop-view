@@ -1,0 +1,17 @@
+ auth status
+
+ Status
+   loggedIn   yes
+   hasSecret  yes
+
+ Relations
+   account  Frame  biz_VraUMckluH8dzV
+
+ Details
+   profile   sunchusrikar
+   method    oauth
+   identity  user_ICLAwIXM9zFfz
+             id     user_ICLAwIXM9zFfz
+             email  redacted@example.com
+
+ json  whop auth status --format json

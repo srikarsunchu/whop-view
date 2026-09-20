@@ -34,7 +34,8 @@ export function detailView(input: DetailInput, theme: Theme): string[] {
   }
 
   const out: string[] = [];
-  const head = title ? `${paint(theme, "accent", title)}  ${paint(theme, "muted", id)}` : `${paint(theme, "accent", noun(group))}  ${paint(theme, "muted", id)}`;
+  const fallback = id ? noun(group) : argv.slice(0, 2).join(" ");
+  const head = `${paint(theme, "accent", title || fallback)}${id ? "  " + paint(theme, "muted", id) : ""}`;
   out.push(" " + head);
   out.push("");
   const kvSections: KvSection[] = (Object.keys(sections) as (keyof typeof sections)[]).map((k) => ({ title: copy.detail.sections[k], rows: sections[k] }));

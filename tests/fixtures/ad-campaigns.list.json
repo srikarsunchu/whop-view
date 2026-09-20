@@ -12,6 +12,6 @@
   },
   "meta": {
     "command": "ad-campaigns list",
-    "duration": "227ms"
+    "duration": "269ms"
   }
 }

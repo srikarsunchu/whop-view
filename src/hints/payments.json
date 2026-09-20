@@ -1,8 +1,33 @@
 {
   "primary": "id",
   "status": "status",
-  "money": ["amount", "payment_amount", "refunded_amount"],
+  "money": [
+    "total",
+    "subtotal",
+    "tax_amount",
+    "refunded_amount"
+  ],
   "date": "created_at",
   "relation": "user",
-  "labels": { "payment_method_type": "method" }
+  "columns": [
+    "id",
+    "status",
+    "total",
+    "user",
+    "billing_reason",
+    "created_at"
+  ],
+  "hidden": [
+    "substatus",
+    "refundable",
+    "retryable",
+    "voidable",
+    "tax_behavior",
+    "tax_refunded_amount",
+    "line_items"
+  ],
+  "labels": {
+    "billing_reason": "reason",
+    "total": "amount"
+  }
 }

@@ -1,7 +1,7 @@
  Frame  biz_VraUMckluH8dzV                                  sunchusrikar · oauth
 
  Balance                 Net revenue · 7d
-   available  $18.56       $18.56            ▁█▁▁█▁▁
+   available  $18.56       $18.56            █▁▁█▁▁▁
                            Sep 12 to Sep 18
 
  auth status · ledgers report --report_type balance_summary · stats get net_rev…

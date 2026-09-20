@@ -1,0 +1,97 @@
+ [1mstats[22m[2m · 90[22m
+
+ [2mkey                                 [22m  [2mname                        [22m  [2munit[22m
+ account_balance                       Total balance                 currency
+ [2mad_delivery                         [22m  Ad delivery                   currency
+ ad_spend                              Ad spend                      currency
+ affiliate_fees                        Affiliate fees                currency
+ annual_recurring_revenue              ARR                           currency
+ auth_rate                             Auth rate                     percent
+ average_revenue_per_subscription      Average revenue per subscri…  currency
+ average_revenue_per_user              Average revenue per user      currency
+ balance_activity                      Balance activity              currency
+ balance_transaction_count             Balance transaction count     count
+ bank_deposit_markup_revenue           Bank deposit markup revenue   currency
+ card_spend                            Card spend                    currency
+ card_spend_markup_revenue             Card spend markup revenue     currency
+ card_transaction_count                Card transaction count        count
+ cashback                              Cashback                      currency
+ cashback_qualified_spend              Cashback qualified spend      currency
+ checkout_gtv                          Checkout GTV                  currency
+ churn_rate                            Churn rate                    percent
+ churned_revenue                       Churned revenue               currency
+ crypto_deposit_markup_revenue         Crypto deposit markup reven…  currency
+ dispute_alerts                        Dispute alerts                count
+ dispute_count                         Dispute count                 count
+ dispute_fees                          Dispute fees                  currency
+ dispute_rate                          Dispute rate                  percent
+ disputes                              Disputes                      count
+ events                                Events                        currency
+ fees                                  Fees                          currency
+ [2mgross_earnings                      [22m  Gross earnings                currency
+ gross_revenue                         Gross revenue                 currency
+ gross_transaction_value               GMV                           currency
+ market_prices                         Market prices                 currency
+ marketplace_fees                      Marketplace fees              currency
+ marketplace_revenue                   Marketplace revenue           currency
+ markup_earning_estimate               Estimated markup earnings     currency
+ markup_fee_count                      Markup fee count              count
+ monthly_recurring_revenue             MRR                           currency
+ net_revenue                           Net revenue                   currency
+ net_volume                            Net volume                    currency
+ new_users                             New users                     count
+ page_visits                           Page visits                   count
+ paid_active_members                   Paid active members           count
+ paid_ad_campaign_count                Paid ad campaign count        count
+ partner_earnings                      Partner referral earnings     currency
+ partner_link_clicks                   Partner link clicks           count
+ partner_payouts                       Partner referral payouts      currency
+ partner_referred_businesses           Partner referred businesses   count
+ partner_volume                        Partner referral volume       currency
+ payment_markup_revenue                Payment markup revenue        currency
+ payment_processing_fees               Payment processing fees       currency
+ payment_rule_matched_volume           Payment rule matched volume   currency
+ payment_rule_matches                  Payment rule matches          count
+ people                                People                        count
+ platform_gtv                          Platform GTV                  currency
+ platform_markup_amount                Collected platform markup     currency
+ platform_revenue                      Platform revenue              currency
+ product_affiliate_fees                Product affiliate fees        currency
+ product_fees                          Product fees                  currency
+ product_new_users                     New product users             count
+ product_payment_processing_fees       Product payment processing…   currency
+ product_sales_tax_withheld            Product sales tax withheld    currency
+ refund_count                          Refund count                  count
+ refund_rate                           Refund rate                   percent
+ sales_tax_withheld                    Sales tax withheld            currency
+ snapshot_approved_authorizations      Approved authorizations       count
+ snapshot_auth_rate                    Auth rate                     percent
+ snapshot_cohorted_dispute_rate_14d_…  Cohorted dispute rate (14-d…  percent
+ snapshot_cohorted_dispute_rate_28d_…  Cohorted dispute rate (28-d…  percent
+ snapshot_cohorted_dispute_rate_7d_a…  Cohorted dispute rate (7-da…  percent
+ snapshot_decided_authorizations       Decided authorizations        count
+ snapshot_dispute_rate                 Dispute rate                  percent
+ snapshot_disputes                     Disputes                      count
+ snapshot_receipts                     Paid receipts                 count
+ snapshot_refund_rate                  Refund rate                   percent
+ snapshot_refunds                      Refunds                       count
+ snapshot_resolution_center_case_rate  Resolution center case rate   percent
+ snapshot_resolution_center_cases      Resolution center cases       count
+ successful_payments                   Successful payments           count
+ swap_markup_revenue                   Swap markup revenue           currency
+ total_markup_revenue                  Total markup revenue          currency
+ total_net_earnings                    Total net earnings            currency
+ [2mtotal_refunded                      [22m  Total refunded                currency
+ traffic_events                        Traffic events                count
+ traffic_people                        Traffic people                count
+ transfer_count                        Transfer count                count
+ transfer_markup_revenue               Transfer markup revenue       currency
+ trial_conversion_rate                 Trial conversion rate         percent
+ [2musers_breakdown                     [22m  Users breakdown               count
+ users_growth                          Active members                count
+ whop_processing_fees                  Whop processing fees          currency
+ withdrawal_markup_revenue             Withdrawal markup revenue     currency
+
+ [2m90 rows · no more pages[22m
+ [2mjson[22m  [2mwhop stats list --account_id <biz_id> --format json --filter-output[22m
+       [2mkey,name,unit[22m

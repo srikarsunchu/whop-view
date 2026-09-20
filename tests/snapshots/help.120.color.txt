@@ -1,7 +1,7 @@
- [1mwhop 0.16.3[22m[2m · API 2026-08-25-2[22m                                                                   [2mtype wv <group> --help[22m
+ [1mwhop 0.18.2[22m[2m · API 2026-09-15[22m                                                                     [2mtype wv <group> --help[22m
 
  [1mGET STARTED[22m                                                [1mPARTNERS[22m
-   quickstart               [2mStart here — choose or create…[22m    partners                 [2mThe users and businesses you r…[22m
+   quickstart               [2mStart here — choose or create…[22m    partners                 [2mYour partner profile, referral…[22m
    apps                     [2mBuild and deploy fully-hosted…[22m  
    upgrade                  [2mUpdate the CLI to the latest v…[22m [1mWORKFORCE[22m
                                                               bounties                 [2mPaid tasks with reviewed submi…[22m
@@ -10,32 +10,39 @@
    plans                    [2mPricing for a product: one-tim…[22m [1mTRACKING[22m
    promo-codes              [2mDiscounts that creators config…[22m   people                   [2mVisitors and customers of an a…[22m
    memberships              [2mA customer's purchase of a pla…[22m   events                   [2mConversion and engagement even…[22m
-   checkout-configurations  [2mTurn a plan into a shareable,…[22m    recommended-actions      [2mSuggested next-step action cha…[22m
-   payment-method-domains   [2mDomains verified to show walle…[22m 
-   shipments                [2mTrack the delivery of an order…[22m [1mADS[22m
-                                                              ads                      [2mThe creative: copy, assets, an…[22m
- [1mCORE RESOURCES[22m                                               ad-campaigns             [2mPlatform, objective, and budge…[22m
-   accounts                 [2mA business on Whop: profile, w…[22m   ad-groups                [2mAudience, placements, and sche…[22m
-   users                    [2mA person on Whop: profile and…[22m    audiences                [2mReusable targeting lists for a…[22m
-   team-members             [2mAn account's team members and…[22m  
-   members                  [2mOne buyer's relationship with…[22m  [1mMEDIA[22m
-   webhooks                 [2mEvent notifications pushed to…[22m    files                    [2mUpload files and attach them w…[22m
-   stats                    [2mAggregated financial, audience…[22m   media                    [2mAI-generated assets, billed fr…[22m
-   verifications            [2mLegal identity required before…[22m 
-   exports                  [2mAsynchronous CSV dumps of an a…[22m [1mIDENTITY[22m
-                                                              social-accounts          [2mConnected Facebook and Instagr…[22m
- [1mNOTIFICATIONS[22m                                              
-   notifications            [2mThe user's notification feed:…[22m  [1mDEVELOPER[22m
-                                                              app-builds               [2mVersioned build artifacts depl…[22m
- [1mMONEY[22m                                                        api-keys                 [2mProgrammatic credentials for a…[22m
+   checkout-configurations  [2mTurn a plan into a shareable,…[22m  
+   payment-method-domains   [2mDomains verified to show walle…[22m [1mADS[22m
+   shipments                [2mTrack the delivery of an order…[22m   ads                      [2mThe creative: copy, assets, an…[22m
+                                                              ad-campaigns             [2mPlatform, objective, and budge…[22m
+ [1mCORE RESOURCES[22m                                               ad-groups                [2mAudience, placements, and sche…[22m
+   accounts                 [2mA business on Whop: profile, w…[22m   audiences                [2mReusable targeting lists for a…[22m
+   users                    [2mA person on Whop: profile and…[22m  
+   team-members             [2mAn account's team members and…[22m  [1mMEDIA[22m
+   members                  [2mOne buyer's relationship with…[22m    files                    [2mUpload files and attach them w…[22m
+   economic-intelligence    [2mWhat an account should do next…[22m   media                    [2mAI-generated assets, billed fr…[22m
+   webhooks                 [2mEvent notifications pushed to…[22m  
+   stats                    [2mAggregated financial, audience…[22m [1mIDENTITY[22m
+   verifications            [2mLegal identity required before…[22m   social-accounts          [2mConnected Facebook and Instagr…[22m
+   exports                  [2mAsynchronous CSV dumps of an a…[22m 
+                                                            [1mDEVELOPER[22m
+ [1mNOTIFICATIONS[22m                                                domains                  [2mCustom domains assigned to hos…[22m
+   notifications            [2mThe user's notification feed:…[22m    app-builds               [2mVersioned build artifacts depl…[22m
+                                                              api-keys                 [2mProgrammatic credentials for a…[22m
+ [1mPAYMENTS[22m                                                     api-logs                 [2mRequests made to Whop's API wi…[22m
    payments                 [2mA charge against a buyer, and…[22m    permissions              [2mWhat your credential is allowe…[22m
-   setup-intents            [2mSaving a buyer's payment metho…[22m   files                    [2mCreate file uploads and retrie…[22m
-   ledgers                  [2mThe activity feed behind an ac…[22m 
-   payouts                  [2mSend money from a balance to a…[22m [1mAUTH[22m
-   cards                    [2mIssue cards that spend from a…[22m    auth                     [2mManage authentication[22m
-   transfers                [2mMove funds between Whop accoun…[22m   login                    [2mSign in to Whop[22m
-   disputes                 [2mChargebacks filed against an a…[22m   logout                   [2mSign out[22m
-   dispute-alerts           [2mIssuer warnings that arrive be…[22m   completions              [2mGenerate shell completion scri…[22m
-   deposits                 [2mAdd funds to a balance.[22m           skills                   [2mSync skill files to agents (ad…[22m
+   refunds                  [2mMoney returned to a buyer from…[22m   experiments              [2mFeature flags and A/B experime…[22m
+   confirmation-tokens      [2mA short-lived reference to pay…[22m   report-feedback          [2mReport a Whop problem for inte…[22m
+   setup-intents            [2mSaving a buyer's payment metho…[22m   ask-question             [2mRecord an unanswered Whop ques…[22m
+   payment-rules            [2mRules an account writes to dec…[22m   files                    [2mCreate file uploads and retrie…[22m
+   disputes                 [2mChargebacks filed against an a…[22m 
+   dispute-alerts           [2mIssuer warnings that arrive be…[22m [1mAUTH[22m
+   resolution-center-cases  [2mFile or respond to a case agai…[22m   auth                     [2mManage authentication[22m
+                                                              login                    [2mSign in to Whop[22m
+ [1mMONEY[22m                                                        logout                   [2mSign out[22m
+   ledgers                  [2mThe activity feed behind an ac…[22m   completions              [2mGenerate shell completion scri…[22m
+   payouts                  [2mSend money from a balance to a…[22m   skills                   [2mSync skill files to agents (ad…[22m
+   cards                    [2mIssue cards that spend from a…[22m  
+   cashback-rules           [2mConfigure platform-sponsored c…[22m 
+   transfers                [2mMove funds between Whop accoun…[22m 
+   deposits                 [2mAdd funds to a balance.[22m         
    swaps                    [2mConvert a balance between curr…[22m 
-   resolution-center-cases  [2mFile or respond to a case agai…[22m 

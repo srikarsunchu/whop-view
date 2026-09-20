@@ -12,6 +12,6 @@
   },
   "meta": {
     "command": "disputes list",
-    "duration": "220ms"
+    "duration": "239ms"
   }
 }

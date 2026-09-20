@@ -15,6 +15,6 @@
   },
   "meta": {
     "command": "ledgers report",
-    "duration": "489ms"
+    "duration": "455ms"
   }
 }

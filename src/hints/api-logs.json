@@ -1,0 +1,23 @@
+{
+  "primary": "operation_name",
+  "status": "status",
+  "date": "created_at",
+  "columns": [
+    "operation_name",
+    "status_code",
+    "http_method",
+    "duration_ms",
+    "created_at",
+    "id"
+  ],
+  "hidden": [
+    "ip_address",
+    "user_agent"
+  ],
+  "labels": {
+    "operation_name": "operation",
+    "status_code": "code",
+    "http_method": "method",
+    "duration_ms": "ms"
+  }
+}

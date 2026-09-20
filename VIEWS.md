@@ -118,7 +118,7 @@ Column drop order under width pressure: 7, 5, 4, 3, 2. The primary label and id 
 
 ## Hints schema
 
-`src/hints/<resource>.json`. Every key optional. Ten shipped; every other resource renders from inference alone.
+`src/hints/<resource>.json`. Every key optional. Eighteen shipped; every other resource renders from inference alone.
 
 ```json
 {
@@ -265,6 +265,12 @@ Groups and order are parsed from `whop --help` at runtime, never hardcoded, so t
 Three calls run in parallel: `auth status`, `ledgers report --report_type balance_summary`, and `stats get net_revenue --from <today-7> --to <today-1> --interval day`. `stats get` requires `--from` and `--to`, so home computes them in UTC. A failed tile renders its error inline and the others still show. Sparkline is eight block characters scaled to the max point.
 
 ## Deviations from the brief, found against the real CLI
+
+- In a TTY the CLI colors its TOON and hides empty fields with a footer count. The brief's "no color" claim came from piped probes. The gap is layout, not color.
+- The CLI auto-upgraded from 0.16.3 to 0.18.2 during the build. `payments list` exists on 0.18.2. Fixtures were re-recorded on 0.18.2.
+- Feature-gated errors (`HTTP_403` with "You don't have access to X yet") are not permission problems. They render muted with no fix command, matching whop-desktop's `unavailable` branch.
+- The empty-state hint `whop <group> create --help` only appears when the group's help lists a `create` verb. Refunds and dispute alerts have none.
+- Phone numbers, IP addresses, and user agents are hidden everywhere. Emails render in detail only. People and api-logs carry all three.
 
 - `payments list` does not exist. Payments hints target `payments status <id>`. The payments feed is `ledgers list`.
 - `stats get` requires `--from` and `--to`. Home supplies a 7-day UTC window.

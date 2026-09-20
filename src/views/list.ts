@@ -15,6 +15,8 @@ export interface ListInput {
   page: PageInfo;
   hints: Hints;
   accountTitle?: string;
+  /** Whether `whop <group> create` exists. Decides the empty-state hint. */
+  canCreate?: boolean;
 }
 
 export function listView(input: ListInput, theme: Theme): string[] {
@@ -28,7 +30,7 @@ export function listView(input: ListInput, theme: Theme): string[] {
 
   if (rows.length === 0) {
     out.push(" " + copy.list.empty(group));
-    out.push(...footer([["try", copy.list.emptyHint(group)]], theme));
+    if (input.canCreate) out.push(...footer([["try", copy.list.emptyHint(group)]], theme));
     return out;
   }
 

@@ -23,6 +23,7 @@ export interface Cell {
 export const HIDDEN = new Set([
   "object", "metadata", "recommended_action", "previous_hosted_urls", "businesses_created_logo_urls",
   "checkout_styling", "payment_method_configuration", "custom_fields", "gallery_images",
+  "last_ip", "ip_address", "user_agent", "phone", "phone_number",
 ]);
 
 const ID_RE = /^[a-z]{2,5}_[A-Za-z0-9]{8,}$/;
@@ -121,8 +122,8 @@ export function infer(key: string, value: unknown, row: Rec, hints: Hints): Cell
     const label = typeof value.id === "string" ? value.id : `${Object.keys(value).length} fields`;
     return cell("objects", label, label, "muted", "left", extra);
   }
-  // 14 long text
-  if (typeof value === "string" && value.length > 60) return cell("long", "", value);
+  // 14 long text. Emails ride along: detail only, never a list column.
+  if (typeof value === "string" && (value.length > 60 || /email/.test(key))) return cell("long", "", value);
   // 16 scalar
   if (typeof value === "number") return cell("scalar", String(value), String(value), "text", "right");
   const s = String(value);

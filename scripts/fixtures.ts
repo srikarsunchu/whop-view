@@ -18,6 +18,10 @@ const CASES: [string, string[]][] = [
   ["memberships.get", ["memberships", "get", "mem_kfT4Jl8Pb8DlWE"]],
   ["members.list", ["members", "list"]],
   ["payouts.list", ["payouts", "list"]],
+  ["payments.list", ["payments", "list"]],
+  ["stats.list", ["stats", "list"]],
+  ["refunds.list", ["refunds", "list"]],
+  ["error.gated", ["economic-intelligence", "list"]],
   ["ledgers.list", ["ledgers", "list"]],
   ["ledgers.report", ["ledgers", "report", "--report_type", "balance_summary"]],
   ["disputes.list", ["disputes", "list"]],
@@ -32,7 +36,7 @@ const CASES: [string, string[]][] = [
 ];
 
 // Fixtures are committed. Email addresses are the one field no view renders and the one that must not leak.
-const redact = (text: string) => text.replace(/("(?:user_)?email":\s*")[^"@]+@[^"]+(")/g, "$1redacted@example.com$2");
+const redact = (text: string) => text.replace(/("[a-z_]*email[a-z_]*":\s*")[^"@]+@[^"]+(")/g, "$1redacted@example.com$2");
 
 const dir = join(import.meta.dirname, "..", "tests", "fixtures");
 mkdirSync(dir, { recursive: true });

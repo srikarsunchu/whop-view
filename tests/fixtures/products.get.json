@@ -61,6 +61,6 @@
   },
   "meta": {
     "command": "products get",
-    "duration": "277ms"
+    "duration": "248ms"
   }
 }

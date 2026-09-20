@@ -1,0 +1,17 @@
+{
+  "primary": "name",
+  "date": "created_at",
+  "columns": [
+    "name",
+    "username",
+    "created_at",
+    "id"
+  ],
+  "hidden": [
+    "bio",
+    "banner",
+    "profile_picture",
+    "balance_history",
+    "social_accounts"
+  ]
+}

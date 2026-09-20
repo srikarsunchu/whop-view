@@ -101,6 +101,6 @@
   },
   "meta": {
     "command": "products list",
-    "duration": "424ms"
+    "duration": "252ms"
   }
 }

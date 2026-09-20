@@ -1,11 +1,11 @@
-whop@0.16.3 — Build and manage Whop apps from your terminal.
-API version: 2026-08-25-2
+whop@0.18.2 — Build and manage Whop apps from your terminal.
+API version: 2026-09-15
 
 Usage: whop <command>
 
 GET STARTED
   quickstart               Start here — choose or create the business used by the CLI
-  apps                     Build and deploy fully-hosted web apps (*.whop.app)
+  apps                     Build and deploy fully-hosted web apps (*.whop.site)
   upgrade                  Update the CLI to the latest version
 
 COMMERCE
@@ -22,6 +22,7 @@ CORE RESOURCES
   users                    A person on Whop: profile and connected identities.
   team-members             An account's team members and the roles that scope their access.
   members                  One buyer's relationship with an account, across all their purchases.
+  economic-intelligence    What an account should do next to grow, generated from its own data.
   webhooks                 Event notifications pushed to your server as things happen.
   stats                    Aggregated financial, audience, and traffic reporting.
   verifications            Legal identity required before payouts and card issuing.
@@ -30,21 +31,27 @@ CORE RESOURCES
 NOTIFICATIONS
   notifications            The user's notification feed: unread badges, mark-read, app sends, and the topic catalog.
 
-MONEY
+PAYMENTS
   payments                 A charge against a buyer, and the step they still owe.
+  refunds                  Money returned to a buyer from a payment.
+  confirmation-tokens      A short-lived reference to payment details collected from a buyer.
   setup-intents            Saving a buyer's payment method without charging it.
+  payment-rules            Rules an account writes to decide its own payments.
+  disputes                 Chargebacks filed against an account, with evidence and outcomes.
+  dispute-alerts           Issuer warnings that arrive before a chargeback does.
+  resolution-center-cases  File or respond to a case against a payment, as the buyer or the merchant.
+
+MONEY
   ledgers                  The activity feed behind an account or user's balance.
   payouts                  Send money from a balance to a bank or wallet.
   cards                    Issue cards that spend from a balance.
+  cashback-rules           Configure platform-sponsored card cashback.
   transfers                Move funds between Whop accounts and users.
-  disputes                 Chargebacks filed against an account, with evidence and outcomes.
-  dispute-alerts           Issuer warnings that arrive before a chargeback does.
   deposits                 Add funds to a balance.
   swaps                    Convert a balance between currencies.
-  resolution-center-cases  File or respond to a case against a payment, as the buyer or the merchant.
 
 PARTNERS
-  partners                 The users and businesses you referred to Whop, and what you earn from them.
+  partners                 Your partner profile, referral links, payout rates, and referred businesses.
 
 WORKFORCE
   bounties                 Paid tasks with reviewed submissions and escrowed rewards.
@@ -53,7 +60,6 @@ WORKFORCE
 TRACKING
   people                   Visitors and customers of an account, with identity, purchase, and traffic profiles.
   events                   Conversion and engagement events tracked for attribution.
-  recommended-actions      Suggested next-step action chains for an account.
 
 ADS
   ads                      The creative: copy, assets, and destination URL.
@@ -69,9 +75,14 @@ IDENTITY
   social-accounts          Connected Facebook and Instagram accounts that run ads.
 
 DEVELOPER
+  domains                  Custom domains assigned to hosted apps.
   app-builds               Versioned build artifacts deployed to an app's platforms.
   api-keys                 Programmatic credentials for an account or app.
+  api-logs                 Requests made to Whop's API with your account's API keys.
   permissions              What your credential is allowed to do on a resource.
+  experiments              Feature flags and A/B experiments for gradual rollout and statistical measurement.
+  report-feedback          Report a Whop problem for internal review
+  ask-question             Record an unanswered Whop question for internal review
   files                    Create file uploads and retrieve uploaded file details
 
 AUTH

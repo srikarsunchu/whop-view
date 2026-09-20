@@ -12,6 +12,6 @@
   },
   "meta": {
     "command": "payouts list",
-    "duration": "290ms"
+    "duration": "344ms"
   }
 }

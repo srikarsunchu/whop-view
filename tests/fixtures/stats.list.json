@@ -1,0 +1,940 @@
+{
+  "ok": true,
+  "data": {
+    "data": [
+      {
+        "key": "account_balance",
+        "name": "Total balance",
+        "unit": "currency",
+        "properties": [
+          "currency",
+          "segment"
+        ],
+        "description": "Total wallet balance over time, split into available, pending, reserve, dispute hold, and crypto."
+      },
+      {
+        "key": "ad_delivery",
+        "name": "Ad delivery",
+        "unit": "currency",
+        "properties": [
+          "metric",
+          "source",
+          "group_by",
+          "age",
+          "gender",
+          "age_gender",
+          "placement",
+          "publisher_platform",
+          "country",
+          "region",
+          "device_platform",
+          "impression_device"
+        ],
+        "description": "Ad platform delivery over time (spend, impressions, clicks) on the unified source language: source scopes by a whop:<campaign>:<group>:<ad> path, exact or with a trailing :* prefix (whop alone or no source = the whole account), and group_by=source groups one path segment deeper than the filter prefix. Only whop:* paths report delivery today; other roots return nothing. breakdown_by=metric returns each delivery measure per bucket plus whole-window data.totals. breakdown_by can instead split delivery by a dimension — age, gender, age_gender, placement, publisher_platform, country, region, device_platform, or impression_device — with the metric parameter picking the measure (spend, impressions, or clicks; defaults to spend). On the placement and publisher_platform dimensions the metric parameter also accepts results, roas, and cost_per_result: conversion-side measures attributed from your own tracked events rather than reported by the ad platform, with results counting conversions that match each ad group's conversion event. Dimension entries don't sum exactly to the totals (the ad platform withholds tiny cells) and are grouped by the ad account's calendar day — they can't re-bucket into time_zone. Spend converts to convert_to (defaults to usd). Whole-account attribution numbers live in the events and people metrics."
+      },
+      {
+        "key": "ad_spend",
+        "name": "Ad spend",
+        "unit": "currency",
+        "properties": [
+          "product"
+        ],
+        "description": "Total advertising spend across company ad campaigns. Converts to convert_to (defaults to usd) — pass the account's ads reporting currency to match the entity endpoints."
+      },
+      {
+        "key": "affiliate_fees",
+        "name": "Affiliate fees",
+        "unit": "currency",
+        "properties": [
+          "currency"
+        ],
+        "description": "Fees paid to affiliates on referred sales."
+      },
+      {
+        "key": "annual_recurring_revenue",
+        "name": "ARR",
+        "unit": "currency",
+        "properties": [
+          "currency",
+          "product"
+        ],
+        "description": "Annualized recurring revenue — MRR times twelve."
+      },
+      {
+        "key": "auth_rate",
+        "name": "Auth rate",
+        "unit": "percent",
+        "properties": [
+          "product"
+        ],
+        "description": "Share of decided card authorizations that were approved."
+      },
+      {
+        "key": "average_revenue_per_subscription",
+        "name": "Average revenue per subscription",
+        "unit": "currency",
+        "properties": [
+          "payment_method",
+          "product",
+          "currency"
+        ],
+        "description": "Average revenue earned per active subscription."
+      },
+      {
+        "key": "average_revenue_per_user",
+        "name": "Average revenue per user",
+        "unit": "currency",
+        "properties": [
+          "payment_method",
+          "product",
+          "currency"
+        ],
+        "description": "Average revenue earned per paying user."
+      },
+      {
+        "key": "balance_activity",
+        "name": "Balance activity",
+        "unit": "currency",
+        "properties": [
+          "currency",
+          "category"
+        ],
+        "description": "Net movement into and out of the wallet each period."
+      },
+      {
+        "key": "balance_transaction_count",
+        "name": "Balance transaction count",
+        "unit": "count",
+        "properties": [],
+        "description": "Number of balance purchase and refund ledger lines, excluding ad purchases, posted in the selected period."
+      },
+      {
+        "key": "bank_deposit_markup_revenue",
+        "name": "Bank deposit markup revenue",
+        "unit": "currency",
+        "properties": [],
+        "description": "Markup credited to your wallet, net of reversals, by ledger posting date."
+      },
+      {
+        "key": "card_spend",
+        "name": "Card spend",
+        "unit": "currency",
+        "properties": [
+          "merchant"
+        ],
+        "description": "Total spend on issued cards each period, in USD. Pair with breakdown_by=merchant to split by merchant."
+      },
+      {
+        "key": "card_spend_markup_revenue",
+        "name": "Card spend markup revenue",
+        "unit": "currency",
+        "properties": [],
+        "description": "Markup credited to your wallet, net of reversals, by ledger posting date."
+      },
+      {
+        "key": "card_transaction_count",
+        "name": "Card transaction count",
+        "unit": "count",
+        "properties": [],
+        "description": "Number of card authorization ledger lines posted in the selected period."
+      },
+      {
+        "key": "cashback",
+        "name": "Cashback",
+        "unit": "currency",
+        "properties": [
+          "merchant"
+        ],
+        "description": "Cashback earned on eligible card spend each period. Pair with breakdown_by=merchant to split by merchant bucket."
+      },
+      {
+        "key": "cashback_qualified_spend",
+        "name": "Cashback qualified spend",
+        "unit": "currency",
+        "properties": [
+          "merchant"
+        ],
+        "description": "Card spend that earned cashback each period. Pair with breakdown_by=merchant to split by merchant bucket."
+      },
+      {
+        "key": "checkout_gtv",
+        "name": "Checkout GTV",
+        "unit": "currency",
+        "properties": [
+          "payment_method",
+          "product",
+          "currency"
+        ],
+        "description": "Gross value of paid checkout receipts. Receipts-based, so it measures checkout transactions by payment method and does not reconcile to the ledger-based gross revenue or GMV metrics."
+      },
+      {
+        "key": "churn_rate",
+        "name": "Churn rate",
+        "unit": "percent",
+        "properties": [],
+        "description": "Share of paying members who canceled."
+      },
+      {
+        "key": "churned_revenue",
+        "name": "Churned revenue",
+        "unit": "currency",
+        "properties": [
+          "product"
+        ],
+        "description": "Lost recurring revenue from memberships whose MRR decreased over the period."
+      },
+      {
+        "key": "crypto_deposit_markup_revenue",
+        "name": "Crypto deposit markup revenue",
+        "unit": "currency",
+        "properties": [],
+        "description": "Markup credited to your wallet, net of reversals, by ledger posting date."
+      },
+      {
+        "key": "dispute_alerts",
+        "name": "Dispute alerts",
+        "unit": "count",
+        "properties": [
+          "product"
+        ],
+        "description": "Early-warning dispute alerts received across company payments."
+      },
+      {
+        "key": "dispute_count",
+        "name": "Dispute count",
+        "unit": "count",
+        "properties": [
+          "outcome"
+        ],
+        "description": "Number of new dispute, dispute alert, and dispute reversal ledger lines posted in the selected period."
+      },
+      {
+        "key": "dispute_fees",
+        "name": "Dispute fees",
+        "unit": "currency",
+        "properties": [
+          "currency"
+        ],
+        "description": "Fees charged for disputes and dispute alerts."
+      },
+      {
+        "key": "dispute_rate",
+        "name": "Dispute rate",
+        "unit": "percent",
+        "properties": [
+          "payment_method",
+          "product"
+        ],
+        "description": "Share of payments received in the period that have been disputed, excluding Visa RDR."
+      },
+      {
+        "key": "disputes",
+        "name": "Disputes",
+        "unit": "count",
+        "properties": [
+          "product"
+        ],
+        "description": "Disputes opened against the account."
+      },
+      {
+        "key": "events",
+        "name": "Events",
+        "unit": "currency",
+        "properties": [
+          "metric",
+          "group_by",
+          "source",
+          "event",
+          "attribution_model",
+          "country",
+          "city",
+          "utm_source",
+          "hostname",
+          "page",
+          "device",
+          "browser",
+          "os"
+        ],
+        "description": "Event counts and value sums, filterable and groupable by the unified analytics language. Events are full names (payment.completed, pixel.lead, pixel.page, pixel.custom:<name>). Sources are canonical paths — whop:<campaign>:<group>:<ad>, ext:<platform>:<campaign>:<adset>:<ad>, referrer:<domain>, direct, other — filtered exactly or by trailing :* prefix; a source filter (or attribution_model) makes the query attributed over conversion targets. attribution_model is last_touch (default) or first_touch; under both, a journey with any whop ad touch always attributes to whop (never to an external or referrer source) — the model picks which whop touch credits the entity and which non-whop source wins otherwise. group_by takes one dimension (source, event, country, city, utm_source, hostname, page); attributed queries support source, event, and hostname, where hostname is the credited touchpoint's page. Grouping by source is hierarchical, one path segment deeper than the filter prefix — extra trailing wildcards deepen it (whop:* groups by campaign, whop:*:* by ad group). Requires breakdown_by=metric; entries are \"<group>|count\" and \"<group>|value\" (net USD on attributed queries), with per-bucket points and whole-window data.totals. Long-tail group values fold into other past the top 100. Every filter accepts multiple values, matched as OR; a multi-value filter on a dimension other than group_by implicitly breaks entries down by its variants (verbatim, each counted as its own request), composing keys as \"<group>|<variant>|measure\"."
+      },
+      {
+        "key": "fees",
+        "name": "Fees",
+        "unit": "currency",
+        "properties": [
+          "currency",
+          "fee_type"
+        ],
+        "description": "Fees charged, across every fee type."
+      },
+      {
+        "key": "gross_earnings",
+        "name": "Gross earnings",
+        "unit": "currency",
+        "properties": [
+          "source"
+        ],
+        "description": "Positive earnings by ledger posting date, before fees, refunds, disputes, and reversals. Excludes deposits and transfers."
+      },
+      {
+        "key": "gross_revenue",
+        "name": "Gross revenue",
+        "unit": "currency",
+        "properties": [
+          "payment_method",
+          "product",
+          "currency"
+        ],
+        "description": "Gross earnings from sales and platform income, before refunds or fees."
+      },
+      {
+        "key": "gross_transaction_value",
+        "name": "GMV",
+        "unit": "currency",
+        "properties": [
+          "currency",
+          "source"
+        ],
+        "description": "Total value of completed sales, before refunds or fees."
+      },
+      {
+        "key": "market_prices",
+        "name": "Market prices",
+        "unit": "currency",
+        "properties": [
+          "currency"
+        ],
+        "description": "Market price of Bitcoin (BTC) or Gold (XAUT) over time."
+      },
+      {
+        "key": "marketplace_fees",
+        "name": "Marketplace fees",
+        "unit": "currency",
+        "properties": [
+          "currency"
+        ],
+        "description": "Affiliate fees on marketplace sales."
+      },
+      {
+        "key": "marketplace_revenue",
+        "name": "Marketplace revenue",
+        "unit": "currency",
+        "properties": [
+          "payment_method",
+          "product",
+          "currency"
+        ],
+        "description": "Revenue from marketplace sales, excluding direct-to-consumer."
+      },
+      {
+        "key": "markup_earning_estimate",
+        "name": "Estimated markup earnings",
+        "unit": "currency",
+        "properties": [
+          "category"
+        ],
+        "description": "Estimated monthly USD earnings at 0.5%, extrapolated from the latest seven days of connected-account activity."
+      },
+      {
+        "key": "markup_fee_count",
+        "name": "Markup fee count",
+        "unit": "count",
+        "properties": [
+          "category"
+        ],
+        "description": "Number of markup payout ledger lines posted in the selected period."
+      },
+      {
+        "key": "monthly_recurring_revenue",
+        "name": "MRR",
+        "unit": "currency",
+        "properties": [
+          "currency",
+          "product"
+        ],
+        "description": "Monthly recurring revenue from active subscriptions."
+      },
+      {
+        "key": "net_revenue",
+        "name": "Net revenue",
+        "unit": "currency",
+        "properties": [
+          "product"
+        ],
+        "description": "Earnings kept after refunds, disputes, and all fees."
+      },
+      {
+        "key": "net_volume",
+        "name": "Net volume",
+        "unit": "currency",
+        "properties": [],
+        "description": "Gross earnings minus Whop fees, before refunds and other deductions."
+      },
+      {
+        "key": "new_users",
+        "name": "New users",
+        "unit": "count",
+        "properties": [
+          "status",
+          "access_level",
+          "most_recent_action"
+        ],
+        "description": "Users who joined."
+      },
+      {
+        "key": "page_visits",
+        "name": "Page visits",
+        "unit": "count",
+        "properties": [],
+        "description": "Store page views across the company."
+      },
+      {
+        "key": "paid_active_members",
+        "name": "Paid active members",
+        "unit": "count",
+        "properties": [],
+        "description": "Active paying members."
+      },
+      {
+        "key": "paid_ad_campaign_count",
+        "name": "Paid ad campaign count",
+        "unit": "count",
+        "properties": [],
+        "description": "Unique campaigns paid for by this company in the selected payment period."
+      },
+      {
+        "key": "partner_earnings",
+        "name": "Partner referral earnings",
+        "unit": "currency",
+        "properties": [
+          "status",
+          "account_id",
+          "tier",
+          "income_source",
+          "payment_method",
+          "referred_user_id",
+          "internal_referrers",
+          "earning_partner_id",
+          "attribution_source"
+        ],
+        "description": "Commissions earned from businesses you referred to Whop, across all partner tiers."
+      },
+      {
+        "key": "partner_link_clicks",
+        "name": "Partner link clicks",
+        "unit": "count",
+        "properties": [
+          "reward",
+          "earning_partner_id"
+        ],
+        "description": "Landings on a partner's referral link — /start or /network pageviews carrying the partner's ?a= code, read from the partner_link_clicks materialized view. Filter by reward to isolate one onboarding-reward link."
+      },
+      {
+        "key": "partner_payouts",
+        "name": "Partner referral payouts",
+        "unit": "currency",
+        "properties": [
+          "status",
+          "account_id",
+          "tier",
+          "income_source",
+          "payment_method",
+          "referred_user_id",
+          "internal_referrers",
+          "earning_partner_id",
+          "attribution_source"
+        ],
+        "description": "Commissions paid out to you from businesses you referred to Whop, by payout date, across all partner tiers."
+      },
+      {
+        "key": "partner_referred_businesses",
+        "name": "Partner referred businesses",
+        "unit": "count",
+        "properties": [
+          "earning_partner_id"
+        ],
+        "description": "Businesses whose creator signed up carrying the partner's ?a= code — partners.referral.succeeded events, the moment immediate onboarding rewards pay out. Pair with partner_link_clicks for link conversion."
+      },
+      {
+        "key": "partner_volume",
+        "name": "Partner referral volume",
+        "unit": "currency",
+        "properties": [
+          "status",
+          "account_id",
+          "tier",
+          "income_source",
+          "payment_method",
+          "referred_user_id",
+          "internal_referrers",
+          "earning_partner_id",
+          "attribution_source"
+        ],
+        "description": "Sales volume generated by businesses you referred to Whop, across all partner tiers."
+      },
+      {
+        "key": "payment_markup_revenue",
+        "name": "Payment markup revenue",
+        "unit": "currency",
+        "properties": [],
+        "description": "Markup credited to your wallet, net of reversals, by ledger posting date."
+      },
+      {
+        "key": "payment_processing_fees",
+        "name": "Payment processing fees",
+        "unit": "currency",
+        "properties": [
+          "currency"
+        ],
+        "description": "Fees to process payments — card, network, currency conversion, billing, and payout."
+      },
+      {
+        "key": "payment_rule_matched_volume",
+        "name": "Payment rule matched volume",
+        "unit": "currency",
+        "properties": [
+          "payment_rule_ids",
+          "action"
+        ],
+        "description": "What the payments an account's own rules matched were attempting, in USD. A blocked payment never moved the money, so this is attempted volume rather than revenue. Payments that reached risk assessment without an amount are counted by Payment rule matches but not valued here. Broken down by payment_rule_ids, a payment several rules matched is valued against each of them."
+      },
+      {
+        "key": "payment_rule_matches",
+        "name": "Payment rule matches",
+        "unit": "count",
+        "properties": [
+          "payment_rule_ids",
+          "action"
+        ],
+        "description": "Payments an account's own payment rules matched, counted once each however many rules matched. Break down by payment_rule_ids for a count per rule, or by action for the split across allow, block, review, and enforce_3ds."
+      },
+      {
+        "key": "people",
+        "name": "People",
+        "unit": "count",
+        "properties": [
+          "metric",
+          "group_by",
+          "source",
+          "event",
+          "attribution_model",
+          "country",
+          "city",
+          "utm_source",
+          "hostname",
+          "page",
+          "device",
+          "browser",
+          "os"
+        ],
+        "description": "Unique people (resolved person identities), filterable and groupable by the same unified analytics language as the events metric: full event names, canonical source paths with trailing :* prefixes (a source filter or attribution_model makes the query attributed over conversion targets), and one optional group_by dimension. Uniques only exist at window level, so the response is data.totals only — entries are \"<group>|people\" (bare \"people\" without group_by) and never additive across groups or requests. Every filter accepts multiple values, matched as OR; a multi-value filter on a dimension other than group_by implicitly breaks entries down by its variants, same as the events metric."
+      },
+      {
+        "key": "platform_gtv",
+        "name": "Platform GTV",
+        "unit": "currency",
+        "properties": [
+          "business_type",
+          "industry_group",
+          "industry_type",
+          "country",
+          "state",
+          "city",
+          "source",
+          "line_subcategory",
+          "company_ids"
+        ],
+        "description": "Whole-platform gross transaction value from the Fragment ledger, by sector or source."
+      },
+      {
+        "key": "platform_markup_amount",
+        "name": "Collected platform markup",
+        "unit": "currency",
+        "properties": [
+          "category"
+        ],
+        "description": "Platform markup payouts grouped by fee type."
+      },
+      {
+        "key": "platform_revenue",
+        "name": "Platform revenue",
+        "unit": "currency",
+        "properties": [
+          "business_type",
+          "industry_group",
+          "industry_type",
+          "country",
+          "state",
+          "city",
+          "source",
+          "line_subcategory",
+          "company_ids"
+        ],
+        "description": "Whole-platform Whop revenue: signed sum of income-account Fragment ledger lines, by sector or source."
+      },
+      {
+        "key": "product_affiliate_fees",
+        "name": "Product affiliate fees",
+        "unit": "currency",
+        "properties": [
+          "product",
+          "currency"
+        ],
+        "description": "Fees paid to affiliates on product sales."
+      },
+      {
+        "key": "product_fees",
+        "name": "Product fees",
+        "unit": "currency",
+        "properties": [
+          "product",
+          "currency"
+        ],
+        "description": "Fees charged on product sales, across every fee type."
+      },
+      {
+        "key": "product_new_users",
+        "name": "New product users",
+        "unit": "count",
+        "properties": [
+          "product",
+          "access_level"
+        ],
+        "description": "Users who joined a product."
+      },
+      {
+        "key": "product_payment_processing_fees",
+        "name": "Product payment processing fees",
+        "unit": "currency",
+        "properties": [
+          "product",
+          "currency"
+        ],
+        "description": "Fees to process product payments."
+      },
+      {
+        "key": "product_sales_tax_withheld",
+        "name": "Product sales tax withheld",
+        "unit": "currency",
+        "properties": [
+          "product",
+          "currency"
+        ],
+        "description": "Sales tax withheld and remitted on product sales."
+      },
+      {
+        "key": "refund_count",
+        "name": "Refund count",
+        "unit": "count",
+        "properties": [],
+        "description": "Number of refund ledger lines posted in the selected period."
+      },
+      {
+        "key": "refund_rate",
+        "name": "Refund rate",
+        "unit": "percent",
+        "properties": [
+          "payment_method",
+          "product"
+        ],
+        "description": "Share of payments received in the period that have been refunded."
+      },
+      {
+        "key": "sales_tax_withheld",
+        "name": "Sales tax withheld",
+        "unit": "currency",
+        "properties": [
+          "currency"
+        ],
+        "description": "Sales tax withheld and remitted."
+      },
+      {
+        "key": "snapshot_approved_authorizations",
+        "name": "Approved authorizations",
+        "unit": "count",
+        "properties": [],
+        "description": "Card authorizations approved in the last 30 days.",
+        "windows": [
+          "30d"
+        ]
+      },
+      {
+        "key": "snapshot_auth_rate",
+        "name": "Auth rate",
+        "unit": "percent",
+        "properties": [],
+        "description": "Share of card authorizations approved over the last 30 days.",
+        "windows": [
+          "30d"
+        ]
+      },
+      {
+        "key": "snapshot_cohorted_dispute_rate_14d_attr",
+        "name": "Cohorted dispute rate (14-day attribution)",
+        "unit": "percent",
+        "properties": [
+          "card_network",
+          "payment_method"
+        ],
+        "description": "Share of paid receipts in the selected sales cohort disputed within 14 days of purchase.",
+        "windows": [
+          "7d",
+          "28d"
+        ]
+      },
+      {
+        "key": "snapshot_cohorted_dispute_rate_28d_attr",
+        "name": "Cohorted dispute rate (28-day attribution)",
+        "unit": "percent",
+        "properties": [
+          "card_network",
+          "payment_method"
+        ],
+        "description": "Share of paid receipts in the selected sales cohort disputed within 28 days of purchase.",
+        "windows": [
+          "7d",
+          "28d"
+        ]
+      },
+      {
+        "key": "snapshot_cohorted_dispute_rate_7d_attr",
+        "name": "Cohorted dispute rate (7-day attribution)",
+        "unit": "percent",
+        "properties": [
+          "card_network",
+          "payment_method"
+        ],
+        "description": "Share of paid receipts in the selected sales cohort disputed within 7 days of purchase.",
+        "windows": [
+          "7d",
+          "28d"
+        ]
+      },
+      {
+        "key": "snapshot_decided_authorizations",
+        "name": "Decided authorizations",
+        "unit": "count",
+        "properties": [],
+        "description": "Card authorizations approved or declined in the last 30 days.",
+        "windows": [
+          "30d"
+        ]
+      },
+      {
+        "key": "snapshot_dispute_rate",
+        "name": "Dispute rate",
+        "unit": "percent",
+        "properties": [
+          "card_network",
+          "payment_method"
+        ],
+        "description": "Share of paid receipts disputed over the last 30 days.",
+        "windows": [
+          "30d"
+        ]
+      },
+      {
+        "key": "snapshot_disputes",
+        "name": "Disputes",
+        "unit": "count",
+        "properties": [
+          "card_network",
+          "payment_method",
+          "dispute_reason"
+        ],
+        "description": "Disputes filed in the last 30 days.",
+        "windows": [
+          "30d"
+        ]
+      },
+      {
+        "key": "snapshot_receipts",
+        "name": "Paid receipts",
+        "unit": "count",
+        "properties": [
+          "card_network",
+          "payment_method"
+        ],
+        "description": "Paid receipts in the last 30 days.",
+        "windows": [
+          "30d"
+        ]
+      },
+      {
+        "key": "snapshot_refund_rate",
+        "name": "Refund rate",
+        "unit": "percent",
+        "properties": [],
+        "description": "Share of paid receipts refunded over the last 30 days.",
+        "windows": [
+          "30d"
+        ]
+      },
+      {
+        "key": "snapshot_refunds",
+        "name": "Refunds",
+        "unit": "count",
+        "properties": [],
+        "description": "Refunds issued in the last 30 days.",
+        "windows": [
+          "30d"
+        ]
+      },
+      {
+        "key": "snapshot_resolution_center_case_rate",
+        "name": "Resolution center case rate",
+        "unit": "percent",
+        "properties": [],
+        "description": "Share of paid receipts that opened a resolution center case over the last 30 days.",
+        "windows": [
+          "30d"
+        ]
+      },
+      {
+        "key": "snapshot_resolution_center_cases",
+        "name": "Resolution center cases",
+        "unit": "count",
+        "properties": [],
+        "description": "Resolution center cases opened in the last 30 days.",
+        "windows": [
+          "30d"
+        ]
+      },
+      {
+        "key": "successful_payments",
+        "name": "Successful payments",
+        "unit": "count",
+        "properties": [
+          "payment_method",
+          "product",
+          "currency"
+        ],
+        "description": "Count of successful payments received."
+      },
+      {
+        "key": "swap_markup_revenue",
+        "name": "Swap markup revenue",
+        "unit": "currency",
+        "properties": [],
+        "description": "Markup credited to your wallet, net of reversals, by ledger posting date."
+      },
+      {
+        "key": "total_markup_revenue",
+        "name": "Total markup revenue",
+        "unit": "currency",
+        "properties": [],
+        "description": "Markup credited to your wallet, net of reversals, by ledger posting date."
+      },
+      {
+        "key": "total_net_earnings",
+        "name": "Total net earnings",
+        "unit": "currency",
+        "properties": [
+          "source"
+        ],
+        "description": "Posted earnings after refunds and earning-related deductions, before operating spending. Uses ledger posting dates."
+      },
+      {
+        "key": "total_refunded",
+        "name": "Total refunded",
+        "unit": "currency",
+        "properties": [
+          "payment_method",
+          "product",
+          "currency"
+        ],
+        "description": "Total amount refunded to buyers."
+      },
+      {
+        "key": "traffic_events",
+        "name": "Traffic events",
+        "unit": "count",
+        "properties": [
+          "event_name",
+          "custom_name",
+          "event_type",
+          "hostname",
+          "page",
+          "source",
+          "device_type",
+          "country_code"
+        ],
+        "description": "Tracked events across the account's traffic: Whop Pixel events on the merchant's own websites plus whop.com store views, excluding crawlers. Filter by event_name (e.g. pixel.page) or event_type (page_view, checkout_start) to count one kind of event; break down by any listed property. Filter to event_name=pixel.custom and break down by custom_name for custom-event counts."
+      },
+      {
+        "key": "traffic_people",
+        "name": "Traffic people",
+        "unit": "count",
+        "properties": [
+          "hostname",
+          "page",
+          "source",
+          "device_type",
+          "country_code"
+        ],
+        "description": "Unique people across the account's traffic, deduplicated by resolved identity. Break down by hostname, page, source, device_type, or country_code."
+      },
+      {
+        "key": "transfer_count",
+        "name": "Transfer count",
+        "unit": "count",
+        "properties": [
+          "direction"
+        ],
+        "description": "Number of transfer ledger lines posted in the selected period."
+      },
+      {
+        "key": "transfer_markup_revenue",
+        "name": "Transfer markup revenue",
+        "unit": "currency",
+        "properties": [],
+        "description": "Markup credited to your wallet, net of reversals, by ledger posting date."
+      },
+      {
+        "key": "trial_conversion_rate",
+        "name": "Trial conversion rate",
+        "unit": "percent",
+        "properties": [
+          "product"
+        ],
+        "description": "Share of trials that converted to paid."
+      },
+      {
+        "key": "users_breakdown",
+        "name": "Users breakdown",
+        "unit": "count",
+        "properties": [
+          "most_recent_action"
+        ],
+        "description": "Users at the end of each period, split by their most recent membership action."
+      },
+      {
+        "key": "users_growth",
+        "name": "Active members",
+        "unit": "count",
+        "properties": [],
+        "description": "Active members over time."
+      },
+      {
+        "key": "whop_processing_fees",
+        "name": "Whop processing fees",
+        "unit": "currency",
+        "properties": [
+          "currency"
+        ],
+        "description": "Whop's processing fee on transactions."
+      },
+      {
+        "key": "withdrawal_markup_revenue",
+        "name": "Withdrawal markup revenue",
+        "unit": "currency",
+        "properties": [],
+        "description": "Markup credited to your wallet, net of reversals, by ledger posting date."
+      }
+    ]
+  },
+  "meta": {
+    "command": "stats list",
+    "duration": "308ms"
+  }
+}

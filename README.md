@@ -4,11 +4,11 @@
 
 The design is in [VIEWS.md](./VIEWS.md). This README shows it.
 
-> Unofficial, personal-use prototype. Not affiliated with, endorsed by, or distributed by Whop. "Whop" is a trademark of its owner. Built against `whop` 0.16.3.
+> Unofficial, personal-use prototype. Not affiliated with, endorsed by, or distributed by Whop. "Whop" is a trademark of its owner. Built against `whop` 0.16.3 and 0.18.2.
 
 ## Why
 
-The CLI shipped agent-first and it shows. Every command dumps every field as TOON, `--format md` prints `[object Object]` for nested fields, errors are two lines, and `payouts create` moves real money with no confirmation. Agents are fine with all of that. People are not. `wv` adds the people layer without touching the agent layer: one rendering system that every one of the 51 command groups gets for free, driven by inference plus ten small hint files.
+The CLI shipped agent-first and it shows. Every command prints every field as TOON. In a terminal that TOON is syntax-colored and empty fields are folded away, which helps, but two products are still 69 lines with no columns, no alignment, and ISO timestamps. `--format md` prints `[object Object]` for nested fields. Errors are two lines. `payouts create` moves real money with no confirmation. Agents are fine with all of that. People are not. `wv` adds the people layer without touching the agent layer: one rendering system that every command group gets for free, driven by inference plus small hint files.
 
 ## Install
 
@@ -22,7 +22,7 @@ Needs Node 22 or newer and a working `whop` on your PATH. Then use `wv` anywhere
 
 ### `products list`
 
-Before, 83 lines for two products:
+Before, 69 lines for two products in a terminal, 83 through a pipe:
 
 ```
 data[2]:
@@ -185,7 +185,7 @@ Nothing new. `wv` execs `whop` with the original argv whenever any of these hold
 
 ## How it generalizes
 
-Three layers. Tokens name six color roles and nothing else names a color. Primitives are pure functions from data and width to lines: table, key-value card, callout, footer, prompt, spinner. Views compose them. Every field is classified by sixteen inference rules, in order, on the response data: ids by prefix, `{amount, currency}` as money, ISO strings as dates, short enums under known keys as status, nested objects by title and id. Ten resources ship a hints file that overrides the primary label, column order, status field, and money fields. Everything else renders from inference alone.
+Three layers. Tokens name six color roles and nothing else names a color. Primitives are pure functions from data and width to lines: table, key-value card, callout, footer, prompt, spinner. Views compose them. Every field is classified by sixteen inference rules, in order, on the response data: ids by prefix, `{amount, currency}` as money, ISO strings as dates, short enums under known keys as status, nested objects by title and id. Eighteen resources ship a hints file that overrides the primary label, column order, status field, and money fields. Everything else renders from inference alone. Phone numbers, IP addresses, and user agents are hidden everywhere. Emails show in detail views only.
 
 ## Development
 

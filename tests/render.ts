@@ -23,10 +23,10 @@ export function theme(width: number, color: boolean): Theme {
   return { ...makeTheme({ width, color }), color };
 }
 
-function page(name: string, group: string, argv: string[], t: Theme, accountTitle?: string) {
+function page(name: string, group: string, argv: string[], t: Theme, accountTitle?: string, canCreate?: boolean) {
   const p = envelope(name);
   if (!p.ok || p.payload.kind !== "page") throw new Error(`${name} is not a page`);
-  return listView({ group, argv, rows: p.payload.rows, page: p.payload.page, hints: hintsFor(group), accountTitle }, t);
+  return listView({ group, argv, rows: p.payload.rows, page: p.payload.page, hints: hintsFor(group), accountTitle, canCreate }, t);
 }
 
 function record(name: string, group: string, argv: string[], t: Theme) {
@@ -48,7 +48,10 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "list.members": (t) => page("members.list", "members", ["members", "list"], t),
   "list.ledgers": (t) => page("ledgers.list", "ledgers", ["ledgers", "list"], t),
   "list.apps": (t) => page("apps.list", "apps", ["apps", "list"], t),
-  "list.empty": (t) => page("payouts.list", "payouts", ["payouts", "list"], t),
+  "list.payments": (t) => page("payments.list", "payments", ["payments", "list"], t),
+  "list.stats": (t) => page("stats.list", "stats", ["stats", "list"], t),
+  "list.empty": (t) => page("payouts.list", "payouts", ["payouts", "list"], t, undefined, true),
+  "list.empty.nocreate": (t) => page("refunds.list", "refunds", ["refunds", "list"], t, undefined, false),
   "detail.membership": (t) => record("memberships.get", "memberships", ["memberships", "get", "mem_kfT4Jl8Pb8DlWE"], t),
   "detail.product": (t) => record("products.get", "products", ["products", "get", "prod_iQ2Zub6GFQS5Q"], t),
   "confirm.payout": (t) =>
@@ -65,6 +68,8 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "error.401": (t) => errorView({ code: "HTTP_401", message: "Unauthorized" }, t),
   "error.scope": (t) => errorView({ code: "HTTP_403", message: "Missing required permission: developer:manage_webhook" }, t),
   "error.enoent": (t) => errorView({ code: "ENOENT", message: "spawn whop ENOENT" }, t),
+  "error.gated": (t) => error("error.gated", t),
+  "detail.auth": (t) => record("auth.status", "auth", ["auth", "status"], t),
   help: (t) => helpView(parseHelp(fixture("help.txt")), t),
   "help.products": (t) => helpView(parseHelp(fixture("help.products.txt")), t, "products"),
   home: (t) =>

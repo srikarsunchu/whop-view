@@ -57,6 +57,6 @@
   },
   "meta": {
     "command": "memberships list",
-    "duration": "285ms"
+    "duration": "271ms"
   }
 }
