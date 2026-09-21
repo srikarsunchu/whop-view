@@ -1,0 +1,6 @@
+ [1mlogs[22m[2m · app_HKnLpw6UGGEqk6 · 0[22m
+
+ No log lines in the window. Whop keeps hosted app logs for 7 days.
+
+ [2mjson[22m  [2mwhop apps logs app_HKnLpw6UGGEqk6 --format json[22m
+ [2mfollow[22m  [2mwv apps logs app_HKnLpw6UGGEqk6 --follow[22m

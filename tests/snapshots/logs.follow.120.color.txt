@@ -1,0 +1,10 @@
+ [1mlogs[22m[2m · app_HKnLpw6UGGEqk6 · level error · query slot[22m                                              [32mfollowing · every 3s[39m
+ [2mctrl-c stops[22m
+ [2mjson[22m  [2mwhop apps logs app_HKnLpw6UGGEqk6 --level error --query slot --format json[22m
+
+ [2m09:00:01[22m  info   booted
+ [2m09:00:02[22m  [31merror[39m  [1mGET /api/slots 500[22m · TypeError: Cannot read properties of undefined (reading 'slotId')
+ [2m09:00:02[22m  [2mdebug[22m  cache miss for user_ICLAwIXM9zFfz
+ [2m09:00:05[22m  [33mwarn [39m  [1mPOST /api/checkout 200[22m · slow response…
+
+ [2mstopped · 4 lines[22m

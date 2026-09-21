@@ -17,6 +17,8 @@ import { adPlanView, adRefusedView, type AdPlanInput } from "../src/views/adplan
 import { gtmView } from "../src/views/gtm.ts";
 import { doctorView, DOCTOR_ACTIONS, type DoctorInput } from "../src/views/doctor.ts";
 import { sandboxMissingKeyView, sandboxStatusView } from "../src/views/sandbox.ts";
+import { followHeader, followStopped, logLines, logsView } from "../src/views/logs.ts";
+import type { Rec } from "../src/envelope.ts";
 
 export const FIXTURES = join(import.meta.dirname, "fixtures");
 export const fixture = (name: string) => readFileSync(join(FIXTURES, name), "utf8");
@@ -148,11 +150,26 @@ export const DOCTOR_READY: DoctorInput = {
 
 const CONFIG_PATH = "~/.config/whop-view/config.json";
 
+/** Log entries as the API reference shapes them, newest first, since this account's app has none yet. */
+export const LOG_ROWS: Rec[] = [
+  { app_id: "app_HKnLpw6UGGEqk6", app_build_id: "abld_x1AbCdEfGh", request_id: "req_4", created_at: "2026-09-18T09:00:05.000Z", source: "request", level: "warn", message: "slow response", request_method: "POST", request_path: "/api/checkout", response_status: 200, wall_time_ms: 2400, cpu_time_ms: 40, truncated: true },
+  { app_id: "app_HKnLpw6UGGEqk6", app_build_id: "abld_x1AbCdEfGh", request_id: "req_3", created_at: "2026-09-18T09:00:02.500Z", source: "console", level: "debug", message: "cache miss for user_ICLAwIXM9zFfz", request_method: null, request_path: null, response_status: null },
+  { app_id: "app_HKnLpw6UGGEqk6", app_build_id: "abld_x1AbCdEfGh", request_id: "req_2", created_at: "2026-09-18T09:00:02.000Z", source: "exception", level: "error", message: "TypeError: Cannot read properties of undefined (reading 'slotId')", outcome: "exception", request_method: "GET", request_path: "/api/slots", response_status: 500, stack: "at handler (app.js:12)" },
+  { app_id: "app_HKnLpw6UGGEqk6", app_build_id: "abld_x1AbCdEfGh", request_id: "req_1", created_at: "2026-09-18T09:00:01.000Z", source: "console", level: "info", message: "booted", request_method: null, request_path: null, response_status: null },
+];
+
 export const SCENES: Record<string, (t: Theme) => string[]> = {
   "sandbox.status": (t) => sandboxStatusView({ url: "https://sandbox-api.whop.com/api/v1", urlSource: "default", key: "whop_sandbox_key_abcdef1234", keySource: "config", configPath: CONFIG_PATH, account: synth({ id: "biz_sandboxAb12", title: "Frame (sandbox)", route: "frame-sandbox" }) }, t),
   "sandbox.status.nokey": (t) => sandboxStatusView({ url: "https://sandbox-api.whop.com/api/v1", urlSource: "default", keySource: "none", configPath: CONFIG_PATH, account: envelope("error.sandbox_oauth") }, t),
   "sandbox.status.badkey": (t) => sandboxStatusView({ url: "http://localhost:9", urlSource: "env", key: "whop_wrong_key_abcdef1234", keySource: "env", configPath: CONFIG_PATH, account: envelope("error.sandbox_oauth") }, t),
   "sandbox.missing_key": (t) => sandboxMissingKeyView(CONFIG_PATH, t),
+  "logs.page": (t) => logsView({ argv: ["apps", "logs", "app_HKnLpw6UGGEqk6", "--level", "error"], rows: LOG_ROWS, page: { start_cursor: "c0", end_cursor: "c1", has_next_page: true, has_previous_page: false } }, t),
+  "logs.empty": (t) => {
+    const p = envelope("apps.logs");
+    if (!p.ok || p.payload.kind !== "page") throw new Error("apps.logs is not a page");
+    return logsView({ argv: ["apps", "logs", "app_HKnLpw6UGGEqk6"], rows: p.payload.rows, page: p.payload.page }, t);
+  },
+  "logs.follow": (t) => [...followHeader(["apps", "logs", "app_HKnLpw6UGGEqk6", "--level", "error", "--query", "slot"], 3, t), ...LOG_ROWS.slice().reverse().flatMap((r) => logLines(r, t)), ...followStopped(4, t)],
   "error.events_range": (t) => errorView({ code: "EVENTS_RANGE", message: "Time range cannot exceed 30 days\n62 days from 2026-07-01T00:00:00Z to 2026-09-01T00:00:00Z. Try --last 30d, or move --from and --to closer together." }, t),
   "error.bad_preset": (t) => errorView({ code: "BAD_PRESET", message: "--last week is not a date preset.\nPresets: --last 7d, --last 30d, --last 90d, --this month, --last month." }, t),
   "error.sandbox_auth": (t) => errorView({ code: "SANDBOX_AUTH", message: "The sandbox host answered 401 to the key whop_wro…1234. It is not a sandbox key, or it was revoked.", durationMs: 500 }, t),

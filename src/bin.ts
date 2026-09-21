@@ -7,12 +7,13 @@ import { configPath, maskKey, saveSandboxKey } from "./config.ts";
 import { sandboxMissingKeyView, sandboxSavedView, sandboxStatusView } from "./views/sandbox.ts";
 import { ask } from "./primitives/prompt.ts";
 import { resolveDates } from "./dates.ts";
+import { followHeader, followIntervalMs, followStopped, logLines, logsView, newEntries, newest, pollArgv } from "./views/logs.ts";
 import { hintsFor } from "./hints.ts";
 import { isWrite, MONEY_GROUPS } from "./status.ts";
 import { teach } from "./argv.ts";
 import { daysAgo, isoDay } from "./format.ts";
 import { copy } from "./copy.ts";
-import { listViewWithMeta, type ListRender } from "./views/list.ts";
+import { listViewWithMeta, withAfter, type ListRender } from "./views/list.ts";
 import { detailView } from "./views/detail.ts";
 import { amountMatcher, confirmView, describeMethod, flagsToRecord, limitFor, moneyOf, refusedView, speedOf, type Balance, type WhopLimit } from "./views/confirm.ts";
 import { money } from "./format.ts";
@@ -48,10 +49,11 @@ export interface Outcome {
 }
 
 /** Splits wv's own flags out of argv. */
-export function ownFlags(argvIn: string[]): { argv: string[]; width?: number; sandbox: boolean; plan: boolean } {
+export function ownFlags(argvIn: string[]): { argv: string[]; width?: number; sandbox: boolean; plan: boolean; follow: boolean } {
   let width: number | undefined;
   let sandbox = false;
   let plan = false;
+  let follow = false;
   const argv: string[] = [];
   for (let i = 0; i < argvIn.length; i++) {
     const a = argvIn[i];
@@ -59,9 +61,10 @@ export function ownFlags(argvIn: string[]): { argv: string[]; width?: number; sa
     else if (a.startsWith("--width=")) width = Number(a.slice(8));
     else if (a === "--sandbox") sandbox = true;
     else if (a === "--plan") plan = true;
+    else if (a === "--follow" || a === "-f") follow = true;
     else argv.push(a);
   }
-  return { argv, width: width !== undefined && Number.isFinite(width) && width > 0 ? Math.floor(width) : undefined, sandbox, plan };
+  return { argv, width: width !== undefined && Number.isFinite(width) && width > 0 ? Math.floor(width) : undefined, sandbox, plan, follow };
 }
 
 /** Per-payout cap from `WV_PAYOUT_CAP`, in whole currency units. `none` turns it off. Default $500, like Link. */
@@ -95,7 +98,7 @@ export function timeoutFrom(env: NodeJS.ProcessEnv = process.env): number | unde
 
 async function main(argvIn: string[]) {
   const own = ownFlags(argvIn);
-  const { width, sandbox, plan } = own;
+  const { width, sandbox, plan, follow } = own;
   const theme = makeTheme({ width });
   // Date presets are wv's flags too: resolve them before a pipe execs `whop`, and refuse a range Whop would.
   const dates = resolveDates(own.argv);
@@ -121,7 +124,7 @@ async function main(argvIn: string[]) {
     const acct = await identity(env);
     process.exit(await session({ theme, execute: (a, t) => execute(a, t, { numbered: true, mode }), account: acct, mode }));
   }
-  process.exit((await execute(argv, theme, { mode, plan })).code);
+  process.exit((await execute(argv, theme, { mode, plan, follow })).code);
 }
 
 export interface ExecuteOptions {
@@ -131,6 +134,8 @@ export interface ExecuteOptions {
   mode?: Mode;
   /** `--plan`: for an ad write, print the plan card and run nothing. */
   plan?: boolean;
+  /** `--follow`: for `apps logs`, keep polling and print new lines until Ctrl-C. */
+  follow?: boolean;
 }
 
 /** Runs one wv command end to end and prints it. Shared by the one-shot CLI and the session. */
@@ -163,6 +168,8 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
     print(helpView(parseHelp(helpText([group])), theme, group));
     return { code: 0 };
   }
+
+  if (group === "apps" && verb === "logs" && opts.follow) return followLogs(argv, theme, env);
 
   const hints = hintsFor(group, verb);
   const yes = argv.includes("--yes");
@@ -348,6 +355,10 @@ function render(parsed: Parsed, group: string, argv: string[], theme: Theme, opt
   const p = parsed.payload;
   switch (p.kind) {
     case "page": {
+      if (group === "apps" && verb === "logs") {
+        print(logsView({ argv, rows: p.rows, page: p.page }, theme));
+        return { rows: p.rows, teach: teach(argv), next: p.page.has_next_page && p.page.end_cursor ? withAfter(argv, p.page.end_cursor) : undefined };
+      }
       const list = listViewWithMeta({ group, argv, rows: p.rows, page: p.page, hints, noun, canCreate: p.rows.length || noun !== group ? undefined : canCreate(group), numbered: opts.numbered }, theme);
       print(list.lines);
       return { rows: p.rows, list, teach: list.teach, next: list.next };
@@ -482,6 +493,52 @@ async function doctor(theme: Theme, mode: Mode): Promise<Outcome> {
   };
   print(doctorView(input, theme));
   return { code: blocked(checks(input)) ? 1 : 0 };
+}
+
+/**
+ * `wv apps logs <id> --follow`: the newest page first, then `--created_after` the newest line seen every
+ * few seconds, printing what is new, until Ctrl-C. The API answers newest first with no entry id, so
+ * `newEntries` keys on request id, time, and message. An API error stops the loop; it is printed as is.
+ */
+async function followLogs(argv: string[], theme: Theme, env: NodeJS.ProcessEnv): Promise<Outcome> {
+  const interval = followIntervalMs();
+  print(followHeader(argv, Math.round(interval / 1000), theme));
+  const seen = new Set<string>();
+  let after: string | undefined;
+  let count = 0;
+  let stopped = false;
+  let wake: (() => void) | undefined;
+  const stop = () => {
+    stopped = true;
+    wake?.();
+  };
+  process.on("SIGINT", stop);
+  try {
+    let first = true;
+    while (!stopped) {
+      const { parsed } = await run(pollArgv(argv, after), env);
+      if (!parsed.ok) {
+        print(errorView(parsed.error, theme));
+        return { code: 1 };
+      }
+      const rows = parsed.payload.kind === "page" ? parsed.payload.rows : [];
+      // The first page is history: show the last twenty, then only what arrives.
+      const fresh = newEntries(seen, rows, first ? 20 : Infinity);
+      for (const r of fresh) print(logLines(r, theme));
+      count += fresh.length;
+      after = newest(rows) ?? after;
+      first = false;
+      // The timer stays referenced: it is the only handle keeping the process alive between polls.
+      if (!stopped) await new Promise<void>((resolve) => {
+        wake = resolve;
+        setTimeout(resolve, interval);
+      });
+    }
+  } finally {
+    process.off("SIGINT", stop);
+  }
+  print(followStopped(count, theme));
+  return { code: 0 };
 }
 
 /**

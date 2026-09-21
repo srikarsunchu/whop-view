@@ -47,6 +47,7 @@ const CASES: [string, string[], NodeJS.ProcessEnv?][] = [
   ["payouts.methods.limits", ["payouts", "methods", "--include_limits"]],
   ["error.webhooks_oauth", ["webhooks", "list"]],
   ["error.sandbox_oauth", ["accounts", "get", "me"], SANDBOX],
+  ["apps.logs", ["apps", "logs", "app_HKnLpw6UGGEqk6"]],
 ];
 
 // Fixtures are committed. Nothing a real person could be identified by survives recording:

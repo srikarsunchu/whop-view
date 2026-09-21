@@ -273,6 +273,16 @@ export const copy = {
     keyRejected: (masked: string) => `The sandbox host answered 401 to the key ${masked}. It is not a sandbox key, or it was revoked.`,
     unknownVerb: (verb: string) => `wv sandbox has no '${verb}'. Try wv sandbox status.`,
   },
+  logs: {
+    title: "logs",
+    empty: "No log lines in the window. Whop keeps hosted app logs for 7 days.",
+    oldestFirst: "oldest first",
+    follow: "follow",
+    following: (seconds: number) => `following · every ${seconds}s`,
+    stop: "ctrl-c stops",
+    stopped: (n: number) => (n === 1 ? "stopped · 1 line" : `stopped · ${n} lines`),
+    notFollowing: "--follow needs a terminal. Pipe whop apps logs directly.",
+  },
   dates: {
     presets: "Presets: --last 7d, --last 30d, --last 90d, --this month, --last month.",
     badPreset: (what: string) => `${what} is not a date preset.`,

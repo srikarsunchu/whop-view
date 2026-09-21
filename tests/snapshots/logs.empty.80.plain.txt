@@ -1,0 +1,6 @@
+ logs · app_HKnLpw6UGGEqk6 · 0
+
+ No log lines in the window. Whop keeps hosted app logs for 7 days.
+
+ json  whop apps logs app_HKnLpw6UGGEqk6 --format json
+ follow  wv apps logs app_HKnLpw6UGGEqk6 --follow

@@ -407,6 +407,21 @@ A write verb inside the session gets the same confirmation, then hands the termi
 - `wv help` renders the 51 groups the way `whop --help` orders them, two columns at 120 and one at 80.
 - `wv <group>` renders that group's verbs.
 - `wv doctor` is the setup checklist above; it exits 1 when signing in, identity, or a sellable product is missing.
+- `wv apps logs <app_id>` renders hosted-app logs as a tail: time, level, request, message, oldest first. `--follow` (or `-f`) keeps polling every three seconds on `--created_after` the newest line seen and prints what is new, level colored, until Ctrl-C; `--level` and `--query` narrow it the way they narrow `whop apps logs`. The header carries the agent command, and the tail ends with a line count. `--follow` is `wv`'s flag: in a pipe it is dropped and `whop apps logs` runs once, untouched.
+
+```
+ logs · app_HKnLpw6UGGEqk6 · level error · query slot     following · every 3s
+ ctrl-c stops
+ json  whop apps logs app_HKnLpw6UGGEqk6 --level error --query slot --format json
+
+ 09:00:01  info   booted
+ 09:00:02  error  GET /api/slots 500  TypeError: Cannot read properties of
+                  undefined (reading 'slotId')
+ 09:00:02  debug  cache miss for user_ICLAwIXM9zFfz
+ 09:00:05  warn   POST /api/checkout 200  slow response…
+
+ stopped · 4 lines
+```
 - `wv stats get <metric> --from … --to …` renders a series: total, sparkline, one money row per point.
 - `wv stats get <metric> --last 7d` (or `30d`, `90d`, any `Nd`), `--this month`, and `--last month` do the date math. Stats presets are whole UTC days, ending yesterday for `--last Nd` like `home` and `gtm`; the footer shows the resolved `--from` and `--to`, so `copy json` pastes real dates. The same presets work on `wv events list`, where they are timestamps and `--last Nd` rolls to now. Whop refuses an events range over 30 days, so `wv` refuses it first, in Whop's words, before anything runs. The presets resolve before a pipe too, so `wv stats get net_revenue --last 7d --format json` is `whop` with the dates filled in.
 - `--width N` overrides the terminal width. `NO_COLOR` strips every escape.

@@ -1,0 +1,12 @@
+ logs · app_HKnLpw6UGGEqk6 · level error · query slot      following · every 3s
+ ctrl-c stops
+ json  whop apps logs app_HKnLpw6UGGEqk6 --level error --query slot --format
+       json
+
+ 09:00:01  info   booted
+ 09:00:02  error  GET /api/slots 500 · TypeError: Cannot read properties of
+                  undefined (reading 'slotId')
+ 09:00:02  debug  cache miss for user_ICLAwIXM9zFfz
+ 09:00:05  warn   POST /api/checkout 200 · slow response…
+
+ stopped · 4 lines
