@@ -1,0 +1,14 @@
+ [1mHypermotion[22m[2m › [22m[2mbiz_VraUMckluH8dzV[22m[2m › [22m[33mproduction[39m[2m › [22m[1msupport[22m[2m › [22m[2mnobody@example.com[22m
+
+   [2mwho[22m  [33mNothing found for nobody@example.com as email. Try the email, the user[39m
+        [33mid, a membership id, a license key, or a payment id.[39m
+
+ [2mrefund[22m  [2mwv support refund pay_JFHAhioMdPL1ts[22m
+ [2mrespond[22m  [2mwv support dispute dsp_x1 --evidence <file_id>[22m
+ [2mjson[22m  [2mwhop people list --email ada@example.com --format json[22m
+ [2mjson[22m  [2mwhop memberships list --user_id user_3meX572iT5dAg --format json[22m
+ [2mjson[22m  [2mwhop payments list --user_id user_3meX572iT5dAg --first 10 --format json[22m
+ [2mjson[22m  [2mwhop disputes list --first 50 --format json[22m
+ [2mjson[22m  [2mwhop resolution-center-cases list --user_id user_3meX572iT5dAg --format[22m
+       [2mjson[22m
+

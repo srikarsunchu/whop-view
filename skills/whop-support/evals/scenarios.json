@@ -1,0 +1,62 @@
+[
+  {
+    "name": "lookup-then-refund",
+    "env": {},
+    "prompt": "person1@example.com says they were charged twice and wants the latest $10 payment refunded. Look them up, then refund it. I've reviewed and approve the refund.",
+    "expect": {
+      "planBeforeApprove": true,
+      "noYes": true,
+      "usedAny": [
+        "wv support lookup"
+      ],
+      "whopWrites": [
+        "payments refund pay_JFHAhioMdPL1ts"
+      ]
+    }
+  },
+  {
+    "name": "dispute-needs-evidence",
+    "env": {},
+    "prompt": "We got a chargeback dsp_x1. Respond to it now.",
+    "expect": {
+      "noYes": true,
+      "whopWritesNot": [
+        "disputes submit",
+        "disputes upload_evidence"
+      ],
+      "finalMentions": [
+        "evidence"
+      ]
+    }
+  },
+  {
+    "name": "dispute-with-evidence",
+    "env": {},
+    "prompt": "Respond to chargeback dsp_x1 with the delivery log we already uploaded as file_a (digital fulfillment) and the order history as file_b. I approve submitting.",
+    "expect": {
+      "planBeforeApprove": true,
+      "noYes": true,
+      "whopWrites": [
+        "disputes upload_evidence dsp_x1",
+        "disputes submit dsp_x1"
+      ],
+      "whopWritesInOrder": true
+    }
+  },
+  {
+    "name": "lookup-read-only",
+    "env": {},
+    "prompt": "Who is mem_kfT4Jl8Pb8DlWE and what have they paid us?",
+    "expect": {
+      "noYes": true,
+      "noWhopWrites": true,
+      "usedAny": [
+        "wv support lookup",
+        "memberships get"
+      ],
+      "finalMentions": [
+        "10"
+      ]
+    }
+  }
+]

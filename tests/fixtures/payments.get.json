@@ -1,0 +1,180 @@
+{
+  "ok": true,
+  "data": {
+    "id": "pay_JFHAhioMdPL1ts",
+    "status": "paid",
+    "substatus": "succeeded",
+    "billing_reason": "one_time",
+    "refundable": true,
+    "retryable": false,
+    "voidable": false,
+    "account_id": "biz_VraUMckluH8dzV",
+    "user": {
+      "id": "user_3meX572iT5dAg",
+      "username": "adacustomer",
+      "name": "ada",
+      "profile_picture": {
+        "url": "https://ui-avatars.com/api/?name=ada&background=535961&color=fff&format=png"
+      }
+    },
+    "member_id": "mber_ZGAeDMkmbieVQ",
+    "membership_id": "mem_kfT4Jl8Pb8DlWE",
+    "plan_id": "plan_NrjXyj6yTetff",
+    "product_id": "prod_iQ2Zub6GFQS5Q",
+    "line_items": [
+      {
+        "id": "li_fSBM3m1WVWz193C",
+        "plan_id": "plan_NrjXyj6yTetff",
+        "plan_title": "Flex \u2014 300 credits",
+        "product_id": "prod_iQ2Zub6GFQS5Q",
+        "product_title": "Hypermotion",
+        "label": "Hypermotion",
+        "quantity": 1,
+        "subtotal": {
+          "currency": "usd",
+          "amount": "10.00",
+          "decimals": 2,
+          "display_decimals": 2
+        }
+      }
+    ],
+    "promo_code_id": null,
+    "checkout_configuration_id": null,
+    "shipment_id": null,
+    "currency": "usd",
+    "total": {
+      "currency": "usd",
+      "amount": "10.00",
+      "decimals": 2,
+      "display_decimals": 2
+    },
+    "subtotal": {
+      "currency": "usd",
+      "amount": "10.00",
+      "decimals": 2,
+      "display_decimals": 2
+    },
+    "tax_amount": {
+      "currency": "usd",
+      "amount": "0.00",
+      "decimals": 2,
+      "display_decimals": 2
+    },
+    "tax_behavior": null,
+    "refunded_amount": {
+      "currency": "usd",
+      "amount": "0.00",
+      "decimals": 2,
+      "display_decimals": 2
+    },
+    "tax_refunded_amount": {
+      "currency": "usd",
+      "amount": "0.00",
+      "decimals": 2,
+      "display_decimals": 2
+    },
+    "auto_refunded": false,
+    "amount_after_fees": {
+      "currency": "usd",
+      "amount": "9.28",
+      "decimals": 2,
+      "display_decimals": 2
+    },
+    "usd_total": {
+      "currency": "usd",
+      "amount": "10.00",
+      "decimals": 2,
+      "display_decimals": 2
+    },
+    "payment_method_type": "card",
+    "payment_method_id": "payt_cpPBGgQWk75IB",
+    "payment_instrument": {
+      "payment_method_type": "card",
+      "display_name": "Mastercard \u2022\u2022\u2022\u2022 1396",
+      "icons": {
+        "square": {
+          "light": {
+            "svg": "https://content.whop.com/payment_methods/mastercard/icons/square_light.svg",
+            "png_1x": "https://content.whop.com/payment_methods/mastercard/icons/square_light_32.png",
+            "png_2x": "https://content.whop.com/payment_methods/mastercard/icons/square_light_64.png",
+            "png_4x": "https://content.whop.com/payment_methods/mastercard/icons/square_light_128.png"
+          },
+          "dark": {
+            "svg": "https://content.whop.com/payment_methods/mastercard/icons/square_dark.svg",
+            "png_1x": "https://content.whop.com/payment_methods/mastercard/icons/square_dark_32.png",
+            "png_2x": "https://content.whop.com/payment_methods/mastercard/icons/square_dark_64.png",
+            "png_4x": "https://content.whop.com/payment_methods/mastercard/icons/square_dark_128.png"
+          }
+        },
+        "card": {
+          "light": {
+            "svg": "https://content.whop.com/payment_methods/mastercard/icons/card_light.svg",
+            "png_1x": "https://content.whop.com/payment_methods/mastercard/icons/card_light_30.png",
+            "png_2x": "https://content.whop.com/payment_methods/mastercard/icons/card_light_60.png",
+            "png_4x": "https://content.whop.com/payment_methods/mastercard/icons/card_light_120.png"
+          },
+          "dark": {
+            "svg": "https://content.whop.com/payment_methods/mastercard/icons/card_dark.svg",
+            "png_1x": "https://content.whop.com/payment_methods/mastercard/icons/card_dark_30.png",
+            "png_2x": "https://content.whop.com/payment_methods/mastercard/icons/card_dark_60.png",
+            "png_4x": "https://content.whop.com/payment_methods/mastercard/icons/card_dark_120.png"
+          }
+        }
+      },
+      "card": {
+        "brand": "mastercard",
+        "last4": "1396",
+        "issuer_identification_number": "51567688"
+      },
+      "installment_count": null
+    },
+    "customer_email": "redacted@example.com",
+    "presentment_total": {
+      "currency": "usd",
+      "amount": "10.00",
+      "decimals": 2,
+      "display_decimals": 2
+    },
+    "customer_phone": null,
+    "billing_address": {
+      "name": "Ada Customer",
+      "line1": "redacted",
+      "line2": null,
+      "city": "Hayward",
+      "state": "CA",
+      "postal_code": "redacted",
+      "country": "US"
+    },
+    "shipping_address": null,
+    "needs_tracking": false,
+    "payments_failed": 0,
+    "failure_message": null,
+    "decline_code": null,
+    "recovery_url": null,
+    "three_ds_verified": false,
+    "verification_checks": {
+      "address_line1": "PASS",
+      "zip_code": "PASS",
+      "card_holder_name": "UNCHECKED",
+      "card_security_code": "PASS"
+    },
+    "risk_score": 12,
+    "payment_rule_matches": [],
+    "risk_signals": null,
+    "financing_installments_count": null,
+    "metadata": {},
+    "created_at": "2026-09-16T00:04:37.707Z",
+    "updated_at": "2026-09-16T00:04:43.319Z",
+    "paid_at": "2026-09-16T00:04:39.130Z",
+    "last_payment_attempt_at": "2026-09-16T00:04:39.130Z",
+    "next_payment_attempt_at": null,
+    "refunded_at": null,
+    "dispute_alerted_at": null,
+    "settlement_time_at": null,
+    "client_secret": null
+  },
+  "meta": {
+    "command": "payments get",
+    "duration": "1ms"
+  }
+}

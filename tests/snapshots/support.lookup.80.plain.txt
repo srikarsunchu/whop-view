@@ -1,0 +1,32 @@
+ Hypermotion › biz_VraUMckluH8dzV › production › support › ada@example.com
+
+   who     Ada Customer  @adacustomer  user_3meX572iT5dAg
+   email   ada@example.com
+   spent   $10.00 over 1 purchase
+   seen    first 4d ago · last 4d ago
+   member  joined · joined Sep 16 · last access 4d ago · mber_ZGAeDMkmbieVQ
+
+ Memberships
+ product             status     until     id
+ prod_iQ2Zub6GFQS5Q  completed  one-time  mem_kfT4Jl8Pb8DlWE
+ prod_iQ2Zub6GFQS5Q  completed  one-time  mem_GqEp26jmlkNcQ0
+
+ Payments
+ amount  status  refunded  reason    date    id
+ $10.00  paid           —  one time  Sep 16  pay_JFHAhioMdPL1ts
+ $10.00  paid           —  one time  Sep 13  pay_Ggv9MYVQ9AHppk
+ $10.00  open           —  one time  Sep 13  pay_WJnNwQAY2wewOl
+
+ Disputes and cases
+ kind        status          due    amount  reason                id
+ chargeback  needs response  in 5d  $10.00  product not received  dsp_x1
+
+ refund  wv support refund pay_JFHAhioMdPL1ts
+ respond  wv support dispute dsp_x1 --evidence <file_id>
+ json  whop people list --email ada@example.com --format json
+ json  whop memberships list --user_id user_3meX572iT5dAg --format json
+ json  whop payments list --user_id user_3meX572iT5dAg --first 10 --format json
+ json  whop disputes list --first 50 --format json
+ json  whop resolution-center-cases list --user_id user_3meX572iT5dAg --format
+       json
+

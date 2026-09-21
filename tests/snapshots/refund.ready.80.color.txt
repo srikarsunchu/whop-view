@@ -1,0 +1,23 @@
+ [33m▌[39m [1mRefund a payment[22m                                         [33mwrites to production[39m
+
+   [2mwv support refund pay_JFHAhioMdPL1ts --idempotency-key
+   5b2c1d6e-0000-4000-8000-000000000005[22m
+
+   [2mpayment        [22m  $10.00 · paid · Sep 16 · pay_JFHAhioMdPL1ts
+   [2mwho            [22m  [2mada  redacted@example.com  user_3meX572iT5dAg[22m
+   [2mproduct        [22m  [2mprod_iQ2Zub6GFQS5Q[22m
+   [2mrefunded so far[22m  [2m—[22m
+   [2mrefund now     [22m  [33m$10.00 · in full[39m
+   [2mfrom           [22m  Hypermotion  biz_VraUMckluH8dzV
+
+ [2m── [22m[1mSteps[22m[2m ──────────────────────────────────────────────────────────────────────[22m
+   [2m1  refund[22m  $10.00 back to the buyer's payment method · in full
+              [2mruns[22m  whop payments refund pay_JFHAhioMdPL1ts --idempotency-ke…
+
+   [2m1 write runs in order against production, each with its own idempotency key.[22m
+   [2mA step that fails stops the rest; what was created stays, and the card names[22m
+   [2mit.[22m
+
+ [2mevery argv[22m  [2mwv support refund pay_JFHAhioMdPL1ts --idempotency-key[22m
+             [2m5b2c1d6e-0000-4000-8000-000000000005 --plan | cat[22m
+

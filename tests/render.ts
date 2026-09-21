@@ -13,6 +13,7 @@ import { buildWinback, parseWinbackArgs } from "../src/views/winback.ts";
 import { recipeView } from "../src/views/recipe.ts";
 import { rankView } from "../src/views/rank.ts";
 import { balanceOf, buildClose, moneyView, parseCloseArgs } from "../src/views/money.ts";
+import { buildDispute, buildRefund, lookupView, parseDisputeArgs, parseRefundArgs } from "../src/views/support.ts";
 import { errorView } from "../src/views/error.ts";
 import { helpView, parseHelp } from "../src/views/help.ts";
 import { homeView } from "../src/views/home.ts";
@@ -154,6 +155,17 @@ export const MONEY_READY = { ...MONEY, accountTitle: "Hypermotion", balances: [{
 const CLOSE_ARGV = ["money", "close", "--keep", "100", "--idempotency-key", "5b2c1d6e-0000-4000-8000-000000000004"];
 export const CLOSE_BLOCKED = buildClose(CLOSE_ARGV, parseCloseArgs(CLOSE_ARGV).opts!, { balance: balanceOf("usd", envelope("ledgers.report")), methods: envelope("payouts.methods.limits"), accountId: "biz_VraUMckluH8dzV", accountTitle: "Frame", cap: 500, now: LAUNCH_NOW });
 export const CLOSE_READY = buildClose(CLOSE_ARGV, parseCloseArgs(CLOSE_ARGV).opts!, { balance: { currency: "usd", available: 1234.56, other: [{ category: "pending", amount: 40 }] }, methods: envelope("payouts.methods.ready"), accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion", cap: 2000, now: LAUNCH_NOW });
+
+const LOOKUP_DISPUTES = parseEnvelope(JSON.stringify({ ok: true, data: { data: [record0("disputes.get")], page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } }, meta: { command: "disputes list", duration: "1ms" } }));
+const LOOKUP_CASES = parseEnvelope(JSON.stringify({ ok: true, data: { data: [], page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } }, meta: { command: "resolution-center-cases list", duration: "1ms" } }));
+const PERSON0 = (() => { const p = envelope("people.list"); return p.ok && p.payload.kind === "page" ? p.payload.rows[1] ?? p.payload.rows[0] : {}; })();
+const MEMBER0 = (() => { const p = envelope("members.list"); return p.ok && p.payload.kind === "page" ? p.payload.rows[0] : {}; })();
+export const LOOKUP = { key: "ada@example.com", kind: "email" as const, accountTitle: "Hypermotion", accountId: "biz_VraUMckluH8dzV", user: { id: "user_3meX572iT5dAg", name: "Ada Customer", username: "adacustomer", email: "ada@example.com" }, person: PERSON0, member: MEMBER0, memberships: envelope("memberships.list"), payments: envelope("payments.list"), disputes: LOOKUP_DISPUTES, cases: LOOKUP_CASES, now: LAUNCH_NOW.getTime(), commands: [["people", "list", "--email", "ada@example.com"], ["memberships", "list", "--user_id", "user_3meX572iT5dAg"], ["payments", "list", "--user_id", "user_3meX572iT5dAg", "--first", "10"], ["disputes", "list", "--first", "50"], ["resolution-center-cases", "list", "--user_id", "user_3meX572iT5dAg"]] };
+const REFUND_ARGV = ["support", "refund", "pay_JFHAhioMdPL1ts", "--idempotency-key", "5b2c1d6e-0000-4000-8000-000000000005"];
+export const REFUND_READY = buildRefund(REFUND_ARGV, parseRefundArgs(REFUND_ARGV).opts!, { payment: record0("payments.get"), accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion" });
+const DISPUTE_ARGV = ["support", "dispute", "dsp_x1", "--evidence", "file_x1:digital_fulfillment,file_x2:customer_order_history", "--idempotency-key", "5b2c1d6e-0000-4000-8000-000000000006"];
+export const DISPUTE_READY = buildDispute(DISPUTE_ARGV, parseDisputeArgs(DISPUTE_ARGV).opts!, { dispute: record0("disputes.get"), accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion", now: LAUNCH_NOW.getTime() });
+export const DISPUTE_LATE = buildDispute(DISPUTE_ARGV, parseDisputeArgs(DISPUTE_ARGV).opts!, { dispute: record0("disputes.get"), accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion", now: Date.parse("2026-09-25T12:00:00Z") });
 
 export const synth = (data: unknown) => parseEnvelope(JSON.stringify({ ok: true, data, meta: { command: "synthetic", duration: "1ms" } }));
 const synthPage = (rows: unknown[]) => synth({ data: rows, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } });
@@ -322,6 +334,11 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "confirm.payout.sandbox": (t) => confirmView({ ...PAYOUT, mode: "sandbox", destination: "Chase checking ••••4242  potk_x1", balance: { available: 418.56, currency: "usd" } }, t),
   "confirm.payout.over_cap": (t) => refusedView({ ...PAYOUT, argv: ["payouts", "create", "--amount", "2000", "--currency", "usd", "--payout_method_id", "potk_x1"], reason: "cap", destination: "Chase checking ••••4242  potk_x1", balance: { available: 2418.56, currency: "usd" }, cap: 500 }, t),
   "confirm.payout.over_balance": (t) => refusedView({ ...PAYOUT, reason: "balance", destination: "Chase checking ••••4242  potk_x1", balance: { available: 18.56, currency: "usd" }, cap: 500 }, t),
+  "support.lookup": (t) => lookupView(LOOKUP, t),
+  "support.lookup.miss": (t) => lookupView({ ...LOOKUP, key: "nobody@example.com", user: undefined, person: undefined, member: undefined }, t),
+  "refund.ready": (t) => recipeView(REFUND_READY, t),
+  "dispute.ready": (t) => recipeView(DISPUTE_READY, t),
+  "dispute.late": (t) => recipeView(DISPUTE_LATE, t),
   money: (t) => moneyView(MONEY, t),
   "money.ready": (t) => moneyView(MONEY_READY, t),
   "close.blocked": (t) => recipeView(CLOSE_BLOCKED, t),

@@ -1,0 +1,20 @@
+ ▌ Refund a payment                                                                                 writes to production
+
+   wv support refund pay_JFHAhioMdPL1ts --idempotency-key 5b2c1d6e-0000-4000-8000-000000000005
+
+   payment          $10.00 · paid · Sep 16 · pay_JFHAhioMdPL1ts
+   who              ada  redacted@example.com  user_3meX572iT5dAg
+   product          prod_iQ2Zub6GFQS5Q
+   refunded so far  —
+   refund now       $10.00 · in full
+   from             Hypermotion  biz_VraUMckluH8dzV
+
+ ── Steps ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1  refund  $10.00 back to the buyer's payment method · in full
+              runs  whop payments refund pay_JFHAhioMdPL1ts --idempotency-key 5b2c1d6e-0000-4000-8000-000000000005-r…
+
+   1 write runs in order against production, each with its own idempotency key. A step that fails stops the rest; what
+   was created stays, and the card names it.
+
+ every argv  wv support refund pay_JFHAhioMdPL1ts --idempotency-key 5b2c1d6e-0000-4000-8000-000000000005 --plan | cat
+

@@ -485,3 +485,57 @@ test("money close: on a ready account the approved rerun exports, then pays out,
   const done = envelopeOf(ran) as ReturnType<typeof envelopeOf> & { results: Record<string, { id: string }> };
   assert.deepEqual(Object.keys(done.results), ["export", "payout"]);
 });
+
+// `wv support`: the lookup as data, the refund as one gated step, the dispute as evidence then submit.
+test("support lookup: an email resolves to the buyer and the screen is data with the actions a ticket ends in", () => {
+  const r = wv(["support", "lookup", "person1@example.com"], gateEnv());
+  assert.equal(r.status, 0, r.stdout);
+  const d = JSON.parse(r.stdout) as { ok: boolean; user: { id: string }; memberships: unknown[]; payments: unknown[]; actions: { what: string; run: string[] }[] };
+  assert.equal(d.ok, true);
+  assert.equal(d.user.id, "user_ICLAwIXM9zFfz");
+  assert.equal(d.memberships.length, 2);
+  assert.equal(d.payments.length, 3);
+  assert.deepEqual(d.actions[0].run, ["wv", "support", "refund", "pay_JFHAhioMdPL1ts"]);
+  assert.match(r.stderr, /^ARGS: people list --email person1@example.com/m);
+  assert.match(r.stderr, /^ARGS: memberships list --user_id user_ICLAwIXM9zFfz/m);
+  const byMembership = JSON.parse(wv(["support", "lookup", "mem_kfT4Jl8Pb8DlWE"], gateEnv()).stdout) as { user: { id: string } };
+  assert.equal(byMembership.user.id, "user_3meX572iT5dAg");
+  const none = wv(["support", "lookup"], gateEnv());
+  assert.equal(none.status, 2);
+  assert.equal(envelopeOf(none).error?.code, "VALIDATION_ERROR");
+});
+
+test("support refund: the payment is read first, the amount is typed back, the approved rerun refunds once", () => {
+  const env = gateEnv();
+  const asked = envelopeOf(wv(["support", "refund", "pay_JFHAhioMdPL1ts", "--idempotency-key", "base"], env));
+  assert.equal(asked.error?.code, "CONFIRMATION_REQUIRED", JSON.stringify(asked));
+  const plan = asked.plan as { amount: number; typedAmount: { amount: number }; payment: { remaining: number } };
+  assert.equal(plan.amount, 10);
+  assert.equal(plan.payment.remaining, 10);
+  const ran = wv(asked.rerun!.slice(1), env);
+  assert.equal(ran.status, 0, ran.stdout + ran.stderr);
+  assert.match(ran.stderr, /^ARGS: payments refund pay_JFHAhioMdPL1ts --idempotency-key base-refund/m);
+  const partial = envelopeOf(wv(["support", "refund", "pay_JFHAhioMdPL1ts", "--amount", "4"], env));
+  assert.match((partial.plan as { steps: { command: string }[] }).steps[0].command, /--partial_amount 4/);
+  const over = envelopeOf(wv(["support", "refund", "pay_JFHAhioMdPL1ts", "--amount", "40"], env));
+  assert.equal(over.error?.code, "REFUND_BLOCKED");
+});
+
+test("support dispute: evidence then submit as one plan; locked, late, or empty is a stop", () => {
+  const env = gateEnv();
+  const asked = envelopeOf(wv(["support", "dispute", "dsp_x1", "--evidence", "file_a,file_b:product_image", "--idempotency-key", "base"], env));
+  assert.equal(asked.error?.code, "CONFIRMATION_REQUIRED", JSON.stringify(asked));
+  assert.deepEqual((asked.plan as { steps: { key: string }[] }).steps.map((s) => s.key), ["evidence", "submit"]);
+  const ran = wv(asked.rerun!.slice(1), env);
+  assert.equal(ran.status, 0, ran.stdout + ran.stderr);
+  const args = ran.stderr.split("\n").filter((l) => l.startsWith("ARGS: disputes")).map((l) => l.slice(6));
+  assert.match(args[1] ?? "", /^disputes upload_evidence dsp_x1 --documents .*"document_type":"product_image".* --idempotency-key base-evidence/);
+  assert.match(args[2] ?? "", /^disputes submit dsp_x1 --idempotency-key base-submit/);
+  const empty = envelopeOf(wv(["support", "dispute", "dsp_x1"], env));
+  assert.equal(empty.error?.code, "DISPUTE_BLOCKED");
+  assert.match(empty.error?.hint ?? "", /No evidence named/);
+  const locked = envelopeOf(wv(["support", "dispute", "dsp_x1", "--evidence", "file_a"], gateEnv({ WV_FAKE_DISPUTE_LOCKED: "1" })));
+  assert.equal(locked.error?.code, "DISPUTE_BLOCKED");
+  assert.match(locked.error?.hint ?? "", /under review/);
+  assert.equal(wroteTo(locked, "disputes submit"), false);
+});

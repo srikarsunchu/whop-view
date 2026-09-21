@@ -1,0 +1,31 @@
+ [31m▌[39m [1mRespond to a dispute[22m                                   [31mblocked · nothing runs[39m
+
+   [2mwv support dispute dsp_x1 --evidence
+   file_x1:digital_fulfillment,file_x2:customer_order_history --idempotency-key
+   5b2c1d6e-0000-4000-8000-000000000006[22m
+
+   [2mdispute[22m  $10.00 · product not received · dsp_x1
+   [2mstatus [22m  [31mneeds response[39m
+   [2mdue    [22m  [31mSep 24, 2026 12:00 UTC · window closed[39m
+   [2mwho    [22m  [2mAda Customer  redacted@example.com  user_3meX572iT5dAg[22m
+   [2mpayment[22m  [2mpay_JFHAhioMdPL1ts · Sep 16[22m
+   [2mfrom   [22m  Hypermotion  biz_VraUMckluH8dzV
+
+ [2m── [22m[1mSteps[22m[2m ──────────────────────────────────────────────────────────────────────[22m
+   [2m1  evidence[22m  2 documents · digital fulfillment, customer order history ·
+                replaces what was uploaded before
+                [2mruns[22m  whop disputes upload_evidence dsp_x1 --documents '[{"i…
+   [2m2  submit  [22m  send the evidence to the processor · final
+                [2mruns[22m  whop disputes submit dsp_x1 --idempotency-key 5b2c1d6e…
+
+   [31m✗ The evidence window closed at Sep 24, 2026 12:00 UTC.[39m
+
+   [2m2 writes run in order against production, each with its own idempotency key.[22m
+   [2mA step that fails stops the rest; what was created stays, and the card names[22m
+   [2mit.[22m
+
+ [2mfix[22m  [2mwv doctor[22m
+ [2mevery argv[22m  [2mwv support dispute dsp_x1 --evidence[22m
+             [2mfile_x1:digital_fulfillment,file_x2:customer_order_history[22m
+             [2m--idempotency-key 5b2c1d6e-0000-4000-8000-000000000006 --plan | cat[22m
+

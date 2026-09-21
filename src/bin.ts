@@ -30,6 +30,7 @@ import { adGroupFor, buildLaunch, parseLaunchArgs, type LaunchReads } from "./vi
 import { buildWinback, parseWinbackArgs, winbackGroup, type WinbackReads } from "./views/winback.ts";
 import { rankData, rankView, type RankInput } from "./views/rank.ts";
 import { balanceOf, buildClose, moneyData, moneyView, parseCloseArgs, type MoneyInput } from "./views/money.ts";
+import { buildDispute, buildRefund, classifyKey, disputesFor, lookupData, lookupView, parseDisputeArgs, parseRefundArgs, userFrom, type LookupInput } from "./views/support.ts";
 import { recipeData, recipeDoneView, recipeView, substitute, type RecipePlan } from "./views/recipe.ts";
 import { randomUUID } from "node:crypto";
 import { homeView } from "./views/home.ts";
@@ -45,7 +46,7 @@ import type { Parsed, Rec } from "./envelope.ts";
 const print = (lines: string[]) => process.stdout.write(lines.join("\n") + "\n");
 
 /** Words that are wv's, not whop's. */
-const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox", "agent", "money"]);
+const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox", "agent", "money", "support"]);
 
 export interface Outcome {
   code: number;
@@ -129,6 +130,7 @@ async function main(argvIn: string[]) {
   if (DATA_SCREENS.has(argv[0]) && wantsJson(argv)) process.exit(await screenJson(argv[0], mode, env));
   if (argv[0] === "agent" && wantsJson(argv)) process.exit((await execute(argv, theme, { mode })).code);
   if (argv[0] === "gtm" && argv[1] === "rank" && wantsJson(argv)) process.exit(await rankJson(argv, mode, env));
+  if (argv[0] === "support" && argv[1] === "lookup" && wantsJson(argv)) process.exit(await lookupJson(argv, mode, env));
   // `--plan` never writes, so it is safe without a terminal and must never fall through to a real `whop` create.
   // `memberships check <key>` is wv's verb over `memberships get <key>`; a pipe gets the get.
   if (shouldPassthrough(argv) && !plan) passthrough(argv0IsCheck(argv) ? ["memberships", "get", ...argv.slice(2)] : argv, env);
@@ -165,7 +167,8 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
     print(lines!);
     process.exit(0);
   }
-  if ((argv[0] === "gtm" && (argv[1] === "launch" || argv[1] === "winback")) || (argv[0] === "money" && argv[1] === "close")) return recipePiped(argv, mode, env, plan);
+  if ((argv[0] === "gtm" && (argv[1] === "launch" || argv[1] === "winback")) || (argv[0] === "money" && argv[1] === "close") || (argv[0] === "support" && (argv[1] === "refund" || argv[1] === "dispute"))) return recipePiped(argv, mode, env, plan);
+  if (argv[0] === "support" && argv[1] === "lookup") process.exit(await lookupJson(argv, mode, env));
   if (argv[0] === "gtm" && argv[1] === "rank") process.exit(await rankJson(argv, mode, env));
   // Two screens are data as well as pictures. The rest draw and need a terminal.
   if (DATA_SCREENS.has(argv[0])) process.exit(await screenJson(argv[0], mode, env));
@@ -285,6 +288,18 @@ async function winbackReads(opts: NonNullable<ReturnType<typeof parseWinbackArgs
 
 /** One recipe by name: parse its flags, gather its reads, build its plan. `error` is a refusal in words before any read. */
 async function buildRecipe(argv: string[], env: NodeJS.ProcessEnv, mode: Mode, live: boolean): Promise<{ plan?: RecipePlan; error?: string }> {
+  if (argv[0] === "support" && argv[1] === "refund") {
+    const parsed = parseRefundArgs(argv);
+    if (!parsed.opts) return { error: parsed.error };
+    const [acct, payment] = await Promise.all([identity(env), run(["payments", "get", parsed.opts.payment], env)]);
+    return { plan: buildRefund(argv, parsed.opts, { payment: recordOf(payment.parsed), paymentError: payment.parsed.ok ? undefined : payment.parsed.error.message.split("\n")[0], accountTitle: acct?.title, accountId: acct?.id, mode }) };
+  }
+  if (argv[0] === "support" && argv[1] === "dispute") {
+    const parsed = parseDisputeArgs(argv);
+    if (!parsed.opts) return { error: parsed.error };
+    const [acct, dispute] = await Promise.all([identity(env), run(["disputes", "get", parsed.opts.dispute], env)]);
+    return { plan: buildDispute(argv, parsed.opts, { dispute: recordOf(dispute.parsed), disputeError: dispute.parsed.ok ? undefined : dispute.parsed.error.message.split("\n")[0], accountTitle: acct?.title, accountId: acct?.id, mode }) };
+  }
   if (argv[0] === "money") {
     const parsed = parseCloseArgs(argv);
     if (!parsed.opts) return { error: parsed.error };
@@ -329,7 +344,7 @@ async function recipeTerminal(argvIn: string[], theme: Theme, mode: Mode, env: N
   }
   const approved = yesFlag || split.token !== undefined;
   const live = mode !== "sandbox" && !planOnly;
-  const spin = spinner(argv[0] === "money" ? copy.spinner.close : argv[1] === "winback" ? copy.spinner.winback : copy.spinner.launch, theme);
+  const spin = spinner(argv[0] === "support" ? (argv[1] === "refund" ? copy.spinner.refund : copy.spinner.dispute) : argv[0] === "money" ? copy.spinner.close : argv[1] === "winback" ? copy.spinner.winback : copy.spinner.launch, theme);
   const built = await buildRecipe(argv, env, mode, live).finally(() => spin.stop());
   if (!built.plan) {
     print(errorView({ code: "VALIDATION_ERROR", message: built.error ?? "" }, theme));
@@ -428,6 +443,85 @@ async function rankJson(argv: string[], mode: Mode, env: NodeJS.ProcessEnv): Pro
   }
   process.stdout.write(JSON.stringify({ ok: input.groups.ok, ...rankData(input), meta: { command: "gtm rank", wrapper: "wv", mode } }, null, 2) + "\n");
   return input.groups.ok ? 0 : 1;
+}
+
+/**
+ * `wv support lookup <key>`: resolve the key to a buyer, then read everything a ticket needs in parallel.
+ * An email goes through `people list --email` and `payments list --query`; a membership id or license key through
+ * `memberships get`; a payment id through `payments get`; a member id through `members get`; a person id through
+ * `people get`. Disputes have no user filter, so the list is narrowed to the buyer's payment ids here.
+ */
+async function gatherLookup(key: string, env: NodeJS.ProcessEnv, mode: Mode): Promise<LookupInput> {
+  const kind = classifyKey(key);
+  const commands: string[][] = [];
+  const read = async (argv: string[]) => {
+    commands.push(argv);
+    return (await run(argv, env)).parsed;
+  };
+  const acct = await identity(env);
+  let user: LookupInput["user"];
+  let person: Rec | undefined;
+  if (kind === "email") {
+    const people = await read(["people", "list", "--email", key]);
+    person = rowsOf(people)?.[0];
+    user = userFrom(person);
+    if (!user) {
+      const pays = await read(["payments", "list", "--query", key, "--first", "1"]);
+      user = userFrom(rowsOf(pays)?.[0]);
+    }
+  } else if (kind === "user") user = { id: key };
+  else if (kind === "membership" || kind === "license") user = userFrom(recordOf(await read(["memberships", "get", key])));
+  else if (kind === "payment") user = userFrom(recordOf(await read(["payments", "get", key])));
+  else if (kind === "member") user = userFrom(recordOf(await read(["members", "get", key])));
+  else if (kind === "person") {
+    person = recordOf(await read(["people", "get", key]));
+    user = userFrom(person);
+  }
+  const empty: Parsed = { ok: true, payload: { kind: "page", rows: [], page: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } } };
+  if (!user) return { key, kind, accountTitle: acct?.title, accountId: acct?.id, mode, memberships: empty, payments: empty, disputes: empty, cases: empty, commands };
+  const cmds = [
+    ["memberships", "list", "--user_id", user.id],
+    ["payments", "list", "--user_id", user.id, "--first", "10"],
+    ["disputes", "list", "--first", "50"],
+    ["resolution-center-cases", "list", "--user_id", user.id],
+    ...(person ? [] : [["people", "list", "--user_id", user.id]]),
+    ["members", "list", "--user_ids", user.id],
+  ];
+  commands.push(...cmds);
+  const results = await Promise.all(cmds.map((c) => run(c, env)));
+  const [memberships, payments, disputes, cases] = results.map((r) => r.parsed);
+  const rest = results.slice(4).map((r) => r.parsed);
+  if (!person) person = rowsOf(rest[0])?.[0];
+  const member = rowsOf(rest[rest.length - 1])?.[0];
+  const u = userFrom(person) ?? userFrom(rowsOf(payments)?.[0]) ?? user;
+  const paymentIds = new Set((rowsOf(payments) ?? []).map((p) => String(p.id)));
+  return { key, kind, accountTitle: acct?.title, accountId: acct?.id, mode, user: { ...user, ...u, id: user.id }, person, member, memberships, payments, disputes: disputesFor(disputes, paymentIds), cases, commands };
+}
+
+const lookupKey = (argv: string[]) => (argv[2] && !argv[2].startsWith("--") ? argv[2] : undefined);
+
+async function lookup(argv: string[], theme: Theme, mode: Mode, env: NodeJS.ProcessEnv): Promise<Outcome> {
+  const key = argv[1] === "lookup" ? lookupKey(argv) : argv[1] && !argv[1].startsWith("--") ? argv[1] : undefined;
+  if (!key) {
+    print(errorView({ code: "VALIDATION_ERROR", message: copy.support.needsKey }, theme));
+    return { code: 2 };
+  }
+  const spin = spinner(copy.spinner.lookup, theme);
+  const input = await gatherLookup(key, env, mode).finally(() => spin.stop());
+  print(lookupView(input, theme));
+  return { code: input.user ? 0 : 1, group: "support" };
+}
+
+async function lookupJson(argv: string[], mode: Mode, env: NodeJS.ProcessEnv): Promise<number> {
+  const clean = argv.filter((a, i) => !(a === "--format" || a.startsWith("--format=") || argv[i - 1] === "--format"));
+  const key = lookupKey(clean);
+  if (!key) {
+    process.stdout.write(serialize(wvErrorEnvelope(clean, mode, { code: "VALIDATION_ERROR", message: copy.support.needsKey })));
+    return 2;
+  }
+  const input = await gatherLookup(key, env, mode);
+  process.stdout.write(JSON.stringify({ ...lookupData(input), meta: { command: "support lookup", wrapper: "wv", mode } }, null, 2) + "\n");
+  return input.user ? 0 : 1;
 }
 
 /** wv screens that have a JSON face: `--format json`, or any pipe. */
@@ -571,7 +665,8 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
     return { code: 0 };
   }
   if (group === "home") return home(theme, mode);
-  if ((group === "gtm" && (verb === "launch" || verb === "winback")) || (group === "money" && verb === "close")) return recipeTerminal(argv, theme, mode, env, !!opts.plan);
+  if ((group === "gtm" && (verb === "launch" || verb === "winback")) || (group === "money" && verb === "close") || (group === "support" && (verb === "refund" || verb === "dispute"))) return recipeTerminal(argv, theme, mode, env, !!opts.plan);
+  if (group === "support") return lookup(argv, theme, mode, env);
   if (group === "money") return moneyScreen(theme, mode);
   if (group === "gtm" && verb === "rank") return rank(argv, theme, mode, env);
   if (group === "gtm") return gtm(theme, mode);

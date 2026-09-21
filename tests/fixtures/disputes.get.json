@@ -1,0 +1,36 @@
+{
+  "ok": true,
+  "data": {
+    "id": "dsp_x1",
+    "object": "dispute",
+    "account_id": "biz_VraUMckluH8dzV",
+    "amount": 10.0,
+    "currency": "usd",
+    "status": "needs_response",
+    "reason": "product_not_received",
+    "reason_code": "13.1",
+    "inquiry": false,
+    "evidence_due_at": "2026-09-24T12:00:00Z",
+    "evidence_editable": true,
+    "evidence_locked_reason": null,
+    "evidence_submitted_at": null,
+    "evidence": {
+      "documents": []
+    },
+    "buyer": {
+      "id": "user_3meX572iT5dAg",
+      "name": "Ada Customer",
+      "email": "redacted@example.com"
+    },
+    "payment": {
+      "id": "pay_JFHAhioMdPL1ts",
+      "paid_at": "2026-09-16T00:04:39.130Z"
+    },
+    "created_at": "2026-09-20T12:00:00Z",
+    "updated_at": "2026-09-20T12:00:00Z"
+  },
+  "meta": {
+    "command": "disputes get",
+    "duration": "1ms"
+  }
+}

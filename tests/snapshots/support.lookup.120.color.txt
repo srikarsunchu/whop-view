@@ -1,0 +1,31 @@
+ [1mHypermotion[22m[2m › [22m[2mbiz_VraUMckluH8dzV[22m[2m › [22m[33mproduction[39m[2m › [22m[1msupport[22m[2m › [22m[2mada@example.com[22m
+
+   [2mwho   [22m  Ada Customer  @adacustomer  user_3meX572iT5dAg
+   [2memail [22m  ada@example.com
+   [2mspent [22m  $10.00 over 1 purchase
+   [2mseen  [22m  [2mfirst 4d ago · last 4d ago[22m
+   [2mmember[22m  [32mjoined · joined Sep 16 · last access 4d ago · mber_ZGAeDMkmbieVQ[39m
+
+ [1mMemberships[22m
+ [2mproduct           [22m  [2mstatus   [22m  [2muntil   [22m  [2mid[22m
+ prod_iQ2Zub6GFQS5Q  [32mcompleted[39m  [2mone-time[22m  [2mmem_kfT4Jl8Pb8DlWE[22m
+ prod_iQ2Zub6GFQS5Q  [32mcompleted[39m  [2mone-time[22m  [2mmem_GqEp26jmlkNcQ0[22m
+
+ [1mPayments[22m
+ [2mamount[22m  [2mstatus[22m  [2mrefunded[22m  [2mreason  [22m  [2mdate  [22m  [2mid[22m
+ $10.00  [32mpaid  [39m  [2m       —[22m  [2mone time[22m  [2mSep 16[22m  [2mpay_JFHAhioMdPL1ts[22m
+ $10.00  [32mpaid  [39m  [2m       —[22m  [2mone time[22m  [2mSep 13[22m  [2mpay_Ggv9MYVQ9AHppk[22m
+ $10.00  open    [2m       —[22m  [2mone time[22m  [2mSep 13[22m  [2mpay_WJnNwQAY2wewOl[22m
+
+ [1mDisputes and cases[22m
+ [2mkind      [22m  [2mstatus        [22m  [2mdue  [22m  [2mamount[22m  [2mreason              [22m  [2mid[22m
+ [2mchargeback[22m  [31mneeds response[39m  [2min 5d[22m  $10.00  [2mproduct not received[22m  [2mdsp_x1[22m
+
+ [2mrefund[22m  [2mwv support refund pay_JFHAhioMdPL1ts[22m
+ [2mrespond[22m  [2mwv support dispute dsp_x1 --evidence <file_id>[22m
+ [2mjson[22m  [2mwhop people list --email ada@example.com --format json[22m
+ [2mjson[22m  [2mwhop memberships list --user_id user_3meX572iT5dAg --format json[22m
+ [2mjson[22m  [2mwhop payments list --user_id user_3meX572iT5dAg --first 10 --format json[22m
+ [2mjson[22m  [2mwhop disputes list --first 50 --format json[22m
+ [2mjson[22m  [2mwhop resolution-center-cases list --user_id user_3meX572iT5dAg --format json[22m
+

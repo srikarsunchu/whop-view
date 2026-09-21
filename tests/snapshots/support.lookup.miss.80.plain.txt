@@ -1,0 +1,14 @@
+ Hypermotion › biz_VraUMckluH8dzV › production › support › nobody@example.com
+
+   who  Nothing found for nobody@example.com as email. Try the email, the user
+        id, a membership id, a license key, or a payment id.
+
+ refund  wv support refund pay_JFHAhioMdPL1ts
+ respond  wv support dispute dsp_x1 --evidence <file_id>
+ json  whop people list --email ada@example.com --format json
+ json  whop memberships list --user_id user_3meX572iT5dAg --format json
+ json  whop payments list --user_id user_3meX572iT5dAg --first 10 --format json
+ json  whop disputes list --first 50 --format json
+ json  whop resolution-center-cases list --user_id user_3meX572iT5dAg --format
+       json
+

@@ -25,6 +25,17 @@ case "$1 $2" in
   "auth status") fx auth.status.json ;;
   "people list") fx people.list.json ;;
   "payouts list") fx payouts.list.json ;;
+  "payments list") fx payments.list.json ;;
+  "payments get") fx payments.get.json ;;
+  "memberships list") fx memberships.list.json ;;
+  "memberships get") fx memberships.get.json ;;
+  "members list") fx members.list.json ;;
+  "disputes list") fx disputes.list.json ;;
+  "disputes get") [ -n "$WV_FAKE_DISPUTE_LOCKED" ] && { sed 's/"needs_response"/"under_review"/; s/"evidence_editable": true/"evidence_editable": false/; s/"evidence_locked_reason": null/"evidence_locked_reason": "submitted"/' "${WV_FAKE_FIXTURES}/disputes.get.json"; exit 0; }; fx disputes.get.json ;;
+  "resolution-center-cases list") echo '{"ok":true,"data":{"data":[],"page_info":{"start_cursor":null,"end_cursor":null,"has_next_page":false,"has_previous_page":false}},"meta":{"command":"resolution-center-cases list","duration":"1ms"}}'; exit 0 ;;
+  "payments refund") echo '{"ok":true,"data":{"id":"pay_JFHAhioMdPL1ts","status":"paid","refunded_amount":{"currency":"usd","amount":"10.00"}},"meta":{"command":"payments refund","duration":"1ms"}}'; exit 0 ;;
+  "disputes upload_evidence") echo '{"ok":true,"data":{"id":"dsp_x1","status":"needs_response","evidence":{"documents":[{"id":"file_a","document_type":"digital_fulfillment"}]}},"meta":{"command":"disputes upload_evidence","duration":"1ms"}}'; exit 0 ;;
+  "disputes submit") echo '{"ok":true,"data":{"id":"dsp_x1","status":"under_review","evidence_submitted_at":"2026-09-21T12:30:00Z"},"meta":{"command":"disputes submit","duration":"1ms"}}'; exit 0 ;;
   "accounts reserves") fx accounts.reserves.json ;;
   "verifications list") fx verifications.list.json ;;
   "exports create") echo '{"ok":true,"data":{"id":"exp_1","resource":"financial-activity","status":"pending","progress_percent":0},"meta":{"command":"exports create","duration":"1ms"}}'; exit 0 ;;

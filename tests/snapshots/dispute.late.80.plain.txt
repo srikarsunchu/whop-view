@@ -1,0 +1,31 @@
+ ▌ Respond to a dispute                                   blocked · nothing runs
+
+   wv support dispute dsp_x1 --evidence
+   file_x1:digital_fulfillment,file_x2:customer_order_history --idempotency-key
+   5b2c1d6e-0000-4000-8000-000000000006
+
+   dispute  $10.00 · product not received · dsp_x1
+   status   needs response
+   due      Sep 24, 2026 12:00 UTC · window closed
+   who      Ada Customer  redacted@example.com  user_3meX572iT5dAg
+   payment  pay_JFHAhioMdPL1ts · Sep 16
+   from     Hypermotion  biz_VraUMckluH8dzV
+
+ ── Steps ──────────────────────────────────────────────────────────────────────
+   1  evidence  2 documents · digital fulfillment, customer order history ·
+                replaces what was uploaded before
+                runs  whop disputes upload_evidence dsp_x1 --documents '[{"i…
+   2  submit    send the evidence to the processor · final
+                runs  whop disputes submit dsp_x1 --idempotency-key 5b2c1d6e…
+
+   ✗ The evidence window closed at Sep 24, 2026 12:00 UTC.
+
+   2 writes run in order against production, each with its own idempotency key.
+   A step that fails stops the rest; what was created stays, and the card names
+   it.
+
+ fix  wv doctor
+ every argv  wv support dispute dsp_x1 --evidence
+             file_x1:digital_fulfillment,file_x2:customer_order_history
+             --idempotency-key 5b2c1d6e-0000-4000-8000-000000000006 --plan | cat
+
