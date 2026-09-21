@@ -1,12 +1,5 @@
 {
   "primary": "name",
-  "columns": [
-    "key",
-    "name",
-    "unit",
-    "properties"
-  ],
-  "hidden": [
-    "description"
-  ]
+  "columns": ["key", "name", "unit", "properties"],
+  "hidden": ["description"]
 }

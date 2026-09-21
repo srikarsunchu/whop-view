@@ -46,6 +46,8 @@ export function labelFor(key: string, hints: Hints): string {
     key
       .replace(/_at$/, "")
       .replace(/_id$/, "")
+      // `member_count` is the members column; `published_reviews_count` the published reviews.
+      .replace(/^(.*?)(s)?_count$/, "$1s")
       .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
       .toLowerCase()
       .replace(/_/g, " ")
@@ -60,11 +62,12 @@ export function summarize(v: Rec): string {
 /** Classify one field. */
 export function infer(key: string, value: unknown, row: Rec, hints: Hints): Cell {
   // 1 hidden
-  if (HIDDEN.has(key) || hints.hidden?.includes(key) || key.endsWith("_decimals") || SECRET_RE.test(key)) return cell("hidden", "");
+  const spec = hints.kinds?.[key];
+  if (HIDDEN.has(key) || hints.hidden?.includes(key) || spec === "hidden" || key.endsWith("_decimals") || SECRET_RE.test(key)) return cell("hidden", "");
   // 15 empty (early so nulls don't fall through)
   if (isEmpty(value)) return cell("empty", copy.detail.empty, "", "muted");
-  // plan (hint) → planPrice
-  if (hints.plan === key && isObj(value)) {
+  // plan (hint, or the spec's word) → planPrice
+  if ((hints.plan === key || spec === "plan") && isObj(value)) {
     const price = planPrice(value as Parameters<typeof planPrice>[0]);
     return cell("plan", price, `${price}  ${value.id ?? ""}`.trim(), "text", "left");
   }
@@ -75,6 +78,22 @@ export function infer(key: string, value: unknown, row: Rec, hints: Hints): Cell
   }
   if (key === "usd_amount" && "amount" in row) return cell("hidden", "");
   if (key === "currency" && isObj(value) && "precision" in value) return cell("hidden", "");
+  // 5b the spec's word: a kind the OpenAPI schema settles, ahead of every guess below and after the ledger's own amount rule. Only the kinds a guess could get wrong.
+  if (spec === "count" && typeof value === "number") return cell("scalar", String(value), String(value), "text", "right");
+  if (spec === "money" && typeof value === "number") {
+    const pre = hints.formatted?.[key];
+    const str = pre && typeof row[pre] === "string" ? (row[pre] as string) : money(value, typeof row.currency === "string" ? row.currency : "usd");
+    return cell("money", str, str, "text", "right");
+  }
+  if (spec === "money" && typeof value === "string" && /^-?\d+(\.\d+)?$/.test(value)) {
+    const n = Number(value);
+    const str = money(n, typeof row.currency === "string" ? row.currency : "usd");
+    return cell("money", str, str, n < 0 ? "bad" : "text", "right");
+  }
+  if (spec === "status" && typeof value === "string" && value.length < 40) return cell("status", statusLabel(value), statusLabel(value), statusRole(value));
+  if (spec === "date" && ((typeof value === "string" && ISO_RE.test(value)) || typeof value === "number")) {
+    return cell("date", relative(value as string | number), `${longDate(value as string | number)} · ${relative(value as string | number)}`, "text");
+  }
   // 7 status, ahead of ids: "needs_response" matches the id shape
   if ((key === "status" || key === "visibility" || key === "access_level" || hints.status === key) && typeof value === "string" && value.length < 20) {
     return cell("status", statusLabel(value), statusLabel(value), statusRole(value));
@@ -196,7 +215,11 @@ export function chooseColumns(rows: Rec[], hints: Hints, breakpoint: "narrow" | 
     add(hints.plan, 3);
     add(hints.money?.[0] ?? keys.find((k) => kinds.get(k) === "money" || kinds.get(k) === "plan"), 3);
     add(hints.date ?? (keys.includes("created_at") ? "created_at" : keys.find((k) => kinds.get(k) === "date")), 4);
-    add(hints.relation ?? RELATION_KEYS.find((k) => keys.includes(k) && (kinds.get(k) === "relation" || kinds.get(k) === "user")), 5);
+    // A relation that is the same on every row says nothing: an account-scoped list carries the account on each row.
+    const constant = (k: string) => rows.length > 1 && rows.every((r) => JSON.stringify(r[k]) === JSON.stringify(rows[0][k]));
+    add(hints.relation ?? RELATION_KEYS.find((k) => keys.includes(k) && (kinds.get(k) === "relation" || kinds.get(k) === "user") && !constant(k)), 5);
+    // A `<thing>_name` string is the relation spelled out: `product_name` on a ledger line, `plan_name` on a member.
+    if (!hints.relation) add(keys.find((k) => /_name$/.test(k) && kinds.get(k) === "text" && !cols.some((c) => c.key === k)), 5);
     if (breakpoint === "wide") {
       add(keys.find((k) => /member_count|count$/.test(k)), 7);
       add(keys.find((k) => kinds.get(k) === "money" && !cols.some((c) => c.key === k)), 7);

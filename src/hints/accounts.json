@@ -1,41 +1,7 @@
 {
   "primary": "title",
   "status": "status",
-  "money": [
-    "volume_usd",
-    "total_earned_usd",
-    "total_usd"
-  ],
-  "date": "created_at",
-  "columns": [
-    "title",
-    "status",
-    "volume_usd",
-    "country",
-    "created_at",
-    "id"
-  ],
-  "hidden": [
-    "home_preferences",
-    "store_page_config",
-    "opengraph_image_url",
-    "opengraph_image_variant",
-    "use_logo_as_opengraph_image_fallback",
-    "banner_image_url",
-    "logo_url",
-    "other_business_description",
-    "other_industry_description",
-    "payment_controls",
-    "capabilities",
-    "required_actions",
-    "recommended_actions",
-    "balances",
-    "stablecoin_rails",
-    "tax_collection_enabled_states",
-    "tax_identifiers"
-  ],
-  "labels": {
-    "volume_usd": "volume",
-    "total_earned_usd": "earned"
-  }
+  "columns": ["title", "status", "volume_usd", "country", "created_at", "id"],
+  "hidden": ["home_preferences", "store_page_config", "opengraph_image_url", "opengraph_image_variant", "use_logo_as_opengraph_image_fallback", "banner_image_url", "logo_url", "other_business_description", "other_industry_description", "payment_controls", "capabilities", "required_actions", "balances", "stablecoin_rails", "tax_collection_enabled_states", "tax_identifiers"],
+  "labels": { "volume_usd": "volume", "total_earned_usd": "earned" }
 }

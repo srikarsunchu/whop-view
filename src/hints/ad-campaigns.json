@@ -1,34 +1,7 @@
 {
   "primary": "title",
-  "status": "status",
-  "money": ["budget_amount", "spend", "cost_per_result", "cost_per_click", "cost_per_mille", "purchase_value", "lead_value", "desired_cost_per_result"],
-  "date": "created_at",
+  "money": ["desired_cost_per_result"],
   "columns": ["title", "status", "delivery_status", "objective", "budget_amount", "spend", "results", "created_at", "id"],
-  "hidden": [
-    "added_to_cart_value", "added_to_carts", "completed_registration_value", "completed_registrations", "contact_value", "contacts",
-    "cost_per_added_to_cart", "cost_per_completed_registration", "cost_per_contact", "cost_per_lead", "cost_per_purchase", "cost_per_schedule",
-    "cost_per_submitted_application", "cost_per_unique_click", "cost_per_viewed_content", "custom_conversions", "custom_event_counts",
-    "custom_event_values", "schedule_value", "schedules", "submitted_application_value", "submitted_applications", "viewed_content_value",
-    "viewed_contents", "unique_click_through_rate", "unique_clicks", "special_ad_categories", "frequency", "link_clicks"
-  ],
-  "labels": {
-    "delivery_status": "delivery",
-    "budget_amount": "budget",
-    "budget_type": "per",
-    "budget_optimization": "budget owner",
-    "bid_type": "bid",
-    "desired_cost_per_result": "target cpr",
-    "cost_per_result": "cpr",
-    "cost_per_click": "cpc",
-    "cost_per_mille": "cpm",
-    "click_through_rate": "ctr",
-    "return_on_ad_spend": "roas",
-    "result_event": "result",
-    "result_event_name": "custom result",
-    "purchase_value": "purchase value",
-    "lead_value": "lead value",
-    "starts_at": "starts",
-    "ends_at": "ends",
-    "spend_currency": "currency"
-  }
+  "hidden": ["added_to_cart_value", "added_to_carts", "completed_registration_value", "completed_registrations", "contact_value", "contacts", "cost_per_added_to_cart", "cost_per_completed_registration", "cost_per_contact", "cost_per_lead", "cost_per_purchase", "cost_per_schedule", "cost_per_submitted_application", "cost_per_unique_click", "cost_per_viewed_content", "custom_conversions", "custom_event_counts", "custom_event_values", "schedule_value", "schedules", "submitted_application_value", "submitted_applications", "viewed_content_value", "viewed_contents", "unique_click_through_rate", "unique_clicks", "special_ad_categories", "frequency", "link_clicks"],
+  "labels": { "delivery_status": "delivery", "budget_amount": "budget", "budget_type": "per", "budget_optimization": "budget owner", "bid_type": "bid", "desired_cost_per_result": "target cpr", "cost_per_result": "cpr", "cost_per_click": "cpc", "cost_per_mille": "cpm", "click_through_rate": "ctr", "return_on_ad_spend": "roas", "result_event": "result", "result_event_name": "custom result", "purchase_value": "purchase value", "lead_value": "lead value", "starts_at": "starts", "ends_at": "ends", "spend_currency": "currency" }
 }

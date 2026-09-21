@@ -1,11 +1,5 @@
 {
   "primary": "resource",
-  "status": "status",
-  "date": "created_at",
   "columns": ["resource", "status", "progress_percent", "created_at", "expires_at", "id"],
-  "labels": {
-    "progress_percent": "progress",
-    "download_url": "download",
-    "expires_at": "expires"
-  }
+  "labels": { "progress_percent": "progress", "download_url": "download", "expires_at": "expires" }
 }

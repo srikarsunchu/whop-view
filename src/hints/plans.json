@@ -1,9 +1,6 @@
 {
   "primary": "title",
-  "status": "visibility",
-  "money": ["initial_price", "renewal_price", "strike_through_initial_price", "strike_through_renewal_price"],
   "formatted": { "initial_price": "formatted_price" },
-  "date": "created_at",
   "relation": "product",
   "columns": ["title", "visibility", "initial_price", "plan_type", "product", "member_count", "created_at", "id"],
   "hidden": ["formatted_price", "invoice", "three_ds_level", "internal_notes", "split_pay_required_payments", "adaptive_pricing_enabled", "image", "release_method"],

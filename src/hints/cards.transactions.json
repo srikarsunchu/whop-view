@@ -1,22 +1,7 @@
 {
   "primary": "merchant_name",
-  "status": "status",
-  "money": ["usd_amount", "local_amount", "cashback_usd_amount"],
-  "date": "created_at",
   "relation": "card_id",
   "columns": ["merchant_name", "status", "usd_amount", "merchant_category", "created_at", "card_id", "id"],
   "hidden": ["merchant_icon_url"],
-  "labels": {
-    "merchant_name": "merchant",
-    "merchant_category": "category",
-    "merchant_category_code": "mcc",
-    "usd_amount": "amount",
-    "local_amount": "local amount",
-    "cashback_usd_amount": "cashback",
-    "card_id": "card",
-    "cardholder_id": "cardholder",
-    "declined_reason": "declined because",
-    "transaction_type": "type",
-    "posted_at": "posted"
-  }
+  "labels": { "merchant_name": "merchant", "merchant_category": "category", "merchant_category_code": "mcc", "usd_amount": "amount", "local_amount": "local amount", "cashback_usd_amount": "cashback", "card_id": "card", "cardholder_id": "cardholder", "declined_reason": "declined because", "transaction_type": "type", "posted_at": "posted" }
 }

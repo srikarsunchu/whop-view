@@ -1,20 +1,6 @@
 {
   "primary": "id",
-  "status": "status",
-  "money": [
-    "amount"
-  ],
-  "date": "created_at",
   "relation": "payment",
-  "columns": [
-    "id",
-    "status",
-    "amount",
-    "reason",
-    "payment_id",
-    "created_at"
-  ],
-  "labels": {
-    "payment_id": "payment"
-  }
+  "columns": ["id", "status", "amount", "reason", "payment_id", "created_at"],
+  "labels": { "payment_id": "payment" }
 }

@@ -1,15 +1,5 @@
 {
   "primary": "media_type",
-  "status": "status",
-  "money": ["amount_charged"],
-  "date": "created_at",
   "columns": ["media_type", "status", "amount_charged", "created_at", "completed_at", "id"],
-  "labels": {
-    "media_type": "type",
-    "amount_charged": "charged",
-    "completed_at": "completed",
-    "error_message": "error",
-    "reference_media": "references",
-    "duration_seconds": "seconds"
-  }
+  "labels": { "media_type": "type", "amount_charged": "charged", "completed_at": "completed", "error_message": "error", "reference_media": "references", "duration_seconds": "seconds" }
 }

@@ -18,7 +18,7 @@ For an agent: `whop --llms-full` tags 149 commands "confirm with the user before
 
 For a person: every command prints every field as TOON, so two products are 69 lines with no columns, no alignment, and ISO timestamps. `--format md` prints `[object Object]` for nested fields. Errors are two lines. `payouts create` moves real money with no confirmation and no dry-run flag. A sandbox host exists, but the CLI reaches it only through `WHOP_API_BASE_URL` with a separate key, and the docs say there is no sandbox mode. Objects and arrays have to be typed as JSON on the command line.
 
-`wv` answers both from one core: inference rules plus small hint files classify every field of every response, so each command group gets the people layer for free, and the same plan a person confirms on a card is the JSON an agent gets on a pipe. `WV_RAW=1` turns all of it off.
+`wv` answers both from one core: the kinds Whop's OpenAPI spec settles for every response field, derived once into one file, plus inference rules and small hint files for what the spec cannot say, classify every field of every response, so each command group gets the people layer for free, and the same plan a person confirms on a card is the JSON an agent gets on a pipe. `WV_RAW=1` turns all of it off.
 
 ## Install for a team
 
@@ -74,7 +74,7 @@ Registers it beside Whop's own server, so an agent has both: whop's 298 tools an
 |---|---|---|---|---|
 | [`whop-gtm`](skills/whop-gtm/SKILL.md) | launch, retarget, scale, report | `wv gtm` | `wv gtm launch`, `wv gtm winback`, `wv gtm rank` | 26/26 |
 | [`whop-store`](skills/whop-store/SKILL.md) | prices, publishing, plans, promo codes, checkout links | `wv store` | `wv store price`, `wv store publish` | 18/18 |
-| [`whop-money`](skills/whop-money/SKILL.md) | balances, payouts, month end, reconcile | `wv money` | `wv money close` | 20/20 |
+| [`whop-money`](skills/whop-money/SKILL.md) | balances per currency, payouts, month end, a swap, reconcile | `wv money` | `wv money close`, `wv money swap` | 20/20 |
 | [`whop-support`](skills/whop-support/SKILL.md) | who is this customer, refund, dispute, cases | `wv support lookup` | `wv support refund`, `wv support dispute` | 21/22 |
 | [`whop-dev`](skills/whop-dev/SKILL.md) | ship, webhook, domain, logs, keys | `wv dev` | `wv dev hook` | 15/15 · MCP 15/15 |
 
@@ -101,7 +101,7 @@ The recording is live on the demo account: the identity block and the missing pi
 
 ### `setup`
 
-The first hour as a numbered list. `wv setup` turns the doctor's checks into steps with who does each: wv runs it as a plan, the person does it in a browser at the URL shown, or an interactive `whop` command runs in a terminal. Blocking checks come first, and `wv setup` again says what is left.
+The first hour as a numbered list. `wv setup` turns the doctor's checks, the payout method among them (what Whop would let this account add, from its country and identity), into steps with who does each: wv runs it as a plan, the person does it in a browser at the URL shown, or an interactive `whop` command runs in a terminal. Blocking checks come first, and `wv setup` again says what is left.
 
 ![setup](demo/setup.gif)
 
@@ -119,7 +119,9 @@ Reads: the bytes are whop's. `wv products list | cat` is byte-identical to `whop
 
 `wv` execs `whop` with the original argv whenever `--format`, `--full-output`, `--filter-output`, `--llms`, `--schema`, `--help`, or any `--token-*` flag is present, when `WV_RAW=1`, or when the command owns the terminal itself: `login`, `logout`, `quickstart`, `upgrade`, `apps dev|deploy|init|pull`. Only the exit status is mapped even then; `WV_EXIT=whop` keeps whop's.
 
-`--sandbox`, `--width`, `--plan`, `--all`, and `--yes` are `wv`'s own flags and are stripped before the exec, so `wv --sandbox products list | cat` is `whop products list` against the sandbox host.
+`--sandbox`, `--width`, `--plan`, `--all`, `--yes`, and `--format human` are `wv`'s own flags and are stripped before the exec, so `wv --sandbox products list | cat` is `whop products list` against the sandbox host.
+
+`--format human` is the sixth format beside whop's `toon`, `json`, `yaml`, `md`, and `jsonl`: the terminal rendering, asked for by name. It is the one flag that turns rule 1 around, so `wv products list --format human | less` gets the table, at `--width` or 80 columns, with no color unless `FORCE_COLOR` is set. whop never sees the flag; it is asked for `--format json --full-output` as always.
 
 Writes: the same gate a person gets, as JSON. `whop --llms-full` marks 149 commands "Confirm with the user before executing this destructive command" and enforces none of it, and there is no `--dry-run`. So a write in a pipe without consent never reaches `whop`. It exits 2 with the plan and the command that runs it:
 
@@ -226,7 +228,7 @@ The launch recording is the plan on the demo account, which has no Facebook page
 
 ### `store`
 
-The catalog on one screen, and the two storefront writes that matter as recipes. `wv store` shows every product with whether it is for sale and why not, its plans with price, type, visibility, members, stock, and trial, the active promo codes, and the checkout links. `wv store price <plan_id> --to 39` reads the plan and shows `$10.00 → $39.00` with the members on it, refusing the same price, a sub-dollar price, or an archived plan. `wv store publish <prod_id>` publishes and mints a shareable checkout link for the default plan, refusing a product with nothing to buy.
+The catalog on one screen, and the two storefront writes that matter as recipes. `wv store` shows every product with whether it is for sale and why not, its plans with price, type, visibility, members, stock, and trial, the active promo codes, and the checkout links. `wv store --from DE` adds what a buyer in that country pays on every priced plan, tax included, from Whop's own tax preview. `wv store price <plan_id> --to 39` reads the plan and shows `$10.00 → $39.00` with the members on it, refusing the same price, a sub-dollar price, or an archived plan. `wv store publish <prod_id>` publishes and mints a shareable checkout link for the default plan, refusing a product with nothing to buy.
 
 ![store](demo/store.gif)
 
@@ -236,7 +238,7 @@ Both recordings are live reads on the demo account; the price change is shown wi
 
 ### `money`
 
-The treasury on one screen, and the month end as one plan. `wv money` reads the balance per currency, Whop's live payout limits per speed with the block behind a zero, the saved payout methods, the reserves, and the last payouts, and names the identity fix when payouts are blocked. `wv money close --keep 100` exports the month's financial activity and pays out what is above the floor, two writes with one approval; the plan is refused before anything runs when the balance is under the floor, no saved method is the obvious one, Whop blocks payouts, or the amount is over Whop's limit or wv's cap.
+The treasury on one screen, the month end as one plan, and a stuck balance converted as another. `wv money` reads one balance per currency the account holds money in (the saved methods, the ledger's last page, and the reserves say which), Whop's live payout limits per speed with the block behind a zero, the saved payout methods, the reserves, and the last payouts; it marks a balance no saved method can deliver and names the swap, and names the identity fix when payouts are blocked. `wv money swap --from eur --to usd --amount 80` asks Whop for a quote, shows both balances before and after with the rate and the fee, and runs one swap at that rate after the amount is typed back. `wv money close --keep 100` exports the month's financial activity and pays out what is above the floor, two writes with one approval; the plan is refused before anything runs when the balance is under the floor, no saved method is the obvious one, Whop blocks payouts, or the amount is over Whop's limit or wv's cap.
 
 ![money](demo/money.gif)
 
@@ -689,12 +691,12 @@ A write verb inside the session gets the same confirmation, then hands the termi
 ```
 
 - `wv stats get <metric> --from … --to …` renders a series: total, sparkline, one money row per point. `--last 7d` (or `30d`, `90d`, any `Nd`), `--this month`, and `--last month` do the date math. Stats presets are whole UTC days, ending yesterday for `--last Nd` like `home` and `gtm`; the footer shows the resolved `--from` and `--to`, so `copy json` pastes real dates. The same presets work on `wv events list`, where they are timestamps and `--last Nd` rolls to now. Whop refuses an events range over 30 days, so `wv` refuses it first, in Whop's words, before anything runs.
-- `--width N` overrides the terminal width. `NO_COLOR` strips every escape.
+- `--width N` overrides the terminal width. `NO_COLOR` strips every escape. `--format human` asks for the rendering in a pipe.
 - Every teaching footer is built from an argv array and shell-quoted once, so a product title with a space or a quote pastes back as the same command. `WV_PAYOUT_CAP`, `WV_AD_CAP`, `WV_CONFIRM_TIMEOUT`, `WV_SANDBOX`, `WV_SANDBOX_KEY`, `WV_SANDBOX_URL`, `WV_CONFIG` (the config file path, default `~/.config/whop-view/config.json`), `WV_EXIT`, and `WV_RAW` are the only knobs; each is described where it applies.
 
 ## How it generalizes
 
-Three layers. Tokens name six color roles and nothing else names a color. Primitives are pure functions from data and width to lines: table, key-value card, callout, footer, prompt, spinner. Views compose them. Every field is classified by sixteen inference rules, in order, on the response data: ids by prefix, `{amount, currency}` as money, ISO strings as dates, short enums under known keys as status, nested objects by title and id. Twenty-four resources ship a hints file that overrides the primary label, column order, status field, and money fields. Everything else renders from inference alone. Phone numbers, IP addresses, user agents, tokens, and secrets are hidden everywhere. Emails show in detail views only.
+Three layers. Tokens name six color roles and nothing else names a color. Primitives are pure functions from data and width to lines: table, key-value card, callout, footer, prompt, spinner. Views compose them. Every field is classified first by the kind Whop's OpenAPI spec settles for it (`pnpm spec` derives `src/hints/_spec.json` from `https://api.whop.com/openapi.json`: 370 commands across 84 groups), then by sixteen inference rules, in order, on the response data: ids by prefix, `{amount, currency}` as money, ISO strings as dates, short enums under known keys as status, nested objects by title and id. Forty-nine resources ship a hand hints file for what the spec cannot say: the primary label, column order, and labels. `pnpm coverage` writes `docs/coverage.md`, every recorded envelope rendered with and without each layer, so the split is measured rather than claimed; `docs/in-cli.md` is the same code as a `--format human` inside the whop binary. Phone numbers, IP addresses, user agents, tokens, and secrets are hidden everywhere. Emails show in detail views only.
 
 The agent layer is the same data one step earlier. A screen is a pure function from parsed envelopes to lines; the JSON form returns the envelopes it was given, joined the same way. A plan is what the confirm card would have shown, as fields. A skill is those two facts written down for a model: which screen to read first, which plan each playbook produces, what blocks it, and which read proves it is done.
 

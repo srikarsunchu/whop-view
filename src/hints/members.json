@@ -1,7 +1,5 @@
 {
   "primary": "user",
-  "status": "status",
-  "date": "last_accessed_at",
   "columns": ["user", "status", "access_level", "last_accessed_at", "joined_at", "id"],
   "hidden": ["phone_number", "token_balance"],
   "labels": { "last_accessed_at": "last seen", "access_level": "role" }

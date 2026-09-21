@@ -1,18 +1,6 @@
 {
   "primary": "type",
-  "money": ["amount"],
-  "date": "reported_at",
   "relation": "payment_id",
   "columns": ["type", "amount", "actionable", "card_brand", "reported_at", "payment_id", "id"],
-  "labels": {
-    "type": "kind",
-    "reported_at": "reported",
-    "transaction_at": "transaction",
-    "fee_charged": "fee charged",
-    "not_actionable_reason": "why not actionable",
-    "card_brand": "card",
-    "payment_id": "payment",
-    "product_id": "product",
-    "account_id": "account"
-  }
+  "labels": { "type": "kind", "reported_at": "reported", "transaction_at": "transaction", "fee_charged": "fee charged", "not_actionable_reason": "why not actionable", "card_brand": "card", "payment_id": "payment", "product_id": "product", "account_id": "account" }
 }

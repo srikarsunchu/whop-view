@@ -1,0 +1,4783 @@
+{
+ "access-tokens create": {
+  "schema": "AccessToken",
+  "kinds": {
+   "expires_at": "date"
+  }
+ },
+ "account-links create": {
+  "schema": "AccountLink",
+  "kinds": {
+   "expires_at": "date"
+  }
+ },
+ "accounts create": {
+  "schema": "Account",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "owner": "relation",
+   "parent_account": "relation",
+   "partner": "relation",
+   "recommended_actions": "hidden",
+   "route": "id",
+   "total_earned_usd": "money",
+   "total_usd": "money",
+   "volume_usd": "money"
+  }
+ },
+ "accounts fees": {
+  "schema": "AccountFees",
+  "kinds": {
+   "account_id": "id",
+   "parent_account_id": "id"
+  }
+ },
+ "accounts form_company": {
+  "kinds": {
+   "checkout_session_id": "id",
+   "currency": "hidden",
+   "total": "money"
+  }
+ },
+ "accounts get": {
+  "schema": "Account",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "owner": "relation",
+   "parent_account": "relation",
+   "partner": "relation",
+   "recommended_actions": "hidden",
+   "route": "id",
+   "total_earned_usd": "money",
+   "total_usd": "money",
+   "volume_usd": "money"
+  }
+ },
+ "accounts list": {
+  "schema": "Account",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "owner": "relation",
+   "parent_account": "relation",
+   "partner": "relation",
+   "recommended_actions": "hidden",
+   "route": "id",
+   "total_earned_usd": "money",
+   "total_usd": "money",
+   "volume_usd": "money"
+  }
+ },
+ "accounts preferences": {
+  "kinds": {
+   "ads_reporting_currency": "money"
+  }
+ },
+ "accounts reserves": {
+  "schema": "AccountReserve",
+  "kinds": {
+   "amount": "money",
+   "currency": "hidden"
+  }
+ },
+ "accounts suspend": {
+  "schema": "Account",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "owner": "relation",
+   "parent_account": "relation",
+   "partner": "relation",
+   "recommended_actions": "hidden",
+   "route": "id",
+   "total_earned_usd": "money",
+   "total_usd": "money",
+   "volume_usd": "money"
+  }
+ },
+ "accounts update": {
+  "schema": "Account",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "owner": "relation",
+   "parent_account": "relation",
+   "partner": "relation",
+   "recommended_actions": "hidden",
+   "route": "id",
+   "total_earned_usd": "money",
+   "total_usd": "money",
+   "volume_usd": "money"
+  }
+ },
+ "ad-campaigns create": {
+  "schema": "AdCampaign",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "budget_amount": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "purchase_value": "money",
+   "reach": "count",
+   "result_event_name": "id",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ad-campaigns delete": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "ad-campaigns duplicate": {
+  "schema": "AdCampaign",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "budget_amount": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "purchase_value": "money",
+   "reach": "count",
+   "result_event_name": "id",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ad-campaigns get": {
+  "schema": "AdCampaign",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "budget_amount": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "purchase_value": "money",
+   "reach": "count",
+   "result_event_name": "id",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ad-campaigns list": {
+  "schema": "AdCampaign",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "budget_amount": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "purchase_value": "money",
+   "reach": "count",
+   "result_event_name": "id",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ad-campaigns pause": {
+  "schema": "AdCampaign",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "budget_amount": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "purchase_value": "money",
+   "reach": "count",
+   "result_event_name": "id",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ad-campaigns retry_payment": {
+  "schema": "AdCampaign",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "budget_amount": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "purchase_value": "money",
+   "reach": "count",
+   "result_event_name": "id",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ad-campaigns unpause": {
+  "schema": "AdCampaign",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "budget_amount": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "purchase_value": "money",
+   "reach": "count",
+   "result_event_name": "id",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ad-campaigns update": {
+  "schema": "AdCampaign",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "budget_amount": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "purchase_value": "money",
+   "reach": "count",
+   "result_event_name": "id",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ad-conversion-value-rules create": {
+  "schema": "AdConversionValueRule",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "fixed_value": "money",
+   "id": "id",
+   "percentage_change": "count",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "ad-conversion-value-rules delete": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "ad-conversion-value-rules get": {
+  "schema": "AdConversionValueRule",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "fixed_value": "money",
+   "id": "id",
+   "percentage_change": "count",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "ad-conversion-value-rules list": {
+  "schema": "AdConversionValueRule",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "fixed_value": "money",
+   "id": "id",
+   "percentage_change": "count",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "ad-conversion-value-rules pause": {
+  "schema": "AdConversionValueRule",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "fixed_value": "money",
+   "id": "id",
+   "percentage_change": "count",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "ad-conversion-value-rules unpause": {
+  "schema": "AdConversionValueRule",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "fixed_value": "money",
+   "id": "id",
+   "percentage_change": "count",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "ad-conversion-value-rules update": {
+  "schema": "AdConversionValueRule",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "fixed_value": "money",
+   "id": "id",
+   "percentage_change": "count",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "ad-groups create": {
+  "schema": "AdGroup",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "budget_amount": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "ends_at": "date",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "minimum_daily_spend": "money",
+   "purchase_value": "money",
+   "reach": "count",
+   "result_event_name": "id",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "starts_at": "date",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ad-groups delete": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "ad-groups duplicate": {
+  "schema": "AdGroup",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "budget_amount": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "ends_at": "date",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "minimum_daily_spend": "money",
+   "purchase_value": "money",
+   "reach": "count",
+   "result_event_name": "id",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "starts_at": "date",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ad-groups estimate_reach": {
+  "schema": "ReachEstimate",
+  "kinds": {
+   "users_lower_bound": "count",
+   "users_upper_bound": "count"
+  }
+ },
+ "ad-groups get": {
+  "schema": "AdGroup",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "budget_amount": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "ends_at": "date",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "minimum_daily_spend": "money",
+   "purchase_value": "money",
+   "reach": "count",
+   "result_event_name": "id",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "starts_at": "date",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ad-groups list": {
+  "schema": "AdGroup",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "budget_amount": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "ends_at": "date",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "minimum_daily_spend": "money",
+   "purchase_value": "money",
+   "reach": "count",
+   "result_event_name": "id",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "starts_at": "date",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ad-groups pause": {
+  "schema": "AdGroup",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "budget_amount": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "ends_at": "date",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "minimum_daily_spend": "money",
+   "purchase_value": "money",
+   "reach": "count",
+   "result_event_name": "id",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "starts_at": "date",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ad-groups targeting_options": {
+  "schema": "TargetingOption",
+  "kinds": {
+   "audience_size_lower_bound": "count",
+   "audience_size_upper_bound": "count",
+   "id": "id"
+  }
+ },
+ "ad-groups unpause": {
+  "schema": "AdGroup",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "budget_amount": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "ends_at": "date",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "minimum_daily_spend": "money",
+   "purchase_value": "money",
+   "reach": "count",
+   "result_event_name": "id",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "starts_at": "date",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ad-groups update": {
+  "schema": "AdGroup",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "budget_amount": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "ends_at": "date",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "minimum_daily_spend": "money",
+   "purchase_value": "money",
+   "reach": "count",
+   "result_event_name": "id",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "starts_at": "date",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ads create": {
+  "schema": "Ad",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "music": "relation",
+   "purchase_value": "money",
+   "reach": "count",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ads delete": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "ads duplicate": {
+  "schema": "Ad",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "music": "relation",
+   "purchase_value": "money",
+   "reach": "count",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ads get": {
+  "schema": "Ad",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "music": "relation",
+   "purchase_value": "money",
+   "reach": "count",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ads list": {
+  "schema": "Ad",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "music": "relation",
+   "purchase_value": "money",
+   "reach": "count",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ads pause": {
+  "schema": "Ad",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "music": "relation",
+   "purchase_value": "money",
+   "reach": "count",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ads unpause": {
+  "schema": "Ad",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "music": "relation",
+   "purchase_value": "money",
+   "reach": "count",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "ads update": {
+  "schema": "Ad",
+  "kinds": {
+   "added_to_cart_value": "money",
+   "clicks": "count",
+   "completed_registration_value": "money",
+   "contact_value": "money",
+   "cost_per_added_to_cart": "money",
+   "cost_per_click": "money",
+   "cost_per_completed_registration": "money",
+   "cost_per_contact": "money",
+   "cost_per_lead": "money",
+   "cost_per_mille": "money",
+   "cost_per_purchase": "money",
+   "cost_per_result": "money",
+   "cost_per_schedule": "money",
+   "cost_per_submitted_application": "money",
+   "cost_per_unique_click": "money",
+   "cost_per_viewed_content": "money",
+   "created_at": "date",
+   "delivery_status": "status",
+   "id": "id",
+   "impressions": "count",
+   "lead_value": "money",
+   "music": "relation",
+   "purchase_value": "money",
+   "reach": "count",
+   "results": "count",
+   "return_on_ad_spend": "count",
+   "schedule_value": "money",
+   "spend": "money",
+   "status": "status",
+   "submitted_application_value": "money",
+   "updated_at": "date",
+   "viewed_content_value": "money"
+  }
+ },
+ "affiliates create": {
+  "schema": "Affiliate",
+  "kinds": {
+   "active_members_count": "count",
+   "company": "relation",
+   "created_at": "date",
+   "id": "id",
+   "monthly_recurring_revenue_usd": "money",
+   "status": "status",
+   "total_overrides_count": "count",
+   "total_referral_earnings_usd": "money",
+   "total_referrals_count": "count",
+   "total_revenue_usd": "money",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "affiliates get": {
+  "schema": "Affiliate",
+  "kinds": {
+   "active_members_count": "count",
+   "company": "relation",
+   "created_at": "date",
+   "id": "id",
+   "monthly_recurring_revenue_usd": "money",
+   "status": "status",
+   "total_overrides_count": "count",
+   "total_referral_earnings_usd": "money",
+   "total_referrals_count": "count",
+   "total_revenue_usd": "money",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "affiliates list": {
+  "schema": "AffiliateListItem",
+  "kinds": {
+   "active_members_count": "count",
+   "company": "relation",
+   "created_at": "date",
+   "id": "id",
+   "monthly_recurring_revenue_usd": "money",
+   "status": "status",
+   "total_overrides_count": "count",
+   "total_referral_earnings_usd": "money",
+   "total_referrals_count": "count",
+   "total_revenue_usd": "money",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "affiliates overrides": {
+  "kinds": {
+   "commission_value": "count",
+   "id": "id",
+   "plan_id": "id",
+   "total_referral_earnings_usd": "money"
+  }
+ },
+ "ai-chats create": {
+  "schema": "AiChat",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "last_message_at": "date",
+   "message_count": "count",
+   "updated_at": "date"
+  }
+ },
+ "ai-chats get": {
+  "schema": "AiChat",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "last_message_at": "date",
+   "message_count": "count",
+   "updated_at": "date"
+  }
+ },
+ "ai-chats list": {
+  "schema": "AiChatListItem",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "last_message_at": "date",
+   "message_count": "count",
+   "updated_at": "date"
+  }
+ },
+ "ai-chats update": {
+  "schema": "AiChat",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "last_message_at": "date",
+   "message_count": "count",
+   "updated_at": "date"
+  }
+ },
+ "api-keys create": {
+  "schema": "ApiKey",
+  "kinds": {
+   "created_at": "date",
+   "expires_at": "date",
+   "id": "id",
+   "updated_at": "date"
+  }
+ },
+ "api-keys delete": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "api-keys get": {
+  "schema": "ApiKey",
+  "kinds": {
+   "created_at": "date",
+   "expires_at": "date",
+   "id": "id",
+   "updated_at": "date"
+  }
+ },
+ "api-keys list": {
+  "schema": "ApiKey",
+  "kinds": {
+   "created_at": "date",
+   "expires_at": "date",
+   "id": "id",
+   "updated_at": "date"
+  }
+ },
+ "api-keys rotate": {
+  "schema": "ApiKey",
+  "kinds": {
+   "created_at": "date",
+   "expires_at": "date",
+   "id": "id",
+   "updated_at": "date"
+  }
+ },
+ "api-keys update": {
+  "schema": "ApiKey",
+  "kinds": {
+   "created_at": "date",
+   "expires_at": "date",
+   "id": "id",
+   "updated_at": "date"
+  }
+ },
+ "api-logs list": {
+  "kinds": {
+   "api_key_id": "id",
+   "duration_ms": "count",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "app-builds create": {
+  "schema": "AppBuild",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "app-builds get": {
+  "schema": "AppBuild",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "app-builds list": {
+  "schema": "AppBuild",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "app-builds promote": {
+  "schema": "AppBuild",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "apps create": {
+  "schema": "App",
+  "kinds": {
+   "account": "relation",
+   "businesses_created_count": "count",
+   "creator": "relation",
+   "default_api_key": "relation",
+   "id": "id",
+   "marketplace_status": "id",
+   "product_id": "id",
+   "status": "status"
+  }
+ },
+ "apps delete": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "apps deploy": {
+  "schema": "AppDeployment",
+  "kinds": {
+   "app_id": "id",
+   "build_id": "id",
+   "estimated_duration_ms": "count",
+   "estimated_remaining_ms": "count",
+   "finished_at": "count",
+   "started_at": "count",
+   "status": "status"
+  }
+ },
+ "apps get": {
+  "schema": "App",
+  "kinds": {
+   "account": "relation",
+   "businesses_created_count": "count",
+   "creator": "relation",
+   "default_api_key": "relation",
+   "id": "id",
+   "marketplace_status": "id",
+   "product_id": "id",
+   "status": "status"
+  }
+ },
+ "apps list": {
+  "schema": "AppListItem",
+  "kinds": {
+   "account": "relation",
+   "businesses_created_count": "count",
+   "creator": "relation",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "apps logs": {
+  "kinds": {
+   "app_id": "id",
+   "cpu_time_ms": "count",
+   "created_at": "date",
+   "wall_time_ms": "count"
+  }
+ },
+ "apps permissions": {
+  "schema": "App",
+  "kinds": {
+   "account": "relation",
+   "businesses_created_count": "count",
+   "creator": "relation",
+   "default_api_key": "relation",
+   "id": "id",
+   "marketplace_status": "id",
+   "product_id": "id",
+   "status": "status"
+  }
+ },
+ "apps update": {
+  "schema": "App",
+  "kinds": {
+   "account": "relation",
+   "businesses_created_count": "count",
+   "creator": "relation",
+   "default_api_key": "relation",
+   "id": "id",
+   "marketplace_status": "id",
+   "product_id": "id",
+   "status": "status"
+  }
+ },
+ "audiences create": {
+  "schema": "Audience",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "last_refreshed_at": "date",
+   "source_audience_id": "id",
+   "status": "status",
+   "total_rows": "money",
+   "updated_at": "date"
+  }
+ },
+ "audiences list": {
+  "schema": "Audience",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "last_refreshed_at": "date",
+   "source_audience_id": "id",
+   "status": "status",
+   "total_rows": "money",
+   "updated_at": "date"
+  }
+ },
+ "audiences update": {
+  "schema": "Audience",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "last_refreshed_at": "date",
+   "source_audience_id": "id",
+   "status": "status",
+   "total_rows": "money",
+   "updated_at": "date"
+  }
+ },
+ "authorized-users create": {
+  "schema": "AuthorizedUser",
+  "kinds": {
+   "company": "relation",
+   "id": "id",
+   "user": "relation"
+  }
+ },
+ "authorized-users get": {
+  "schema": "AuthorizedUser",
+  "kinds": {
+   "company": "relation",
+   "id": "id",
+   "user": "relation"
+  }
+ },
+ "authorized-users list": {
+  "schema": "AuthorizedUserListItem",
+  "kinds": {
+   "company": "relation",
+   "id": "id",
+   "user": "relation"
+  }
+ },
+ "bounties cancel": {
+  "schema": "Bounty",
+  "kinds": {
+   "accepted_submissions_count": "count",
+   "accepted_submissions_limit": "count",
+   "accepted_submissions_per_user_limit": "count",
+   "affiliate_share_amount": "count",
+   "awaiting_review_submissions_count": "count",
+   "budget_amount": "money",
+   "cancel_requested_at": "date",
+   "created_at": "date",
+   "currency": "hidden",
+   "denied_submissions_count": "count",
+   "discussion_experience_id": "id",
+   "experience_id": "id",
+   "funding_account": "relation",
+   "gross_paid_out_amount": "money",
+   "gross_reward_amount": "money",
+   "hosting_account": "relation",
+   "id": "id",
+   "min_total_verified_duration_seconds": "count",
+   "net_reward_amount": "count",
+   "poster": "relation",
+   "scheduled_publish_at": "date",
+   "status": "status",
+   "submissions_closed_at": "date",
+   "unresolved_submissions_count": "count",
+   "updated_at": "date",
+   "viewer_accepted_submissions_count": "count"
+  }
+ },
+ "bounties create": {
+  "schema": "Bounty",
+  "kinds": {
+   "accepted_submissions_count": "count",
+   "accepted_submissions_limit": "count",
+   "accepted_submissions_per_user_limit": "count",
+   "affiliate_share_amount": "count",
+   "awaiting_review_submissions_count": "count",
+   "budget_amount": "money",
+   "cancel_requested_at": "date",
+   "created_at": "date",
+   "currency": "hidden",
+   "denied_submissions_count": "count",
+   "discussion_experience_id": "id",
+   "experience_id": "id",
+   "funding_account": "relation",
+   "gross_paid_out_amount": "money",
+   "gross_reward_amount": "money",
+   "hosting_account": "relation",
+   "id": "id",
+   "min_total_verified_duration_seconds": "count",
+   "net_reward_amount": "count",
+   "poster": "relation",
+   "scheduled_publish_at": "date",
+   "status": "status",
+   "submissions_closed_at": "date",
+   "unresolved_submissions_count": "count",
+   "updated_at": "date",
+   "viewer_accepted_submissions_count": "count"
+  }
+ },
+ "bounties get": {
+  "schema": "Bounty",
+  "kinds": {
+   "accepted_submissions_count": "count",
+   "accepted_submissions_limit": "count",
+   "accepted_submissions_per_user_limit": "count",
+   "affiliate_share_amount": "count",
+   "awaiting_review_submissions_count": "count",
+   "budget_amount": "money",
+   "cancel_requested_at": "date",
+   "created_at": "date",
+   "currency": "hidden",
+   "denied_submissions_count": "count",
+   "discussion_experience_id": "id",
+   "experience_id": "id",
+   "funding_account": "relation",
+   "gross_paid_out_amount": "money",
+   "gross_reward_amount": "money",
+   "hosting_account": "relation",
+   "id": "id",
+   "min_total_verified_duration_seconds": "count",
+   "net_reward_amount": "count",
+   "poster": "relation",
+   "scheduled_publish_at": "date",
+   "status": "status",
+   "submissions_closed_at": "date",
+   "unresolved_submissions_count": "count",
+   "updated_at": "date",
+   "viewer_accepted_submissions_count": "count"
+  }
+ },
+ "bounties list": {
+  "schema": "BountyListItem",
+  "kinds": {
+   "accepted_submissions_count": "count",
+   "accepted_submissions_limit": "count",
+   "accepted_submissions_per_user_limit": "count",
+   "affiliate_share_amount": "count",
+   "budget_amount": "money",
+   "cancel_requested_at": "date",
+   "created_at": "date",
+   "currency": "hidden",
+   "discussion_experience_id": "id",
+   "experience_id": "id",
+   "funding_account": "relation",
+   "gross_paid_out_amount": "money",
+   "gross_reward_amount": "money",
+   "hosting_account": "relation",
+   "id": "id",
+   "min_total_verified_duration_seconds": "count",
+   "net_reward_amount": "count",
+   "poster": "relation",
+   "scheduled_publish_at": "date",
+   "status": "status",
+   "submissions_closed_at": "date",
+   "unresolved_submissions_count": "count",
+   "updated_at": "date",
+   "viewer_accepted_submissions_count": "count"
+  }
+ },
+ "bounties submissions": {
+  "schema": "PublicBountySubmission",
+  "kinds": {
+   "bounty_id": "id",
+   "claimed_at": "date",
+   "created_at": "date",
+   "id": "id",
+   "latest_proof_livestream_feed": "relation",
+   "resolved_at": "date",
+   "status": "status",
+   "submitted_at": "date",
+   "updated_at": "date",
+   "worker": "relation"
+  }
+ },
+ "bounties update": {
+  "schema": "Bounty",
+  "kinds": {
+   "accepted_submissions_count": "count",
+   "accepted_submissions_limit": "count",
+   "accepted_submissions_per_user_limit": "count",
+   "affiliate_share_amount": "count",
+   "awaiting_review_submissions_count": "count",
+   "budget_amount": "money",
+   "cancel_requested_at": "date",
+   "created_at": "date",
+   "currency": "hidden",
+   "denied_submissions_count": "count",
+   "discussion_experience_id": "id",
+   "experience_id": "id",
+   "funding_account": "relation",
+   "gross_paid_out_amount": "money",
+   "gross_reward_amount": "money",
+   "hosting_account": "relation",
+   "id": "id",
+   "min_total_verified_duration_seconds": "count",
+   "net_reward_amount": "count",
+   "poster": "relation",
+   "scheduled_publish_at": "date",
+   "status": "status",
+   "submissions_closed_at": "date",
+   "unresolved_submissions_count": "count",
+   "updated_at": "date",
+   "viewer_accepted_submissions_count": "count"
+  }
+ },
+ "bounty-submissions create": {
+  "schema": "BountySubmission",
+  "kinds": {
+   "bounty_id": "id",
+   "captured_clip_count": "count",
+   "captured_duration_seconds": "count",
+   "claimed_at": "date",
+   "created_at": "date",
+   "id": "id",
+   "latest_proof_livestream_feed": "relation",
+   "resolved_at": "date",
+   "status": "status",
+   "submitted_at": "date",
+   "updated_at": "date",
+   "worker": "relation"
+  }
+ },
+ "bounty-submissions delete": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "bounty-submissions get": {
+  "schema": "BountySubmission",
+  "kinds": {
+   "bounty_id": "id",
+   "captured_clip_count": "count",
+   "captured_duration_seconds": "count",
+   "claimed_at": "date",
+   "created_at": "date",
+   "id": "id",
+   "latest_proof_livestream_feed": "relation",
+   "resolved_at": "date",
+   "status": "status",
+   "submitted_at": "date",
+   "updated_at": "date",
+   "worker": "relation"
+  }
+ },
+ "bounty-submissions list": {
+  "schema": "BountySubmission",
+  "kinds": {
+   "bounty_id": "id",
+   "captured_clip_count": "count",
+   "captured_duration_seconds": "count",
+   "claimed_at": "date",
+   "created_at": "date",
+   "id": "id",
+   "latest_proof_livestream_feed": "relation",
+   "resolved_at": "date",
+   "status": "status",
+   "submitted_at": "date",
+   "updated_at": "date",
+   "worker": "relation"
+  }
+ },
+ "bounty-submissions submit": {
+  "schema": "BountySubmission",
+  "kinds": {
+   "bounty_id": "id",
+   "captured_clip_count": "count",
+   "captured_duration_seconds": "count",
+   "claimed_at": "date",
+   "created_at": "date",
+   "id": "id",
+   "latest_proof_livestream_feed": "relation",
+   "resolved_at": "date",
+   "status": "status",
+   "submitted_at": "date",
+   "updated_at": "date",
+   "worker": "relation"
+  }
+ },
+ "cards create": {
+  "kinds": {
+   "canceled_at": "date",
+   "created_at": "date",
+   "id": "id",
+   "spent_last_month": "count",
+   "status": "status",
+   "user_id": "id"
+  }
+ },
+ "cards get": {
+  "kinds": {
+   "canceled_at": "date",
+   "created_at": "date",
+   "id": "id",
+   "spent_last_month": "count",
+   "status": "status",
+   "user_id": "id"
+  }
+ },
+ "cards get-transaction": {
+  "schema": "CardTransaction",
+  "kinds": {
+   "card_id": "id",
+   "cardholder_id": "id",
+   "cashback_usd_amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "local_amount": "money",
+   "posted_at": "date",
+   "status": "status",
+   "usd_amount": "money"
+  }
+ },
+ "cards list": {
+  "kinds": {
+   "canceled_at": "date",
+   "created_at": "date",
+   "id": "id",
+   "spent_last_month": "count",
+   "status": "status",
+   "user_id": "id"
+  }
+ },
+ "cards transactions": {
+  "schema": "CardTransaction",
+  "kinds": {
+   "card_id": "id",
+   "cardholder_id": "id",
+   "cashback_usd_amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "local_amount": "money",
+   "posted_at": "date",
+   "status": "status",
+   "usd_amount": "money"
+  }
+ },
+ "cards update": {
+  "kinds": {
+   "canceled_at": "date",
+   "created_at": "date",
+   "id": "id",
+   "spent_last_month": "count",
+   "status": "status",
+   "user_id": "id"
+  }
+ },
+ "cashback-rule create": {
+  "schema": "CashbackRule",
+  "kinds": {
+   "created_at": "date",
+   "discarded_at": "date",
+   "expires_at": "date",
+   "funding_account_id": "id",
+   "id": "id",
+   "rate_bps": "count",
+   "scoped_account_id": "id",
+   "starts_at": "date",
+   "updated_at": "date"
+  }
+ },
+ "cashback-rules list": {
+  "schema": "CashbackRule",
+  "kinds": {
+   "created_at": "date",
+   "discarded_at": "date",
+   "expires_at": "date",
+   "funding_account_id": "id",
+   "id": "id",
+   "rate_bps": "count",
+   "scoped_account_id": "id",
+   "starts_at": "date",
+   "updated_at": "date"
+  }
+ },
+ "cashback-rules update": {
+  "schema": "CashbackRule",
+  "kinds": {
+   "created_at": "date",
+   "discarded_at": "date",
+   "expires_at": "date",
+   "funding_account_id": "id",
+   "id": "id",
+   "rate_bps": "count",
+   "scoped_account_id": "id",
+   "starts_at": "date",
+   "updated_at": "date"
+  }
+ },
+ "chat-channels get": {
+  "schema": "ChatChannel",
+  "kinds": {
+   "experience": "relation",
+   "id": "id",
+   "user_posts_cooldown_seconds": "count"
+  }
+ },
+ "chat-channels list": {
+  "schema": "ChatChannelListItem",
+  "kinds": {
+   "experience": "relation",
+   "id": "id",
+   "user_posts_cooldown_seconds": "count"
+  }
+ },
+ "chat-channels update": {
+  "schema": "ChatChannel",
+  "kinds": {
+   "experience": "relation",
+   "id": "id",
+   "user_posts_cooldown_seconds": "count"
+  }
+ },
+ "checkout-configurations create": {
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "plan": "plan",
+   "updated_at": "date"
+  }
+ },
+ "checkout-configurations delete": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "checkout-configurations get": {
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "plan": "plan",
+   "updated_at": "date"
+  }
+ },
+ "checkout-configurations list": {
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "plan": "plan",
+   "updated_at": "date"
+  }
+ },
+ "company-token-transactions create": {
+  "schema": "CompanyTokenTransaction",
+  "kinds": {
+   "amount": "money",
+   "company": "relation",
+   "created_at": "date",
+   "id": "id",
+   "user": "relation"
+  }
+ },
+ "company-token-transactions get": {
+  "schema": "CompanyTokenTransaction",
+  "kinds": {
+   "amount": "money",
+   "company": "relation",
+   "created_at": "date",
+   "id": "id",
+   "user": "relation"
+  }
+ },
+ "company-token-transactions list": {
+  "schema": "CompanyTokenTransactionListItem",
+  "kinds": {
+   "amount": "money",
+   "company": "relation",
+   "created_at": "date",
+   "id": "id",
+   "user": "relation"
+  }
+ },
+ "confirmation-tokens get": {
+  "schema": "ConfirmationToken",
+  "kinds": {
+   "created_at": "date",
+   "expires_at": "date",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "course-chapters create": {
+  "schema": "CourseChapter",
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "course-chapters get": {
+  "schema": "CourseChapter",
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "course-chapters list": {
+  "schema": "CourseChapterListItem",
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "course-chapters update": {
+  "schema": "CourseChapter",
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "course-lesson-interactions get": {
+  "schema": "CourseLessonInteraction",
+  "kinds": {
+   "course": "relation",
+   "created_at": "date",
+   "id": "id",
+   "lesson": "relation",
+   "user": "relation"
+  }
+ },
+ "course-lesson-interactions list": {
+  "schema": "CourseLessonInteractionListItem",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "lesson": "relation",
+   "user": "relation"
+  }
+ },
+ "course-lessons create": {
+  "schema": "CourseLesson",
+  "kinds": {
+   "created_at": "date",
+   "days_from_course_start_until_unlock": "count",
+   "id": "id",
+   "visibility": "status"
+  }
+ },
+ "course-lessons get": {
+  "schema": "CourseLesson",
+  "kinds": {
+   "created_at": "date",
+   "days_from_course_start_until_unlock": "count",
+   "id": "id",
+   "visibility": "status"
+  }
+ },
+ "course-lessons list": {
+  "schema": "CourseLessonListItem",
+  "kinds": {
+   "created_at": "date",
+   "days_from_course_start_until_unlock": "count",
+   "id": "id",
+   "visibility": "status"
+  }
+ },
+ "course-lessons submit_assessment": {
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "lesson": "relation",
+   "result_correct": "count",
+   "result_question_count": "count",
+   "score_percent": "count",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "course-lessons update": {
+  "schema": "CourseLesson",
+  "kinds": {
+   "created_at": "date",
+   "days_from_course_start_until_unlock": "count",
+   "id": "id",
+   "visibility": "status"
+  }
+ },
+ "course-students get": {
+  "schema": "CourseStudent",
+  "kinds": {
+   "completed_lessons_count": "count",
+   "completion_rate": "count",
+   "course": "relation",
+   "first_interaction_at": "date",
+   "id": "id",
+   "last_interaction_at": "date",
+   "total_lessons_count": "count",
+   "user": "relation"
+  }
+ },
+ "course-students list": {
+  "schema": "CourseStudentListItem",
+  "kinds": {
+   "completed_lessons_count": "count",
+   "completion_rate": "count",
+   "first_interaction_at": "date",
+   "id": "id",
+   "last_interaction_at": "date",
+   "total_lessons_count": "count",
+   "user": "relation"
+  }
+ },
+ "courses create": {
+  "schema": "Course",
+  "kinds": {
+   "chapters_count": "count",
+   "completed_lessons_count": "count",
+   "created_at": "date",
+   "id": "id",
+   "latest_lesson_created_at": "date",
+   "started_at": "date",
+   "total_duration_seconds": "count",
+   "total_lessons_count": "count",
+   "updated_at": "date",
+   "visibility": "status"
+  }
+ },
+ "courses get": {
+  "schema": "Course",
+  "kinds": {
+   "chapters_count": "count",
+   "completed_lessons_count": "count",
+   "created_at": "date",
+   "id": "id",
+   "latest_lesson_created_at": "date",
+   "started_at": "date",
+   "total_duration_seconds": "count",
+   "total_lessons_count": "count",
+   "updated_at": "date",
+   "visibility": "status"
+  }
+ },
+ "courses list": {
+  "schema": "CourseListItem",
+  "kinds": {
+   "chapters_count": "count",
+   "completed_lessons_count": "count",
+   "created_at": "date",
+   "id": "id",
+   "latest_lesson_created_at": "date",
+   "started_at": "date",
+   "total_duration_seconds": "count",
+   "total_lessons_count": "count",
+   "updated_at": "date",
+   "visibility": "status"
+  }
+ },
+ "courses update": {
+  "schema": "Course",
+  "kinds": {
+   "chapters_count": "count",
+   "completed_lessons_count": "count",
+   "created_at": "date",
+   "id": "id",
+   "latest_lesson_created_at": "date",
+   "started_at": "date",
+   "total_duration_seconds": "count",
+   "total_lessons_count": "count",
+   "updated_at": "date",
+   "visibility": "status"
+  }
+ },
+ "deposits create": {
+  "kinds": {
+   "account_id": "id",
+   "amount": "money"
+  }
+ },
+ "dispute-alerts get": {
+  "schema": "DisputeAlert",
+  "kinds": {
+   "account_id": "id",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "payment_id": "id",
+   "product_id": "id",
+   "reported_at": "date",
+   "transaction_at": "date",
+   "updated_at": "date"
+  }
+ },
+ "dispute-alerts list": {
+  "schema": "DisputeAlert",
+  "kinds": {
+   "account_id": "id",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "payment_id": "id",
+   "product_id": "id",
+   "reported_at": "date",
+   "transaction_at": "date",
+   "updated_at": "date"
+  }
+ },
+ "disputes get": {
+  "schema": "Dispute",
+  "kinds": {
+   "account_id": "id",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "evidence_due_at": "date",
+   "evidence_submitted_at": "date",
+   "id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "disputes list": {
+  "schema": "Dispute",
+  "kinds": {
+   "account_id": "id",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "evidence_due_at": "date",
+   "evidence_submitted_at": "date",
+   "id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "disputes submit": {
+  "schema": "Dispute",
+  "kinds": {
+   "account_id": "id",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "evidence_due_at": "date",
+   "evidence_submitted_at": "date",
+   "id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "disputes summary": {
+  "kinds": {
+   "total": "count"
+  }
+ },
+ "disputes update": {
+  "schema": "Dispute",
+  "kinds": {
+   "account_id": "id",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "evidence_due_at": "date",
+   "evidence_submitted_at": "date",
+   "id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "disputes upload_evidence": {
+  "schema": "Dispute",
+  "kinds": {
+   "account_id": "id",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "evidence_due_at": "date",
+   "evidence_submitted_at": "date",
+   "id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "dm-channels create": {
+  "schema": "DmChannel",
+  "kinds": {
+   "id": "id",
+   "last_message_at": "date"
+  }
+ },
+ "dm-channels get": {
+  "schema": "DmChannel",
+  "kinds": {
+   "id": "id",
+   "last_message_at": "date"
+  }
+ },
+ "dm-channels list": {
+  "schema": "DmChannelListItem",
+  "kinds": {
+   "id": "id",
+   "last_message_at": "date"
+  }
+ },
+ "dm-channels update": {
+  "schema": "DmChannel",
+  "kinds": {
+   "id": "id",
+   "last_message_at": "date"
+  }
+ },
+ "dm-members create": {
+  "schema": "DmMember",
+  "kinds": {
+   "id": "id",
+   "last_viewed_at": "date",
+   "status": "status"
+  }
+ },
+ "dm-members get": {
+  "schema": "DmMember",
+  "kinds": {
+   "id": "id",
+   "last_viewed_at": "date",
+   "status": "status"
+  }
+ },
+ "dm-members list": {
+  "schema": "DmMemberListItem",
+  "kinds": {
+   "id": "id",
+   "last_viewed_at": "date",
+   "status": "status"
+  }
+ },
+ "dm-members update": {
+  "schema": "DmMember",
+  "kinds": {
+   "id": "id",
+   "last_viewed_at": "date",
+   "status": "status"
+  }
+ },
+ "domains create": {
+  "schema": "Domain",
+  "kinds": {
+   "account_id": "id",
+   "app_id": "id",
+   "created_at": "date",
+   "dns_status": "status",
+   "id": "id",
+   "last_checked_at": "date",
+   "status": "status",
+   "updated_at": "date",
+   "verification_expires_at": "date",
+   "verified_at": "date"
+  }
+ },
+ "domains delete": {
+  "schema": "Domain",
+  "kinds": {
+   "account_id": "id",
+   "app_id": "id",
+   "created_at": "date",
+   "dns_status": "status",
+   "id": "id",
+   "last_checked_at": "date",
+   "status": "status",
+   "updated_at": "date",
+   "verification_expires_at": "date",
+   "verified_at": "date"
+  }
+ },
+ "domains get": {
+  "schema": "Domain",
+  "kinds": {
+   "account_id": "id",
+   "app_id": "id",
+   "created_at": "date",
+   "dns_status": "status",
+   "id": "id",
+   "last_checked_at": "date",
+   "status": "status",
+   "updated_at": "date",
+   "verification_expires_at": "date",
+   "verified_at": "date"
+  }
+ },
+ "domains list": {
+  "schema": "Domain",
+  "kinds": {
+   "account_id": "id",
+   "app_id": "id",
+   "created_at": "date",
+   "dns_status": "status",
+   "id": "id",
+   "last_checked_at": "date",
+   "status": "status",
+   "updated_at": "date",
+   "verification_expires_at": "date",
+   "verified_at": "date"
+  }
+ },
+ "domains update": {
+  "schema": "Domain",
+  "kinds": {
+   "account_id": "id",
+   "app_id": "id",
+   "created_at": "date",
+   "dns_status": "status",
+   "id": "id",
+   "last_checked_at": "date",
+   "status": "status",
+   "updated_at": "date",
+   "verification_expires_at": "date",
+   "verified_at": "date"
+  }
+ },
+ "economic-intelligence list": {
+  "schema": "EconomicIntelligence",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "executed_at": "date",
+   "id": "id",
+   "status": "status",
+   "superseded_at": "date"
+  }
+ },
+ "economic-intelligence update": {
+  "schema": "EconomicIntelligence",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "executed_at": "date",
+   "id": "id",
+   "status": "status",
+   "superseded_at": "date"
+  }
+ },
+ "events create": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "events list": {
+  "kinds": {
+   "currency": "hidden",
+   "event_time": "date",
+   "id": "id",
+   "total_usd_amount": "money"
+  }
+ },
+ "events pulse": {
+  "kinds": {
+   "event_time": "date",
+   "total_usd_amount": "money"
+  }
+ },
+ "events validate_pixel": {
+  "schema": "PixelValidation",
+  "kinds": {
+   "last_seen_days": "count"
+  }
+ },
+ "experiences attach": {
+  "schema": "Experience",
+  "kinds": {
+   "app": "relation",
+   "company": "relation",
+   "created_at": "date",
+   "id": "id"
+  }
+ },
+ "experiences create": {
+  "schema": "Experience",
+  "kinds": {
+   "app": "relation",
+   "company": "relation",
+   "created_at": "date",
+   "id": "id"
+  }
+ },
+ "experiences detach": {
+  "schema": "Experience",
+  "kinds": {
+   "app": "relation",
+   "company": "relation",
+   "created_at": "date",
+   "id": "id"
+  }
+ },
+ "experiences duplicate": {
+  "schema": "Experience",
+  "kinds": {
+   "app": "relation",
+   "company": "relation",
+   "created_at": "date",
+   "id": "id"
+  }
+ },
+ "experiences get": {
+  "schema": "Experience",
+  "kinds": {
+   "app": "relation",
+   "company": "relation",
+   "created_at": "date",
+   "id": "id"
+  }
+ },
+ "experiences list": {
+  "schema": "ExperienceListItem",
+  "kinds": {
+   "app": "relation",
+   "company": "relation",
+   "created_at": "date",
+   "id": "id"
+  }
+ },
+ "experiences update": {
+  "schema": "Experience",
+  "kinds": {
+   "app": "relation",
+   "company": "relation",
+   "created_at": "date",
+   "id": "id"
+  }
+ },
+ "experiments activate": {
+  "schema": "Experiment",
+  "kinds": {
+   "created_at": "date",
+   "created_by": "id",
+   "ended_at": "date",
+   "id": "id",
+   "started_at": "date",
+   "status": "status"
+  }
+ },
+ "experiments create": {
+  "schema": "Experiment",
+  "kinds": {
+   "created_at": "date",
+   "created_by": "id",
+   "ended_at": "date",
+   "id": "id",
+   "started_at": "date",
+   "status": "status"
+  }
+ },
+ "experiments end": {
+  "schema": "Experiment",
+  "kinds": {
+   "created_at": "date",
+   "created_by": "id",
+   "ended_at": "date",
+   "id": "id",
+   "started_at": "date",
+   "status": "status"
+  }
+ },
+ "experiments get": {
+  "schema": "Experiment",
+  "kinds": {
+   "created_at": "date",
+   "created_by": "id",
+   "ended_at": "date",
+   "id": "id",
+   "started_at": "date",
+   "status": "status"
+  }
+ },
+ "experiments list": {
+  "schema": "Experiment",
+  "kinds": {
+   "created_at": "date",
+   "created_by": "id",
+   "ended_at": "date",
+   "id": "id",
+   "started_at": "date",
+   "status": "status"
+  }
+ },
+ "experiments pause": {
+  "schema": "Experiment",
+  "kinds": {
+   "created_at": "date",
+   "created_by": "id",
+   "ended_at": "date",
+   "id": "id",
+   "started_at": "date",
+   "status": "status"
+  }
+ },
+ "experiments update": {
+  "schema": "Experiment",
+  "kinds": {
+   "created_at": "date",
+   "created_by": "id",
+   "ended_at": "date",
+   "id": "id",
+   "started_at": "date",
+   "status": "status"
+  }
+ },
+ "exports create": {
+  "schema": "Export",
+  "kinds": {
+   "created_at": "date",
+   "expires_at": "date",
+   "id": "id",
+   "progress_percent": "count",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "exports get": {
+  "schema": "Export",
+  "kinds": {
+   "created_at": "date",
+   "expires_at": "date",
+   "id": "id",
+   "progress_percent": "count",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "exports list": {
+  "schema": "Export",
+  "kinds": {
+   "created_at": "date",
+   "expires_at": "date",
+   "id": "id",
+   "progress_percent": "count",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "fee-markups create": {
+  "schema": "FeeMarkup",
+  "kinds": {
+   "created_at": "date",
+   "fixed_fee_usd": "money",
+   "id": "id",
+   "percentage_fee": "count",
+   "updated_at": "date"
+  }
+ },
+ "fee-markups list": {
+  "schema": "FeeMarkupListItem",
+  "kinds": {
+   "created_at": "date",
+   "fixed_fee_usd": "money",
+   "id": "id",
+   "percentage_fee": "count",
+   "updated_at": "date"
+  }
+ },
+ "files complete": {
+  "schema": "File",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "upload_status": "status",
+   "visibility": "status"
+  }
+ },
+ "files create": {
+  "schema": "File",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "upload_status": "status",
+   "visibility": "status"
+  }
+ },
+ "files get": {
+  "schema": "File",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "upload_status": "status",
+   "visibility": "status"
+  }
+ },
+ "files list": {
+  "schema": "File",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "upload_status": "status",
+   "visibility": "status"
+  }
+ },
+ "forum-posts create": {
+  "schema": "ForumPost",
+  "kinds": {
+   "comment_count": "count",
+   "created_at": "date",
+   "id": "id",
+   "like_count": "count",
+   "updated_at": "date",
+   "user": "relation",
+   "view_count": "count"
+  }
+ },
+ "forum-posts get": {
+  "schema": "ForumPost",
+  "kinds": {
+   "comment_count": "count",
+   "created_at": "date",
+   "id": "id",
+   "like_count": "count",
+   "updated_at": "date",
+   "user": "relation",
+   "view_count": "count"
+  }
+ },
+ "forum-posts list": {
+  "schema": "ForumPostListItem",
+  "kinds": {
+   "comment_count": "count",
+   "created_at": "date",
+   "id": "id",
+   "like_count": "count",
+   "updated_at": "date",
+   "user": "relation",
+   "view_count": "count"
+  }
+ },
+ "forum-posts update": {
+  "schema": "ForumPost",
+  "kinds": {
+   "comment_count": "count",
+   "created_at": "date",
+   "id": "id",
+   "like_count": "count",
+   "updated_at": "date",
+   "user": "relation",
+   "view_count": "count"
+  }
+ },
+ "forums get": {
+  "schema": "Forum",
+  "kinds": {
+   "experience": "relation",
+   "id": "id"
+  }
+ },
+ "forums list": {
+  "schema": "ForumListItem",
+  "kinds": {
+   "experience": "relation",
+   "id": "id"
+  }
+ },
+ "forums update": {
+  "schema": "Forum",
+  "kinds": {
+   "experience": "relation",
+   "id": "id"
+  }
+ },
+ "identity-profiles delete": {
+  "schema": "IdentityProfile",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "payout_status": "status",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "identity-profiles get": {
+  "schema": "IdentityProfile",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "payout_status": "status",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "identity-profiles list": {
+  "schema": "IdentityProfileListItem",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "payout_status": "status",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "identity-profiles verifications": {
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "invoices create": {
+  "schema": "Invoice",
+  "kinds": {
+   "automatically_finalizes_at": "date",
+   "created_at": "date",
+   "due_date": "date",
+   "id": "id",
+   "product": "relation",
+   "status": "status",
+   "subscription_billing_anchor_at": "date",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "invoices get": {
+  "schema": "Invoice",
+  "kinds": {
+   "automatically_finalizes_at": "date",
+   "created_at": "date",
+   "due_date": "date",
+   "id": "id",
+   "product": "relation",
+   "status": "status",
+   "subscription_billing_anchor_at": "date",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "invoices list": {
+  "schema": "InvoiceListItem",
+  "kinds": {
+   "created_at": "date",
+   "due_date": "date",
+   "id": "id",
+   "status": "status",
+   "user": "relation"
+  }
+ },
+ "invoices update": {
+  "schema": "Invoice",
+  "kinds": {
+   "automatically_finalizes_at": "date",
+   "created_at": "date",
+   "due_date": "date",
+   "id": "id",
+   "product": "relation",
+   "status": "status",
+   "subscription_billing_anchor_at": "date",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "leads create": {
+  "schema": "Lead",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "product": "relation",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "leads get": {
+  "schema": "Lead",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "product": "relation",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "leads list": {
+  "schema": "LeadListItem",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "product": "relation",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "leads update": {
+  "schema": "Lead",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "product": "relation",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "ledger-accounts get": {
+  "schema": "LedgerAccount",
+  "kinds": {
+   "id": "id",
+   "owner": "relation",
+   "payments_approval_status": "status",
+   "settlement_time_at": "date",
+   "transfer_fee": "money"
+  }
+ },
+ "ledgers breakdown": {
+  "kinds": {
+   "currency": "hidden",
+   "other_amount": "money"
+  }
+ },
+ "ledgers list": {
+  "schema": "LedgerActivity",
+  "kinds": {
+   "account": "relation",
+   "amount": "money",
+   "available_at": "date",
+   "id": "id",
+   "ledger_account_id": "id",
+   "posted_at": "date",
+   "resource": "relation"
+  }
+ },
+ "ledgers report": {
+  "kinds": {
+   "beginning_balance": "money",
+   "ending_balance": "money",
+   "total": "money"
+  }
+ },
+ "media generate": {
+  "schema": "MediaAsset",
+  "kinds": {
+   "amount_charged": "money",
+   "completed_at": "date",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "media get": {
+  "schema": "MediaAsset",
+  "kinds": {
+   "amount_charged": "money",
+   "completed_at": "date",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "members get": {
+  "schema": "Member",
+  "kinds": {
+   "access_level": "status",
+   "account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "joined_at": "date",
+   "last_accessed_at": "date",
+   "status": "status",
+   "token_balance": "money",
+   "user": "relation"
+  }
+ },
+ "members list": {
+  "schema": "Member",
+  "kinds": {
+   "access_level": "status",
+   "account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "joined_at": "date",
+   "last_accessed_at": "date",
+   "status": "status",
+   "token_balance": "money",
+   "user": "relation"
+  }
+ },
+ "members logs": {
+  "kinds": {
+   "actor": "relation",
+   "created_at": "date"
+  }
+ },
+ "memberships cancel": {
+  "schema": "Membership",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "current_period_end": "date",
+   "id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "user_id": "id"
+  }
+ },
+ "memberships extend": {
+  "schema": "Membership",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "current_period_end": "date",
+   "id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "user_id": "id"
+  }
+ },
+ "memberships get": {
+  "schema": "Membership",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "current_period_end": "date",
+   "id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "user_id": "id"
+  }
+ },
+ "memberships list": {
+  "schema": "Membership",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "current_period_end": "date",
+   "id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "user_id": "id"
+  }
+ },
+ "memberships pause": {
+  "schema": "Membership",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "current_period_end": "date",
+   "id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "user_id": "id"
+  }
+ },
+ "memberships resume": {
+  "schema": "Membership",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "current_period_end": "date",
+   "id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "user_id": "id"
+  }
+ },
+ "memberships resync_access": {
+  "schema": "Membership",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "current_period_end": "date",
+   "id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "user_id": "id"
+  }
+ },
+ "memberships update": {
+  "schema": "Membership",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "current_period_end": "date",
+   "id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "user_id": "id"
+  }
+ },
+ "messages create": {
+  "schema": "Message",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "updated_at": "date",
+   "user": "relation",
+   "view_count": "count"
+  }
+ },
+ "messages get": {
+  "schema": "Message",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "updated_at": "date",
+   "user": "relation",
+   "view_count": "count"
+  }
+ },
+ "messages list": {
+  "schema": "MessageListItem",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "updated_at": "date",
+   "user": "relation",
+   "view_count": "count"
+  }
+ },
+ "messages update": {
+  "schema": "Message",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "updated_at": "date",
+   "user": "relation",
+   "view_count": "count"
+  }
+ },
+ "notifications badges": {
+  "schema": "NotificationBadge",
+  "kinds": {
+   "account_id": "id",
+   "experience_id": "id",
+   "important_count": "count",
+   "last_viewed_at": "date"
+  }
+ },
+ "notifications get": {
+  "schema": "Notification",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "experience": "relation",
+   "id": "id",
+   "sender": "relation"
+  }
+ },
+ "notifications list": {
+  "schema": "Notification",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "experience": "relation",
+   "id": "id",
+   "sender": "relation"
+  }
+ },
+ "notifications mark_read": {
+  "schema": "NotificationBadge",
+  "kinds": {
+   "account_id": "id",
+   "experience_id": "id",
+   "important_count": "count",
+   "last_viewed_at": "date"
+  }
+ },
+ "notifications topics": {
+  "schema": "NotificationTopic",
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "partner-referral-requests accept": {
+  "schema": "PartnerReferralRequest",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "id": "id",
+   "partner": "relation",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "partner-referral-requests cancel": {
+  "schema": "PartnerReferralRequest",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "id": "id",
+   "partner": "relation",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "partner-referral-requests create": {
+  "schema": "PartnerReferralRequest",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "id": "id",
+   "partner": "relation",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "partner-referral-requests decline": {
+  "schema": "PartnerReferralRequest",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "id": "id",
+   "partner": "relation",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "partner-referral-requests get": {
+  "schema": "PartnerReferralRequest",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "id": "id",
+   "partner": "relation",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "partner-referral-requests list": {
+  "schema": "PartnerReferralRequest",
+  "kinds": {
+   "account": "relation",
+   "created_at": "date",
+   "id": "id",
+   "partner": "relation",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "partners create": {
+  "kinds": {
+   "whop_partner_enabled_at": "date"
+  }
+ },
+ "partners earnings": {
+  "kinds": {
+   "account": "relation",
+   "commission_amount_usd": "money",
+   "created_at": "date",
+   "id": "id",
+   "payout_at": "date",
+   "payout_percentage": "money",
+   "product": "relation",
+   "status": "status",
+   "transaction_amount_usd": "money"
+  }
+ },
+ "partners get": {
+  "schema": "Partner",
+  "kinds": {
+   "joined_at": "date",
+   "referred_businesses_count": "count",
+   "user": "relation",
+   "whop_partner_verified_at": "date"
+  }
+ },
+ "partners links": {
+  "schema": "PartnerRewardLink",
+  "kinds": {
+   "expires_at": "date",
+   "id": "id",
+   "max_redemptions": "count",
+   "partner_reward_amount": "money",
+   "qualification_amount": "money",
+   "redemptions": "count",
+   "referred_business_reward_amount": "money",
+   "status": "status"
+  }
+ },
+ "partners list": {
+  "kinds": {
+   "account": "relation",
+   "blueprint_partner": "relation",
+   "created_at": "date",
+   "first_tier_partner": "relation",
+   "id": "id",
+   "owner": "relation",
+   "referral_expires_at": "date",
+   "referral_started_at": "date",
+   "second_tier_partner": "relation",
+   "status": "status"
+  }
+ },
+ "partners referred_users": {
+  "kinds": {
+   "user": "relation"
+  }
+ },
+ "partners retrieve": {
+  "kinds": {
+   "account": "relation",
+   "blueprint_partner": "relation",
+   "created_at": "date",
+   "first_tier_partner": "relation",
+   "id": "id",
+   "owner": "relation",
+   "referral_expires_at": "date",
+   "referral_started_at": "date",
+   "second_tier_partner": "relation",
+   "status": "status"
+  }
+ },
+ "payment-method-domains create": {
+  "schema": "PaymentMethodDomain",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "payment-method-domains delete": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "payment-method-domains get": {
+  "schema": "PaymentMethodDomain",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "payment-method-domains list": {
+  "schema": "PaymentMethodDomain",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "payment-method-domains verify": {
+  "schema": "PaymentMethodDomain",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "payment-methods get": {
+  "schema": "PaymentMethod",
+  "kinds": {
+   "created_at": "date",
+   "id": "id"
+  }
+ },
+ "payment-methods list": {
+  "schema": "PaymentMethodListItem",
+  "kinds": {
+   "created_at": "date",
+   "id": "id"
+  }
+ },
+ "payment-rules activate": {
+  "schema": "PaymentRule",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "deleted_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "payment-rules create": {
+  "schema": "PaymentRule",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "deleted_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "payment-rules deactivate": {
+  "schema": "PaymentRule",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "deleted_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "payment-rules get": {
+  "schema": "PaymentRule",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "deleted_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "payment-rules list": {
+  "schema": "PaymentRule",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "deleted_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "payment-rules replace": {
+  "schema": "PaymentRule",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "deleted_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "payment-rules update": {
+  "schema": "PaymentRule",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "deleted_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "payments capture": {
+  "schema": "PaymentStatus",
+  "kinds": {
+   "account": "relation",
+   "auto_capture_at": "date",
+   "capture_expires_at": "date",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "payments create": {
+  "schema": "Payment",
+  "kinds": {
+   "account_id": "id",
+   "amount_after_fees": "money",
+   "checkout_configuration_id": "id",
+   "created_at": "date",
+   "currency": "hidden",
+   "financing_installments_count": "count",
+   "id": "id",
+   "member_id": "id",
+   "membership_id": "id",
+   "payment_method_id": "id",
+   "payments_failed": "count",
+   "plan_id": "id",
+   "presentment_total": "money",
+   "product_id": "id",
+   "promo_code_id": "id",
+   "refunded_amount": "money",
+   "risk_signals": "hidden",
+   "shipment_id": "id",
+   "status": "status",
+   "subtotal": "money",
+   "tax_amount": "money",
+   "tax_refunded_amount": "money",
+   "total": "money",
+   "updated_at": "date",
+   "usd_total": "money",
+   "user": "relation"
+  }
+ },
+ "payments fees": {
+  "schema": "PaymentFee",
+  "kinds": {
+   "amount": "money",
+   "collected_at": "date",
+   "settlement_amount": "money"
+  }
+ },
+ "payments get": {
+  "schema": "Payment",
+  "kinds": {
+   "account_id": "id",
+   "amount_after_fees": "money",
+   "checkout_configuration_id": "id",
+   "created_at": "date",
+   "currency": "hidden",
+   "financing_installments_count": "count",
+   "id": "id",
+   "member_id": "id",
+   "membership_id": "id",
+   "payment_method_id": "id",
+   "payments_failed": "count",
+   "plan_id": "id",
+   "presentment_total": "money",
+   "product_id": "id",
+   "promo_code_id": "id",
+   "refunded_amount": "money",
+   "risk_signals": "hidden",
+   "shipment_id": "id",
+   "status": "status",
+   "subtotal": "money",
+   "tax_amount": "money",
+   "tax_refunded_amount": "money",
+   "total": "money",
+   "updated_at": "date",
+   "usd_total": "money",
+   "user": "relation"
+  }
+ },
+ "payments list": {
+  "schema": "Payment",
+  "kinds": {
+   "account_id": "id",
+   "amount_after_fees": "money",
+   "checkout_configuration_id": "id",
+   "created_at": "date",
+   "currency": "hidden",
+   "financing_installments_count": "count",
+   "id": "id",
+   "member_id": "id",
+   "membership_id": "id",
+   "payment_method_id": "id",
+   "payments_failed": "count",
+   "plan_id": "id",
+   "presentment_total": "money",
+   "product_id": "id",
+   "promo_code_id": "id",
+   "refunded_amount": "money",
+   "risk_signals": "hidden",
+   "shipment_id": "id",
+   "status": "status",
+   "subtotal": "money",
+   "tax_amount": "money",
+   "tax_refunded_amount": "money",
+   "total": "money",
+   "updated_at": "date",
+   "usd_total": "money",
+   "user": "relation"
+  }
+ },
+ "payments refund": {
+  "schema": "Payment",
+  "kinds": {
+   "account_id": "id",
+   "amount_after_fees": "money",
+   "checkout_configuration_id": "id",
+   "created_at": "date",
+   "currency": "hidden",
+   "financing_installments_count": "count",
+   "id": "id",
+   "member_id": "id",
+   "membership_id": "id",
+   "payment_method_id": "id",
+   "payments_failed": "count",
+   "plan_id": "id",
+   "presentment_total": "money",
+   "product_id": "id",
+   "promo_code_id": "id",
+   "refunded_amount": "money",
+   "risk_signals": "hidden",
+   "shipment_id": "id",
+   "status": "status",
+   "subtotal": "money",
+   "tax_amount": "money",
+   "tax_refunded_amount": "money",
+   "total": "money",
+   "updated_at": "date",
+   "usd_total": "money",
+   "user": "relation"
+  }
+ },
+ "payments resume": {
+  "schema": "PaymentStatus",
+  "kinds": {
+   "account": "relation",
+   "auto_capture_at": "date",
+   "capture_expires_at": "date",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "payments retry": {
+  "schema": "Payment",
+  "kinds": {
+   "account_id": "id",
+   "amount_after_fees": "money",
+   "checkout_configuration_id": "id",
+   "created_at": "date",
+   "currency": "hidden",
+   "financing_installments_count": "count",
+   "id": "id",
+   "member_id": "id",
+   "membership_id": "id",
+   "payment_method_id": "id",
+   "payments_failed": "count",
+   "plan_id": "id",
+   "presentment_total": "money",
+   "product_id": "id",
+   "promo_code_id": "id",
+   "refunded_amount": "money",
+   "risk_signals": "hidden",
+   "shipment_id": "id",
+   "status": "status",
+   "subtotal": "money",
+   "tax_amount": "money",
+   "tax_refunded_amount": "money",
+   "total": "money",
+   "updated_at": "date",
+   "usd_total": "money",
+   "user": "relation"
+  }
+ },
+ "payments return_url": {
+  "schema": "PaymentStatus",
+  "kinds": {
+   "account": "relation",
+   "auto_capture_at": "date",
+   "capture_expires_at": "date",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "payments status": {
+  "schema": "PaymentStatus",
+  "kinds": {
+   "account": "relation",
+   "auto_capture_at": "date",
+   "capture_expires_at": "date",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "payments void": {
+  "schema": "Payment",
+  "kinds": {
+   "account_id": "id",
+   "amount_after_fees": "money",
+   "checkout_configuration_id": "id",
+   "created_at": "date",
+   "currency": "hidden",
+   "financing_installments_count": "count",
+   "id": "id",
+   "member_id": "id",
+   "membership_id": "id",
+   "payment_method_id": "id",
+   "payments_failed": "count",
+   "plan_id": "id",
+   "presentment_total": "money",
+   "product_id": "id",
+   "promo_code_id": "id",
+   "refunded_amount": "money",
+   "risk_signals": "hidden",
+   "shipment_id": "id",
+   "status": "status",
+   "subtotal": "money",
+   "tax_amount": "money",
+   "tax_refunded_amount": "money",
+   "total": "money",
+   "updated_at": "date",
+   "usd_total": "money",
+   "user": "relation"
+  }
+ },
+ "payout-accounts get": {
+  "schema": "PayoutAccount",
+  "kinds": {
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "payout-methods get": {
+  "schema": "PayoutMethod",
+  "kinds": {
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id"
+  }
+ },
+ "payout-methods list": {
+  "schema": "PayoutMethodListItem",
+  "kinds": {
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id"
+  }
+ },
+ "payouts cancel": {
+  "kinds": {
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "destination_amount": "money",
+   "estimated_arrival": "date",
+   "exchange_rate": "count",
+   "id": "id",
+   "net_amount": "money",
+   "payout_request_id": "id",
+   "status": "status"
+  }
+ },
+ "payouts create": {
+  "kinds": {
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "destination_amount": "money",
+   "estimated_arrival": "date",
+   "exchange_rate": "count",
+   "id": "id",
+   "net_amount": "money",
+   "payout_request_id": "id",
+   "status": "status"
+  }
+ },
+ "payouts create-method": {
+  "kinds": {
+   "bank_verification_state": "status",
+   "created_at": "date",
+   "id": "id",
+   "last_paid_out_at": "date",
+   "status": "status"
+  }
+ },
+ "payouts delete-method": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "payouts get": {
+  "kinds": {
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "destination_amount": "money",
+   "estimated_arrival": "date",
+   "exchange_rate": "count",
+   "id": "id",
+   "net_amount": "money",
+   "payout_request_id": "id",
+   "status": "status"
+  }
+ },
+ "payouts list": {
+  "kinds": {
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "destination_amount": "money",
+   "estimated_arrival": "date",
+   "exchange_rate": "count",
+   "id": "id",
+   "net_amount": "money",
+   "payout_request_id": "id",
+   "status": "status"
+  }
+ },
+ "payouts methods": {
+  "kinds": {
+   "bank_verification_state": "status",
+   "created_at": "date",
+   "id": "id",
+   "last_paid_out_at": "date",
+   "status": "status"
+  }
+ },
+ "payouts quotes": {
+  "kinds": {
+   "amount": "money",
+   "destination_amount": "money",
+   "exchange_rate": "count",
+   "expires_at": "date",
+   "fee": "money",
+   "id": "id",
+   "net_amount": "money"
+  }
+ },
+ "payouts supported-methods": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "payouts update-method": {
+  "kinds": {
+   "bank_verification_state": "status",
+   "created_at": "date",
+   "id": "id",
+   "last_paid_out_at": "date",
+   "status": "status"
+  }
+ },
+ "people get": {
+  "kinds": {
+   "account_id": "id",
+   "event_count": "count",
+   "first_purchase_at": "date",
+   "first_seen_at": "date",
+   "id": "id",
+   "last_purchase_at": "date",
+   "last_seen_at": "date",
+   "purchase_count": "count",
+   "user": "relation"
+  }
+ },
+ "people list": {
+  "kinds": {
+   "account_id": "id",
+   "event_count": "count",
+   "first_purchase_at": "date",
+   "first_seen_at": "date",
+   "id": "id",
+   "last_purchase_at": "date",
+   "last_seen_at": "date",
+   "purchase_count": "count",
+   "user": "relation"
+  }
+ },
+ "plans calculate_tax": {
+  "kinds": {
+   "currency": "hidden",
+   "status": "status",
+   "subtotal": "money",
+   "tax_amount": "money",
+   "total": "money"
+  }
+ },
+ "plans create": {
+  "schema": "Plan",
+  "kinds": {
+   "account": "relation",
+   "billing_period": "count",
+   "cancel_discount_intervals": "count",
+   "cancel_discount_percentage": "count",
+   "created_at": "date",
+   "currency": "hidden",
+   "expiration_days": "count",
+   "id": "id",
+   "initial_price": "money",
+   "initial_price_due": "money",
+   "member_count": "count",
+   "renewal_price": "money",
+   "strike_through_initial_price": "money",
+   "strike_through_renewal_price": "money",
+   "trial_period_days": "count",
+   "updated_at": "date",
+   "visibility": "status"
+  }
+ },
+ "plans delete": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "plans get": {
+  "schema": "Plan",
+  "kinds": {
+   "account": "relation",
+   "billing_period": "count",
+   "cancel_discount_intervals": "count",
+   "cancel_discount_percentage": "count",
+   "created_at": "date",
+   "currency": "hidden",
+   "expiration_days": "count",
+   "id": "id",
+   "initial_price": "money",
+   "initial_price_due": "money",
+   "member_count": "count",
+   "renewal_price": "money",
+   "strike_through_initial_price": "money",
+   "strike_through_renewal_price": "money",
+   "trial_period_days": "count",
+   "updated_at": "date",
+   "visibility": "status"
+  }
+ },
+ "plans list": {
+  "schema": "PlanListItem",
+  "kinds": {
+   "account": "relation",
+   "billing_period": "count",
+   "cancel_discount_intervals": "count",
+   "cancel_discount_percentage": "count",
+   "created_at": "date",
+   "currency": "hidden",
+   "expiration_days": "count",
+   "id": "id",
+   "initial_price": "money",
+   "initial_price_due": "money",
+   "member_count": "count",
+   "renewal_price": "money",
+   "strike_through_initial_price": "money",
+   "strike_through_renewal_price": "money",
+   "trial_period_days": "count",
+   "updated_at": "date",
+   "visibility": "status"
+  }
+ },
+ "plans update": {
+  "schema": "Plan",
+  "kinds": {
+   "account": "relation",
+   "billing_period": "count",
+   "cancel_discount_intervals": "count",
+   "cancel_discount_percentage": "count",
+   "created_at": "date",
+   "currency": "hidden",
+   "expiration_days": "count",
+   "id": "id",
+   "initial_price": "money",
+   "initial_price_due": "money",
+   "member_count": "count",
+   "renewal_price": "money",
+   "strike_through_initial_price": "money",
+   "strike_through_renewal_price": "money",
+   "trial_period_days": "count",
+   "updated_at": "date",
+   "visibility": "status"
+  }
+ },
+ "products create": {
+  "schema": "Product",
+  "kinds": {
+   "created_at": "date",
+   "default_plan": "plan",
+   "gallery_images": "hidden",
+   "global_affiliate_percentage": "count",
+   "global_affiliate_status": "status",
+   "id": "id",
+   "marketplace_status": "id",
+   "member_affiliate_percentage": "count",
+   "member_affiliate_status": "status",
+   "member_count": "count",
+   "published_reviews_count": "count",
+   "updated_at": "date"
+  }
+ },
+ "products delete": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "products get": {
+  "schema": "Product",
+  "kinds": {
+   "created_at": "date",
+   "default_plan": "plan",
+   "gallery_images": "hidden",
+   "global_affiliate_percentage": "count",
+   "global_affiliate_status": "status",
+   "id": "id",
+   "marketplace_status": "id",
+   "member_affiliate_percentage": "count",
+   "member_affiliate_status": "status",
+   "member_count": "count",
+   "published_reviews_count": "count",
+   "updated_at": "date"
+  }
+ },
+ "products list": {
+  "schema": "ProductListItem",
+  "kinds": {
+   "created_at": "date",
+   "default_plan": "plan",
+   "gallery_images": "hidden",
+   "id": "id",
+   "member_count": "count",
+   "published_reviews_count": "count",
+   "updated_at": "date"
+  }
+ },
+ "products publish": {
+  "schema": "Product",
+  "kinds": {
+   "created_at": "date",
+   "default_plan": "plan",
+   "gallery_images": "hidden",
+   "global_affiliate_percentage": "count",
+   "global_affiliate_status": "status",
+   "id": "id",
+   "marketplace_status": "id",
+   "member_affiliate_percentage": "count",
+   "member_affiliate_status": "status",
+   "member_count": "count",
+   "published_reviews_count": "count",
+   "updated_at": "date"
+  }
+ },
+ "products unpublish": {
+  "schema": "Product",
+  "kinds": {
+   "created_at": "date",
+   "default_plan": "plan",
+   "gallery_images": "hidden",
+   "global_affiliate_percentage": "count",
+   "global_affiliate_status": "status",
+   "id": "id",
+   "marketplace_status": "id",
+   "member_affiliate_percentage": "count",
+   "member_affiliate_status": "status",
+   "member_count": "count",
+   "published_reviews_count": "count",
+   "updated_at": "date"
+  }
+ },
+ "products update": {
+  "schema": "Product",
+  "kinds": {
+   "created_at": "date",
+   "default_plan": "plan",
+   "gallery_images": "hidden",
+   "global_affiliate_percentage": "count",
+   "global_affiliate_status": "status",
+   "id": "id",
+   "marketplace_status": "id",
+   "member_affiliate_percentage": "count",
+   "member_affiliate_status": "status",
+   "member_count": "count",
+   "published_reviews_count": "count",
+   "updated_at": "date"
+  }
+ },
+ "promo-codes activate": {
+  "schema": "PromoCode",
+  "kinds": {
+   "account": "relation",
+   "amount_off": "count",
+   "created_at": "date",
+   "currency": "hidden",
+   "expires_at": "date",
+   "id": "id",
+   "product": "relation",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "promo-codes create": {
+  "schema": "PromoCode",
+  "kinds": {
+   "account": "relation",
+   "amount_off": "count",
+   "created_at": "date",
+   "currency": "hidden",
+   "expires_at": "date",
+   "id": "id",
+   "product": "relation",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "promo-codes deactivate": {
+  "schema": "PromoCode",
+  "kinds": {
+   "account": "relation",
+   "amount_off": "count",
+   "created_at": "date",
+   "currency": "hidden",
+   "expires_at": "date",
+   "id": "id",
+   "product": "relation",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "promo-codes delete": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "promo-codes get": {
+  "schema": "PromoCode",
+  "kinds": {
+   "account": "relation",
+   "amount_off": "count",
+   "created_at": "date",
+   "currency": "hidden",
+   "expires_at": "date",
+   "id": "id",
+   "product": "relation",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "promo-codes list": {
+  "schema": "PromoCodeListItem",
+  "kinds": {
+   "amount_off": "count",
+   "created_at": "date",
+   "currency": "hidden",
+   "expires_at": "date",
+   "id": "id",
+   "product": "relation",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "reactions create": {
+  "schema": "Reaction",
+  "kinds": {
+   "id": "id",
+   "user": "relation"
+  }
+ },
+ "reactions get": {
+  "schema": "Reaction",
+  "kinds": {
+   "id": "id",
+   "user": "relation"
+  }
+ },
+ "reactions list": {
+  "schema": "ReactionListItem",
+  "kinds": {
+   "id": "id",
+   "user": "relation"
+  }
+ },
+ "refunds get": {
+  "schema": "Refund",
+  "kinds": {
+   "account_id": "id",
+   "amount": "money",
+   "created_at": "date",
+   "id": "id",
+   "original_amount": "money",
+   "payment_id": "id",
+   "provider_created_at": "date",
+   "reference_status": "status",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "refunds list": {
+  "schema": "Refund",
+  "kinds": {
+   "account_id": "id",
+   "amount": "money",
+   "created_at": "date",
+   "id": "id",
+   "original_amount": "money",
+   "payment_id": "id",
+   "provider_created_at": "date",
+   "reference_status": "status",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "resolution-center-cases accept": {
+  "schema": "ResolutionCenterCase",
+  "kinds": {
+   "account": "relation",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "outcome": "status",
+   "plan_id": "id",
+   "product_id": "id",
+   "response_due_at": "date",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "resolution-center-cases appeal": {
+  "schema": "ResolutionCenterCase",
+  "kinds": {
+   "account": "relation",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "outcome": "status",
+   "plan_id": "id",
+   "product_id": "id",
+   "response_due_at": "date",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "resolution-center-cases create": {
+  "schema": "ResolutionCenterCase",
+  "kinds": {
+   "account": "relation",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "outcome": "status",
+   "plan_id": "id",
+   "product_id": "id",
+   "response_due_at": "date",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "resolution-center-cases deny": {
+  "schema": "ResolutionCenterCase",
+  "kinds": {
+   "account": "relation",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "outcome": "status",
+   "plan_id": "id",
+   "product_id": "id",
+   "response_due_at": "date",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "resolution-center-cases events": {
+  "schema": "ResolutionEvent",
+  "kinds": {
+   "created_at": "date",
+   "id": "id"
+  }
+ },
+ "resolution-center-cases get": {
+  "schema": "ResolutionCenterCase",
+  "kinds": {
+   "account": "relation",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "outcome": "status",
+   "plan_id": "id",
+   "product_id": "id",
+   "response_due_at": "date",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "resolution-center-cases list": {
+  "schema": "ResolutionCenterCase",
+  "kinds": {
+   "account": "relation",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "outcome": "status",
+   "plan_id": "id",
+   "product_id": "id",
+   "response_due_at": "date",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "resolution-center-cases reply": {
+  "schema": "ResolutionCenterCase",
+  "kinds": {
+   "account": "relation",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "outcome": "status",
+   "plan_id": "id",
+   "product_id": "id",
+   "response_due_at": "date",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "resolution-center-cases request_info": {
+  "schema": "ResolutionCenterCase",
+  "kinds": {
+   "account": "relation",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "outcome": "status",
+   "plan_id": "id",
+   "product_id": "id",
+   "response_due_at": "date",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "resolution-center-cases summary": {
+  "kinds": {
+   "total": "count"
+  }
+ },
+ "resolution-center-cases withdraw": {
+  "schema": "ResolutionCenterCase",
+  "kinds": {
+   "account": "relation",
+   "amount": "money",
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "outcome": "status",
+   "plan_id": "id",
+   "product_id": "id",
+   "response_due_at": "date",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "reviews get": {
+  "schema": "Review",
+  "kinds": {
+   "company": "relation",
+   "created_at": "date",
+   "id": "id",
+   "joined_at": "date",
+   "product": "relation",
+   "published_at": "date",
+   "status": "status",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "reviews list": {
+  "schema": "ReviewListItem",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "joined_at": "date",
+   "published_at": "date",
+   "status": "status",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "setup-intents create": {
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "setup-intents get": {
+  "schema": "SetupIntent",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "setup-intents list": {
+  "schema": "SetupIntentListItem",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "setup-intents return_url": {
+  "schema": "SetupStatus",
+  "kinds": {
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "setup-intents status": {
+  "schema": "SetupStatus",
+  "kinds": {
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "shipments create": {
+  "schema": "Shipment",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "payment_id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "shipments get": {
+  "schema": "Shipment",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "payment_id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "shipments list": {
+  "schema": "Shipment",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "payment_id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "shipments update": {
+  "schema": "Shipment",
+  "kinds": {
+   "account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "payment_id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "social-accounts create": {
+  "schema": "SocialAccount",
+  "kinds": {
+   "id": "id",
+   "parent_social_account": "relation"
+  }
+ },
+ "social-accounts delete": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "social-accounts lead_forms": {
+  "schema": "SocialAccountLeadForm",
+  "kinds": {
+   "created_at": "date",
+   "id": "id"
+  }
+ },
+ "social-accounts list": {
+  "schema": "SocialAccount",
+  "kinds": {
+   "id": "id",
+   "parent_social_account": "relation"
+  }
+ },
+ "social-accounts posts": {
+  "schema": "SocialAccountPost",
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "stats get": {
+  "kinds": {
+   "currency": "hidden"
+  }
+ },
+ "support-channels create": {
+  "schema": "SupportChannel",
+  "kinds": {
+   "customer_user": "relation",
+   "id": "id",
+   "last_message_at": "date",
+   "resolved_at": "date"
+  }
+ },
+ "support-channels get": {
+  "schema": "SupportChannel",
+  "kinds": {
+   "customer_user": "relation",
+   "id": "id",
+   "last_message_at": "date",
+   "resolved_at": "date"
+  }
+ },
+ "support-channels list": {
+  "schema": "SupportChannelListItem",
+  "kinds": {
+   "customer_user": "relation",
+   "id": "id",
+   "last_message_at": "date",
+   "resolved_at": "date"
+  }
+ },
+ "swaps create": {
+  "kinds": {
+   "account_id": "id",
+   "amount_in": "money",
+   "amount_out": "money",
+   "amount_out_expected": "money",
+   "amount_out_min": "money",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "swaps get": {
+  "kinds": {
+   "account_id": "id",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "swaps list": {
+  "kinds": {
+   "account_id": "id",
+   "id": "id",
+   "status": "status"
+  }
+ },
+ "swaps quote": {
+  "kinds": {
+   "amount_in": "money",
+   "amount_out": "money",
+   "amount_out_min": "money",
+   "estimated_duration_seconds": "count",
+   "fee_bps": "count"
+  }
+ },
+ "team-members create": {
+  "schema": "TeamMember",
+  "kinds": {
+   "account_id": "id",
+   "authorized_role": "relation",
+   "created_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "team-members get": {
+  "schema": "TeamMember",
+  "kinds": {
+   "account_id": "id",
+   "authorized_role": "relation",
+   "created_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "team-members list": {
+  "schema": "TeamMember",
+  "kinds": {
+   "account_id": "id",
+   "authorized_role": "relation",
+   "created_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "team-members update": {
+  "schema": "TeamMember",
+  "kinds": {
+   "account_id": "id",
+   "authorized_role": "relation",
+   "created_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date",
+   "user": "relation"
+  }
+ },
+ "topups create": {
+  "schema": "Topup",
+  "kinds": {
+   "created_at": "date",
+   "currency": "hidden",
+   "id": "id",
+   "paid_at": "date",
+   "status": "status",
+   "total": "money"
+  }
+ },
+ "transfers create": {
+  "kinds": {
+   "amount": "money",
+   "created_at": "date",
+   "created_by_user": "relation",
+   "currency": "hidden",
+   "destination": "relation",
+   "destination_ledger_account_id": "id",
+   "failed_at": "date",
+   "fee_amount": "money",
+   "id": "id",
+   "origin": "relation",
+   "origin_ledger_account_id": "id",
+   "status": "status"
+  }
+ },
+ "transfers get": {
+  "kinds": {
+   "amount": "money",
+   "created_at": "date",
+   "created_by_user": "relation",
+   "currency": "hidden",
+   "destination": "relation",
+   "destination_ledger_account_id": "id",
+   "failed_at": "date",
+   "fee_amount": "money",
+   "id": "id",
+   "origin": "relation",
+   "origin_ledger_account_id": "id",
+   "status": "status"
+  }
+ },
+ "transfers list": {
+  "kinds": {
+   "amount": "money",
+   "created_at": "date",
+   "created_by_user": "relation",
+   "currency": "hidden",
+   "destination_ledger_account_id": "id",
+   "failed_at": "date",
+   "fee_amount": "money",
+   "id": "id",
+   "origin_ledger_account_id": "id",
+   "status": "status"
+  }
+ },
+ "transfers recipients": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "users access": {
+  "kinds": {
+   "access_level": "status"
+  }
+ },
+ "users get": {
+  "schema": "User",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "whop_partner_enabled_at": "date"
+  }
+ },
+ "users list": {
+  "schema": "User",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "whop_partner_enabled_at": "date"
+  }
+ },
+ "users me": {
+  "schema": "User",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "whop_partner_enabled_at": "date"
+  }
+ },
+ "users oauth_grants": {
+  "schema": "OauthGrant",
+  "kinds": {
+   "account_id": "id",
+   "app_id": "id",
+   "authorized_at": "date",
+   "created_at": "date",
+   "id": "id",
+   "revoked_at": "date"
+  }
+ },
+ "users passkeys": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "users preferences": {
+  "schema": "UserPreferences",
+  "kinds": {
+   "terms_accepted_at": "date"
+  }
+ },
+ "users recommend_actions": {
+  "schema": "UserRecommendedAction",
+  "kinds": {
+   "account_id": "id",
+   "status": "status"
+  }
+ },
+ "users topics": {
+  "schema": "UserNotificationPreference",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "updated_at": "date"
+  }
+ },
+ "users update": {
+  "schema": "User",
+  "kinds": {
+   "created_at": "date",
+   "id": "id",
+   "whop_partner_enabled_at": "date"
+  }
+ },
+ "verifications create": {
+  "kinds": {
+   "business_structure": "id",
+   "created_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "verifications get": {
+  "kinds": {
+   "business_structure": "id",
+   "created_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "verifications list": {
+  "kinds": {
+   "business_structure": "id",
+   "created_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "verifications update": {
+  "kinds": {
+   "business_structure": "id",
+   "created_at": "date",
+   "id": "id",
+   "status": "status",
+   "updated_at": "date"
+  }
+ },
+ "waitlist-entries approve": {
+  "schema": "WaitlistEntry",
+  "kinds": {
+   "account_id": "id",
+   "approval_failure_reason": "id",
+   "buyer_account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "membership_id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "updated_at": "date",
+   "user_id": "id"
+  }
+ },
+ "waitlist-entries approve_all": {
+  "kinds": {
+   "account_id": "id",
+   "plan_id": "id"
+  }
+ },
+ "waitlist-entries cancel": {
+  "schema": "WaitlistEntry",
+  "kinds": {
+   "account_id": "id",
+   "approval_failure_reason": "id",
+   "buyer_account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "membership_id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "updated_at": "date",
+   "user_id": "id"
+  }
+ },
+ "waitlist-entries create": {
+  "schema": "WaitlistEntry",
+  "kinds": {
+   "account_id": "id",
+   "approval_failure_reason": "id",
+   "buyer_account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "membership_id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "updated_at": "date",
+   "user_id": "id"
+  }
+ },
+ "waitlist-entries deny": {
+  "schema": "WaitlistEntry",
+  "kinds": {
+   "account_id": "id",
+   "approval_failure_reason": "id",
+   "buyer_account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "membership_id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "updated_at": "date",
+   "user_id": "id"
+  }
+ },
+ "waitlist-entries get": {
+  "schema": "WaitlistEntry",
+  "kinds": {
+   "account_id": "id",
+   "approval_failure_reason": "id",
+   "buyer_account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "membership_id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "updated_at": "date",
+   "user_id": "id"
+  }
+ },
+ "waitlist-entries list": {
+  "schema": "WaitlistEntry",
+  "kinds": {
+   "account_id": "id",
+   "approval_failure_reason": "id",
+   "buyer_account_id": "id",
+   "created_at": "date",
+   "id": "id",
+   "membership_id": "id",
+   "plan_id": "id",
+   "product_id": "id",
+   "status": "status",
+   "updated_at": "date",
+   "user_id": "id"
+  }
+ },
+ "webhooks create": {
+  "schema": "Webhook",
+  "kinds": {
+   "consecutive_failures": "count",
+   "created_at": "date",
+   "disabled_at": "date",
+   "failing_since": "date",
+   "id": "id",
+   "last_failure_at": "date",
+   "resource_id": "id",
+   "webhook_secret": "id"
+  }
+ },
+ "webhooks delete": {
+  "kinds": {
+   "id": "id"
+  }
+ },
+ "webhooks deliveries": {
+  "schema": "WebhookDelivery",
+  "kinds": {
+   "id": "id",
+   "replayed_from": "id",
+   "sent_at": "date",
+   "total_time": "count"
+  }
+ },
+ "webhooks get": {
+  "schema": "Webhook",
+  "kinds": {
+   "consecutive_failures": "count",
+   "created_at": "date",
+   "disabled_at": "date",
+   "failing_since": "date",
+   "id": "id",
+   "last_failure_at": "date",
+   "resource_id": "id",
+   "webhook_secret": "id"
+  }
+ },
+ "webhooks list": {
+  "schema": "WebhookListItem",
+  "kinds": {
+   "consecutive_failures": "count",
+   "created_at": "date",
+   "disabled_at": "date",
+   "failing_since": "date",
+   "id": "id",
+   "last_failure_at": "date",
+   "resource_id": "id"
+  }
+ },
+ "webhooks update": {
+  "schema": "Webhook",
+  "kinds": {
+   "consecutive_failures": "count",
+   "created_at": "date",
+   "disabled_at": "date",
+   "failing_since": "date",
+   "id": "id",
+   "last_failure_at": "date",
+   "resource_id": "id",
+   "webhook_secret": "id"
+  }
+ }
+}

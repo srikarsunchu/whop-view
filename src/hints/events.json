@@ -1,26 +1,7 @@
 {
   "primary": "event_name",
-  "date": "event_time",
-  "money": ["value", "total_usd_amount"],
+  "money": ["value"],
   "columns": ["event_name", "event_time", "value", "path", "person_id", "id"],
   "hidden": ["url", "questions", "recommended_action_chain_id", "recommended_action_shown_position", "event_id"],
-  "labels": {
-    "event_name": "event",
-    "event_time": "time",
-    "person_id": "person",
-    "custom_name": "custom name",
-    "total_usd_amount": "usd",
-    "referrer_url": "referrer",
-    "utm_source": "utm source",
-    "utm_campaign": "utm campaign",
-    "utm_medium": "utm medium",
-    "utm_content": "utm content",
-    "utm_term": "utm term",
-    "ad_campaign_id": "campaign",
-    "ad_set_id": "ad set",
-    "ad_id": "ad",
-    "ad_click_id": "click",
-    "ad_click_type": "click type",
-    "source_type": "source"
-  }
+  "labels": { "event_name": "event", "event_time": "time", "person_id": "person", "custom_name": "custom name", "total_usd_amount": "usd", "referrer_url": "referrer", "utm_source": "utm source", "utm_campaign": "utm campaign", "utm_medium": "utm medium", "utm_content": "utm content", "utm_term": "utm term", "ad_campaign_id": "campaign", "ad_set_id": "ad set", "ad_id": "ad", "ad_click_id": "click", "ad_click_type": "click type", "source_type": "source" }
 }

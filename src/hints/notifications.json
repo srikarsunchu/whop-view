@@ -1,11 +1,7 @@
 {
   "primary": "subject",
-  "date": "created_at",
   "relation": "sender",
   "columns": ["subject", "sender", "topic", "mentions_me", "created_at", "id"],
   "hidden": ["iframe_link", "rest_path"],
-  "labels": {
-    "mentions_me": "mentions me",
-    "attachment_url": "attachment"
-  }
+  "labels": { "mentions_me": "mentions me", "attachment_url": "attachment" }
 }

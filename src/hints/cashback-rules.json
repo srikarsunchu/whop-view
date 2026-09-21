@@ -1,15 +1,5 @@
 {
   "primary": "merchant_name",
-  "date": "starts_at",
   "columns": ["merchant_name", "merchant_category_code", "rate_bps", "starts_at", "expires_at", "id"],
-  "labels": {
-    "merchant_name": "merchant",
-    "merchant_category_code": "mcc",
-    "rate_bps": "rate bps",
-    "funding_account_id": "funded by",
-    "scoped_account_id": "scoped to",
-    "starts_at": "starts",
-    "expires_at": "expires",
-    "discarded_at": "discarded"
-  }
+  "labels": { "merchant_name": "merchant", "merchant_category_code": "mcc", "rate_bps": "rate bps", "funding_account_id": "funded by", "scoped_account_id": "scoped to", "starts_at": "starts", "expires_at": "expires", "discarded_at": "discarded" }
 }

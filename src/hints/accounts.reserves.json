@@ -1,9 +1,5 @@
 {
   "primary": "amount",
-  "money": ["amount"],
   "columns": ["amount", "by_type", "unlocks_by_date"],
-  "labels": {
-    "by_type": "holds",
-    "unlocks_by_date": "unlocks"
-  }
+  "labels": { "by_type": "holds", "unlocks_by_date": "unlocks" }
 }

@@ -1,24 +1,7 @@
 {
   "primary": "id",
-  "status": "status",
-  "money": [
-    "amount"
-  ],
-  "date": "evidence_due_at",
   "relation": "user",
-  "columns": [
-    "id",
-    "status",
-    "amount",
-    "reason",
-    "evidence_due_at",
-    "created_at"
-  ],
-  "hidden": [
-    "evidence"
-  ],
-  "labels": {
-    "evidence_due_at": "evidence due",
-    "respond_by": "respond by"
-  }
+  "columns": ["id", "status", "amount", "reason", "evidence_due_at", "created_at"],
+  "hidden": ["evidence"],
+  "labels": { "evidence_due_at": "evidence due", "respond_by": "respond by" }
 }

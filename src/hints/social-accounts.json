@@ -2,9 +2,5 @@
   "primary": "name",
   "columns": ["name", "platform", "username", "verified", "scopes", "error", "id"],
   "hidden": ["profile_picture_url"],
-  "labels": {
-    "external_id": "platform id",
-    "parent_social_account": "parent",
-    "scopes": "can"
-  }
+  "labels": { "external_id": "platform id", "parent_social_account": "parent", "scopes": "can" }
 }

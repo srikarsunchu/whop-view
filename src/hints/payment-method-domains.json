@@ -1,12 +1,4 @@
 {
   "primary": "hostname",
-  "status": "status",
-  "date": "created_at",
-  "columns": [
-    "hostname",
-    "provider",
-    "status",
-    "created_at",
-    "id"
-  ]
+  "columns": ["hostname", "provider", "status", "created_at", "id"]
 }

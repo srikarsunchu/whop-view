@@ -1,19 +1,7 @@
 {
   "primary": "worker",
-  "status": "status",
-  "date": "submitted_at",
   "relation": "bounty_id",
   "columns": ["worker", "status", "deliverable_type", "submitted_at", "resolved_at", "bounty_id", "id"],
   "hidden": ["capture_clips", "latest_proof_livestream_feed", "capture_filename", "fov", "station", "operator", "site"],
-  "labels": {
-    "deliverable_type": "deliverable",
-    "deliverable_urls": "urls",
-    "denial_reason": "denied because",
-    "bounty_id": "bounty",
-    "claimed_at": "claimed",
-    "submitted_at": "submitted",
-    "resolved_at": "resolved",
-    "captured_clip_count": "clips",
-    "captured_duration_seconds": "captured seconds"
-  }
+  "labels": { "deliverable_type": "deliverable", "deliverable_urls": "urls", "denial_reason": "denied because", "bounty_id": "bounty", "claimed_at": "claimed", "submitted_at": "submitted", "resolved_at": "resolved", "captured_clip_count": "clips", "captured_duration_seconds": "captured seconds" }
 }

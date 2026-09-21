@@ -1,36 +1,7 @@
 {
   "primary": "id",
-  "status": "status",
-  "money": [
-    "total",
-    "subtotal",
-    "tax_amount",
-    "refunded_amount"
-  ],
-  "date": "created_at",
   "relation": "user",
-  "columns": [
-    "id",
-    "status",
-    "total",
-    "user",
-    "billing_reason",
-    "created_at"
-  ],
-  "hidden": [
-    "substatus",
-    "refundable",
-    "retryable",
-    "voidable",
-    "tax_behavior",
-    "tax_refunded_amount",
-    "line_items",
-    "billing_address",
-    "presentment_total",
-    "usd_total"
-  ],
-  "labels": {
-    "billing_reason": "reason",
-    "total": "amount"
-  }
+  "columns": ["id", "status", "total", "user", "billing_reason", "created_at"],
+  "hidden": ["substatus", "refundable", "retryable", "voidable", "tax_behavior", "tax_refunded_amount", "line_items", "billing_address", "presentment_total", "usd_total"],
+  "labels": { "billing_reason": "reason", "total": "amount" }
 }
