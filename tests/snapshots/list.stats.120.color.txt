@@ -93,4 +93,4 @@
  withdrawal_markup_revenue                Withdrawal markup revenue                   currency  [2m—[22m
 
  [2m90 rows · no more pages[22m
- [2mjson[22m  [2mwhop stats list --account_id <biz_id> --format json --filter-output key,name,unit,properties[22m
+ [2mjson[22m  [2mwhop stats list --account_id <biz_id> --format json --filter-output 'data[0,90].key'[22m

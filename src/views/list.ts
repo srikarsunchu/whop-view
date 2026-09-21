@@ -81,15 +81,21 @@ export function listViewWithMeta(input: ListInput, theme: Theme): ListRender {
   out.push(...t.lines);
   out.push("");
 
-  // The teaching line names exactly the columns on screen, not the ones we wished for.
+  // The teaching line filters to the primary column on screen. whop's `--filter-output` on a page is a
+  // slice, `data[0,N].field`; `data[*]` returns nothing, and two filters on one slice keep only the last,
+  // so one column is the most a working command can teach. N is the rows on screen.
   const shown = t.kept.filter((k) => k !== ROW_KEY);
+  const primary = columns.find((c) => c.priority === 0 && shown.includes(c.key))?.key ?? shown[0];
   const pageLine = page.has_next_page && page.end_cursor ? copy.list.next(page.end_cursor) : copy.list.noMore;
   const scoped = takesAccount(argv) && !argv.includes("--account_id") ? [...argv, "--account_id", "<biz_id>"] : argv;
-  const teach = teachArgv(scoped, "--filter-output", shown.join(","));
+  const teach = teachArgv(scoped, "--filter-output", pageFilter(rows.length, primary));
   out.push(...footer([`${copy.list.of(rows.length, null)} · ${pageLine}`, [copy.list.json, teach]], theme));
   const next = page.has_next_page && page.end_cursor ? withAfter(argv, page.end_cursor) : undefined;
   return { lines: out, rowStart, rowCount: rows.length, teach, next };
 }
+
+/** whop's slice filter for one field across a page: `data[0,N].field`. Verified against 0.18.2. */
+export const pageFilter = (rows: number, field: string) => `data[0,${rows}].${field}`;
 
 /** The same list one page on: replaces an existing `--after`, else appends one. */
 export function withAfter(argv: string[], cursor: string): string[] {

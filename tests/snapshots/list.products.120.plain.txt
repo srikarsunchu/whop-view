@@ -5,5 +5,4 @@
  Hypermotion  visible     $29.00/mo        2  8d ago   prod_iQ2Zub6GFQS5Q
 
  2 rows · no more pages
- json  whop products list --account_id <biz_id> --format json --filter-output
-       title,visibility,default_plan,member_count,created_at,id
+ json  whop products list --account_id <biz_id> --format json --filter-output 'data[0,2].title'

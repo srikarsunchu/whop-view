@@ -5,4 +5,4 @@
 
  [2m1 row · no more pages[22m
  [2mjson[22m  [2mwhop apps list --account_id <biz_id> --format json --filter-output[22m
-       [2mname,status,app_type,creator,hosted_url,id[22m
+       [2m'data[0,1].name'[22m

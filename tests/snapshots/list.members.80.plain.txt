@@ -6,4 +6,4 @@
 
  2 rows · no more pages
  json  whop members list --account_id <biz_id> --format json --filter-output
-       user,status,access_level,last_accessed_at,joined_at,id
+       'data[0,2].user'

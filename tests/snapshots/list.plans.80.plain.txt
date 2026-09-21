@@ -7,4 +7,4 @@
 
  3 rows · no more pages
  json  whop plans list --account_id <biz_id> --format json --filter-output
-       title,visibility,initial_price,id
+       'data[0,3].title'

@@ -5,4 +5,4 @@
 
  1 row · no more pages
  json  whop apps list --account_id <biz_id> --format json --filter-output
-       name,status,app_type,creator,hosted_url,id
+       'data[0,1].name'

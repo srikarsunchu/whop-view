@@ -7,4 +7,4 @@
 
  3 rows · no more pages
  json  whop payments list --account_id <biz_id> --format json --filter-output
-       id,status,total,user,billing_reason,created_at
+       'data[0,3].id'

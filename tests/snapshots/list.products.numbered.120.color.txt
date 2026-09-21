@@ -5,5 +5,4 @@
  [2m2[22m  Hypermotion  [32mvisible   [39m  $29.00/mo        2  8d ago   [2mprod_iQ2Zub6GFQS5Q[22m
 
  [2m2 rows · no more pages[22m
- [2mjson[22m  [2mwhop products list --account_id <biz_id> --format json --filter-output[22m
-       [2mtitle,visibility,default_plan,member_count,created_at,id[22m
+ [2mjson[22m  [2mwhop products list --account_id <biz_id> --format json --filter-output 'data[0,2].title'[22m

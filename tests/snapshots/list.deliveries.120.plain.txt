@@ -6,5 +6,4 @@
  membership.activated  ok       200  2d ago   0.34  whd_x2AbCdEfGh  whd_x3AbCdEfGh
 
  3 rows · no more pages
- json  whop webhooks deliveries hook_x1AbCdEfGh --format json --filter-output
-       event,success,response_code,sent_at,total_time,replayed_from,id
+ json  whop webhooks deliveries hook_x1AbCdEfGh --format json --filter-output 'data[0,3].event'

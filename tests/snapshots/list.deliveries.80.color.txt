@@ -7,4 +7,4 @@
 
  [2m3 rows · no more pages[22m
  [2mjson[22m  [2mwhop webhooks deliveries hook_x1AbCdEfGh --format json --filter-output[22m
-       [2mevent,success,response_code,sent_at,total_time,id[22m
+       [2m'data[0,3].event'[22m

@@ -244,10 +244,10 @@ Unchanged behavior, copied into `src/format.ts` and `src/status.ts`:
  Hypermotion  visible     $10.00             2  8d ago    prod_iQ2Zub6GFQS5Q
 
  2 of 2 · no more pages
- json  whop products list --format json --filter-output id,title,visibility,default_plan,member_count,created_at
+ json  whop products list --format json --filter-output 'data[0,2].title'
 ```
 
-Header: noun, count, account title right-aligned. The noun is the group, or the verb when it names a sub-resource: `payouts methods` heads `methods · 0` and ends `No methods yet.` with no create hint, not `No payouts yet.` Footer: `n of total`, `next: --after <cursor>` when `has_next_page`, then the teaching line with exactly the columns shown. Empty page renders the header and `No products yet.` with the create command from copy.
+Header: noun, count, account title right-aligned. The noun is the group, or the verb when it names a sub-resource: `payouts methods` heads `methods · 0` and ends `No methods yet.` with no create hint, not `No payouts yet.` Footer: `n of total`, `next: --after <cursor>` when `has_next_page`, then the teaching line: a working `--filter-output` for the primary column, since whop filters a page by slice (`data[0,N].field`) and keeps only the last filter on a slice. Empty page renders the header and `No products yet.` with the create command from copy.
 
 ### detail
 

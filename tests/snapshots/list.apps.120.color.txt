@@ -4,4 +4,4 @@
  Frame  [2mhidden[22m  b2c_app  sri @designedbysri  [2m—  [22m  [2mapp_HKnLpw6UGGEqk6[22m
 
  [2m1 row · no more pages[22m
- [2mjson[22m  [2mwhop apps list --account_id <biz_id> --format json --filter-output name,status,app_type,creator,hosted_url,id[22m
+ [2mjson[22m  [2mwhop apps list --account_id <biz_id> --format json --filter-output 'data[0,1].name'[22m

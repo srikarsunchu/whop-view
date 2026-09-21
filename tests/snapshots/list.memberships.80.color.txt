@@ -6,4 +6,4 @@
 
  [2m2 rows · no more pages[22m
  [2mjson[22m  [2mwhop memberships list --account_id <biz_id> --format json --filter-output[22m
-       [2muser_id,status,product_id,id[22m
+       [2m'data[0,2].user_id'[22m

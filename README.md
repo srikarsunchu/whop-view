@@ -54,13 +54,12 @@ After:
  Hypermotion  visible     $29.00/mo        2  8d ago   prod_iQ2Zub6GFQS5Q
 
  2 rows · no more pages
- json  whop products list --account_id <biz_id> --format json --filter-output
-       title,visibility,default_plan,member_count,created_at,id
+ json  whop products list --account_id <biz_id> --format json --filter-output 'data[0,2].title'
 ```
 
 ![products list](demo/products-list.gif)
 
-The last line is the teaching footer. It is the exact agent command that returns the columns on screen, so a person who learns `wv` learns `whop`.
+The last line is the teaching footer. It is an agent command that works, so a person who learns `wv` learns `whop`. It filters to the primary column because whop's `--filter-output` on a page is a slice, `data[0,N].field`: `data[*]` returns an empty array, and two filters on one slice keep only the last. A record's footer names every field on the card, since top-level keys filter as expected.
 
 ### `memberships get <id>`
 
@@ -412,7 +411,7 @@ Three commands, one screen. The first line is a status line: account, profile an
  2  Hypermotion  visible     $29.00/mo        2  8d ago   prod_iQ2Zub6GFQS5Q
 
  2 rows · no more pages
- json  whop products list --account_id <biz_id> --format json --filter-output title,visibility,default_plan,member_count,created_at,id
+ json  whop products list --account_id <biz_id> --format json --filter-output 'data[0,2].title'
 
  ───────────────────────────────────────────────────────────────────────────────────────────
  ❯ 

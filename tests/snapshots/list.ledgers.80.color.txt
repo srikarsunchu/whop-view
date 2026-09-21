@@ -14,4 +14,4 @@
 
  [2m10 rows · no more pages[22m
  [2mjson[22m  [2mwhop ledgers list --account_id <biz_id> --format json --filter-output[22m
-       [2mline_type,amount,product_name,id[22m
+       [2m'data[0,10].line_type'[22m

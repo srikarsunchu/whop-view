@@ -13,5 +13,4 @@
  Payment Processing Fixed Fee       [31m-$0.30[39m  Hypermotion  sri   6d ago  [2mline_QXZYRVNNSGhNSnFY…[22m
 
  [2m10 rows · no more pages[22m
- [2mjson[22m  [2mwhop ledgers list --account_id <biz_id> --format json --filter-output[22m
-       [2mline_type,amount,product_name,user_name,posted_at,id[22m
+ [2mjson[22m  [2mwhop ledgers list --account_id <biz_id> --format json --filter-output 'data[0,10].line_type'[22m

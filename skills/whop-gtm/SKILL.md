@@ -35,7 +35,7 @@ The Whop CLI (`whop`, 0.18+) exposes every go-to-market stage as a command group
 whop auth status --format json                                   # who, which biz_
 whop accounts preferences --format json --filter-output ads_payment_methods,ads_reporting_currency,economic_intelligence
 whop social-accounts list --format json                          # empty → no page connected, ads will refuse
-whop people list --format json --filter-output data[*].first_source,data[*].last_source   # all null → no pixel
+whop people list --format json --filter-output 'data[0,50].first_source'   # all null → no pixel. Slice syntax: data[*] returns nothing
 whop ad-campaigns list --format json
 whop audiences list --format json
 ```

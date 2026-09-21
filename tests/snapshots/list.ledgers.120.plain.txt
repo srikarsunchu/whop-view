@@ -13,5 +13,4 @@
  Payment Processing Fixed Fee       -$0.30  Hypermotion  sri   6d ago  line_QXZYRVNNSGhNSnFY…
 
  10 rows · no more pages
- json  whop ledgers list --account_id <biz_id> --format json --filter-output
-       line_type,amount,product_name,user_name,posted_at,id
+ json  whop ledgers list --account_id <biz_id> --format json --filter-output 'data[0,10].line_type'
