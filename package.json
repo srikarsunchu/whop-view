@@ -13,7 +13,7 @@
     "wv": "./dist/bin.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && rm -rf dist/hints && cp -R src/hints dist/hints",
+    "build": "tsc -p tsconfig.json && chmod +x dist/bin.js && rm -rf dist/hints && cp -R src/hints dist/hints",
     "dev": "node --experimental-strip-types --no-warnings src/bin.ts",
     "test": "node --test --experimental-strip-types --no-warnings tests/*.test.ts",
     "fixtures": "node --experimental-strip-types --no-warnings scripts/fixtures.ts",
