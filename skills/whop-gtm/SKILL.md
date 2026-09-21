@@ -20,6 +20,8 @@ The bare CLI has no gate, no dry-run, no useful exit code, and no manifest that 
 7. **Dates are presets.** `--last 7d`, `--last 30d`, `--this month`, and `--last month` on `stats get` and `events list` resolve to `--from` and `--to` before `whop` runs. An `events list` range over 30 days is refused before the call, in Whop's words.
 8. **Production is the default, and the sandbox is not a test mode for ads.** `wv --sandbox` points `whop` at the sandbox host with a key kept in `wv`'s config; `wv sandbox status` says whether that works. The sandbox has no Meta account, so ad estimates and creates usually refuse there. Ad budgets, bounties, payouts, and media generation move real money in production; that is what the gate is for.
 
+9. **Every playbook ends with reads that prove it.** Each one below closes with "Done when": the `wv` reads whose answers mean the step landed, and what to tell the person when they do not. Run them before reporting success; a write that returned an id is not a launch that delivers.
+
 ## The loop
 
 | stage | groups | what they give you |
@@ -97,6 +99,8 @@ wv ad-groups create --ad_campaign_id adcamp_x --title "winback 30d" --budget_amo
 
 Filters must be rolling windows (`last_seen_within_days`), never fixed dates, or the audience will not refresh. The audience ids for the ad group come from the two `create` responses; `wv audiences list --format json` lists them again.
 
+Done when: `wv audiences list --format json` shows both audiences with a `status` that is not building and a `total_rows` above zero for the visitors one (an empty visitors audience means the pixel is not attributing; `wv doctor` names the fix); `wv promo-codes list --status active --format json` includes `COMEBACK`; `wv ad-groups list --ad_campaign_id adcamp_x --format json` includes `winback 30d` and its status is not paused; and by the next day `wv stats get ad_delivery --last 1d --source "whop:adcamp_x:*" --group_by source --metric spend --format json` shows spend on the new group. Not done, and worth saying to the person: a lookalike-sized budget on a retargeting audience of a few hundred people will exhaust the audience in days; watch `cost_per_result` against the campaign's other groups after three days and pause the group if it is worse.
+
 ### 3 · Lookalike scale
 
 ```bash
@@ -109,6 +113,8 @@ wv ads duplicate ad_best
 ```
 
 The source audience needs at least 100 matched people. `percentage` must divide evenly by `count`. `pause` and `duplicate` are writes and get the plan like any other; a pause moves no money, so its plan is the command and the account and the prompt is a plain yes.
+
+Done when, in two stages. After the creates: `wv audiences list --audience_type lookalike --format json` shows `count` audiences, one per band, each with a `status` that is not building and `total_rows` above zero; `estimate_reach` for each band returned bounds rather than an error; and `wv ad-groups list --ad_campaign_id adcamp_x --format json` shows one group per band, none paused. Do not judge before three days or fifty results per group, whichever is later. After that: the `ad_delivery` read grouped by source ranks the bands by `cost_per_result`; the plan is to pause the worst band and duplicate the ad in the best one, one change per day, never two variables at once, and only when the best band's cost per result is under the campaign's target. Report the ranking to the person before pausing anything, since a pause moves no money and needs only a yes, but it also throws away the learning that band has bought.
 
 ### 4 · Creators do the distribution
 
@@ -125,6 +131,8 @@ wv partners links --format json
 
 The `products update` plan shows the change, `global affiliate status  disabled → enabled`, read from the record before anything runs. Approve or deny on a submission is dashboard only. `--all` streams every submission as one object per line; poll about once a minute while a person reviews.
 
+Done when: `wv products get $PROD --format json` shows `global_affiliate_status` `enabled` at the percentage asked; `wv bounties get bnty_x --format json` shows the bounty with its `publish_at` in the future and a status that is not draft (the escrow, `gross_reward_amount × accepted_submissions_limit`, has been taken from the balance, and `wv ledgers report --report_type balance_summary --format json` moved by that much); after `publish_at`, `wv bounty-submissions list --bounty_id bnty_x --all` grows; and within the month `wv stats get affiliate_fees --this month --format json` and `wv stats get partner_link_clicks --this month --format json` are above zero. Stop and tell the person when submissions sit in `submitted` for more than a day, since review is dashboard only, and when a weekly bounty's escrow would leave the balance short of the next payout.
+
 ### 5 · Monday report that asks Whop what to do
 
 Needs `intelligence` green in doctor; otherwise `economic-intelligence` answers a 403 whose fix is `whop accounts update-preferences --economic_intelligence true`.
@@ -140,6 +148,8 @@ wv economic-intelligence update reca_x --status superseded --reason "wrong audie
 ```
 
 `wv gtm --format json` is the same six numbers plus the people summary, the campaigns, the offers, and the launch gaps in one call, if the report is for a person rather than for Whop's recommender.
+
+Done when: the six reads returned `totals` for the same seven-day window and the person has seen them next to last week's; `wv economic-intelligence list --status ready --format json` has at least one recommendation, and each one the person approved is `executed` and each one they rejected is `superseded` with a `--reason`; `wv gtm --format json` returns `gaps: []`, or every remaining gap has been shown with its fix. A recommendation that would spend more than the person named as the budget is reported, not executed. Nothing in this playbook writes except the `update`, so the report itself can run unattended and on a schedule.
 
 ## Command reference
 
