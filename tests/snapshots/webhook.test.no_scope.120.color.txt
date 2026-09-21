@@ -1,0 +1,13 @@
+ [1mwebhook test[22m  [2mhook_x1AbCdEfGh[22m  [2mpayment.succeeded[22m
+
+ [2m── [22m[1mTest event[22m[2m ─────────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2mresult[22m  [32macknowledged · the endpoint answered 2xx[39m
+   [2mcode  [22m  200
+   [2mbody  [22m  OK
+
+ [2m── [22m[1mNewest delivery[22m[2m ────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2mstatus[22m  [33mHTTP_403 OAuth token is not authorized for the developer:manage_webhook scope. This resource requires an[39m
+           [33mAPI-key login (`whop login --api-key`).[39m
+
+ [2mjson[22m  [2mwhop webhooks test hook_x1AbCdEfGh --event payment.succeeded --format json[22m
+ [2m    [22m  [2mwhop webhooks deliveries hook_x1AbCdEfGh --first 1 --format json[22m

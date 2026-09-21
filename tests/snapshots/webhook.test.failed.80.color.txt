@@ -1,0 +1,21 @@
+ [1mwebhook test[22m  [2mhook_x1AbCdEfGh[22m  [2mmembership.activated[22m
+
+ [2m── [22m[1mTest event[22m[2m ─────────────────────────────────────────────────────────────────[22m
+   [2mresult[22m  [31mnot acknowledged[39m
+   [2mcode  [22m  [31m500[39m
+   [2mbody  [22m  {"error":"non_json","raw_body":"<html><body>Internal Server
+           Error</body></html>"}
+
+ [2m── [22m[1mNewest delivery[22m[2m ────────────────────────────────────────────────────────────[22m
+   [2mevent [22m  membership.activated
+   [2mstatus[22m  [31mfailed[39m
+   [2mcode  [22m  [31m500[39m
+   [2mtime  [22m  1.20s
+   [2msent  [22m  Sep 17, 2026 09:00 UTC · 2d ago
+   [2mbody  [22m  {"error":"non_json","raw_body":"<html><body>Internal Server
+           Error</body></html>"}
+   [2mid    [22m  [2mwhd_x2AbCdEfGh[22m
+
+ [2mjson[22m  [2mwhop webhooks test hook_x1AbCdEfGh --event membership.activated --format[22m
+       [2mjson[22m
+ [2m    [22m  [2mwhop webhooks deliveries hook_x1AbCdEfGh --first 1 --format json[22m

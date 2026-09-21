@@ -1,0 +1,14 @@
+{
+  "primary": "event",
+  "status": "success",
+  "date": "sent_at",
+  "columns": ["event", "success", "response_code", "sent_at", "total_time", "replayed_from", "id"],
+  "hidden": ["request_body", "response_body", "resource_id"],
+  "labels": {
+    "success": "status",
+    "response_code": "code",
+    "total_time": "secs",
+    "replayed_from": "replay of",
+    "sent_at": "sent"
+  }
+}

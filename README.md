@@ -407,6 +407,29 @@ A write verb inside the session gets the same confirmation, then hands the termi
 - `wv help` renders the 51 groups the way `whop --help` orders them, two columns at 120 and one at 80.
 - `wv <group>` renders that group's verbs.
 - `wv doctor` is the setup checklist above; it exits 1 when signing in, identity, or a sellable product is missing.
+- `wv webhooks test <hook_id> --event payment.succeeded` sends Whop's sample payload and then fetches the newest delivery, so the round trip is one screen: whether the endpoint acknowledged, the response code and body, and the delivery's event, status, code, time, and age. Exit 1 when the endpoint did not answer 2xx. `wv webhooks deliveries <hook_id>` is a table of event, status, code, seconds, replay of, sent, id. Both need an API-key login; an OAuth login gets the 403 with the login as the fix.
+
+```
+ webhook test  hook_x1AbCdEfGh  payment.succeeded
+
+ ── Test event ──────────────────────────────────────────────────────────
+   result  acknowledged · the endpoint answered 2xx
+   code    200
+   body    OK
+
+ ── Newest delivery ─────────────────────────────────────────────────────
+   event   payment.succeeded
+   status  ok
+   code    200
+   time    210ms
+   sent    Sep 18, 2026 09:00 UTC · 27h ago
+   body    {"ok":true}
+   id      whd_x1AbCdEfGh
+
+ json  whop webhooks test hook_x1AbCdEfGh --event payment.succeeded --format json
+       whop webhooks deliveries hook_x1AbCdEfGh --first 1 --format json
+```
+
 - `wv apps logs <app_id>` renders hosted-app logs as a tail: time, level, request, message, oldest first. `--follow` (or `-f`) keeps polling every three seconds on `--created_after` the newest line seen and prints what is new, level colored, until Ctrl-C; `--level` and `--query` narrow it the way they narrow `whop apps logs`. The header carries the agent command, and the tail ends with a line count. `--follow` is `wv`'s flag: in a pipe it is dropped and `whop apps logs` runs once, untouched.
 
 ```

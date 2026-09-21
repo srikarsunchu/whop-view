@@ -1,0 +1,10 @@
+ [1mdeliveries[22m[2m · 3[22m
+
+ [2mevent               [22m  [2mstatus[22m  [2mcode[22m  [2msent   [22m  [2msecs[22m  [2mreplay of     [22m  [2mid[22m
+ payment.succeeded     [32mok    [39m   200  27h ago  0.21  [2m—             [22m  [2mwhd_x1AbCdEfGh[22m
+ membership.activated  [31mfailed[39m   500  2d ago    1.2  [2m—             [22m  [2mwhd_x2AbCdEfGh[22m
+ membership.activated  [32mok    [39m   200  2d ago   0.34  [2mwhd_x2AbCdEfGh[22m  [2mwhd_x3AbCdEfGh[22m
+
+ [2m3 rows · no more pages[22m
+ [2mjson[22m  [2mwhop webhooks deliveries hook_x1AbCdEfGh --format json --filter-output[22m
+       [2mevent,success,response_code,sent_at,total_time,replayed_from,id[22m

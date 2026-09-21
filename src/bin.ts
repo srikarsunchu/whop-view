@@ -7,6 +7,7 @@ import { configPath, maskKey, saveSandboxKey } from "./config.ts";
 import { sandboxMissingKeyView, sandboxSavedView, sandboxStatusView } from "./views/sandbox.ts";
 import { ask } from "./primitives/prompt.ts";
 import { resolveDates } from "./dates.ts";
+import { webhookTestView } from "./views/webhook.ts";
 import { followHeader, followIntervalMs, followStopped, logLines, logsView, newEntries, newest, pollArgv } from "./views/logs.ts";
 import { hintsFor } from "./hints.ts";
 import { isWrite, MONEY_GROUPS } from "./status.ts";
@@ -240,10 +241,28 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
     print([""]);
   }
 
+  if (group === "webhooks" && verb === "test") return webhookTest(args, theme, env);
+
   const spin = spinner(copy.spinner.running(args), theme);
   const { parsed, code } = await run(args, env);
   spin.stop();
   return { code, group, ...render(parsed, group, args, theme, opts) };
+}
+
+/** `webhooks test <id> --event <e>`, then the newest delivery, so the round trip is one screen. */
+async function webhookTest(args: string[], theme: Theme, env: NodeJS.ProcessEnv): Promise<Outcome> {
+  const spin = spinner(copy.spinner.running(args), theme);
+  const { parsed, code } = await run(args, env);
+  if (!parsed.ok || !("record" in parsed.payload)) {
+    spin.stop();
+    return { code, group: "webhooks", ...render(parsed, "webhooks", args, theme, {}) };
+  }
+  const deliveryArgv = ["webhooks", "deliveries", args[2], "--first", "1"];
+  spin.update(copy.spinner.running(deliveryArgv));
+  const delivery = await run(deliveryArgv, env);
+  spin.stop();
+  print(webhookTestView({ argv: args, result: parsed.payload.record, delivery: delivery.parsed, deliveryArgv }, theme));
+  return { code: parsed.payload.record.success === true ? 0 : 1, group: "webhooks", teach: teach(args) };
 }
 
 /**

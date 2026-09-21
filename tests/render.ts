@@ -18,6 +18,7 @@ import { gtmView } from "../src/views/gtm.ts";
 import { doctorView, DOCTOR_ACTIONS, type DoctorInput } from "../src/views/doctor.ts";
 import { sandboxMissingKeyView, sandboxStatusView } from "../src/views/sandbox.ts";
 import { followHeader, followStopped, logLines, logsView } from "../src/views/logs.ts";
+import { webhookTestView } from "../src/views/webhook.ts";
 import type { Rec } from "../src/envelope.ts";
 
 export const FIXTURES = join(import.meta.dirname, "fixtures");
@@ -150,6 +151,13 @@ export const DOCTOR_READY: DoctorInput = {
 
 const CONFIG_PATH = "~/.config/whop-view/config.json";
 
+/** Delivery attempts in the API reference's `WebhookDelivery` shape, newest first. An oauth login cannot record them. */
+export const DELIVERIES: Rec[] = [
+  { id: "whd_x1AbCdEfGh", event: "payment.succeeded", success: true, response_code: 200, total_time: 0.21, sent_at: "2026-09-18T09:00:00Z", replayed_from: null, resource_id: "biz_VraUMckluH8dzV", request_body: { type: "payment.succeeded" }, response_body: { ok: true } },
+  { id: "whd_x2AbCdEfGh", event: "membership.activated", success: false, response_code: 500, total_time: 1.2, sent_at: "2026-09-17T09:00:00Z", replayed_from: null, resource_id: "biz_VraUMckluH8dzV", request_body: { type: "membership.activated" }, response_body: { error: "non_json", raw_body: "<html><body>Internal Server Error</body></html>" } },
+  { id: "whd_x3AbCdEfGh", event: "membership.activated", success: true, response_code: 200, total_time: 0.34, sent_at: "2026-09-17T09:05:00Z", replayed_from: "whd_x2AbCdEfGh", resource_id: "biz_VraUMckluH8dzV", request_body: { type: "membership.activated" }, response_body: null },
+];
+
 /** Log entries as the API reference shapes them, newest first, since this account's app has none yet. */
 export const LOG_ROWS: Rec[] = [
   { app_id: "app_HKnLpw6UGGEqk6", app_build_id: "abld_x1AbCdEfGh", request_id: "req_4", created_at: "2026-09-18T09:00:05.000Z", source: "request", level: "warn", message: "slow response", request_method: "POST", request_path: "/api/checkout", response_status: 200, wall_time_ms: 2400, cpu_time_ms: 40, truncated: true },
@@ -163,6 +171,10 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "sandbox.status.nokey": (t) => sandboxStatusView({ url: "https://sandbox-api.whop.com/api/v1", urlSource: "default", keySource: "none", configPath: CONFIG_PATH, account: envelope("error.sandbox_oauth") }, t),
   "sandbox.status.badkey": (t) => sandboxStatusView({ url: "http://localhost:9", urlSource: "env", key: "whop_wrong_key_abcdef1234", keySource: "env", configPath: CONFIG_PATH, account: envelope("error.sandbox_oauth") }, t),
   "sandbox.missing_key": (t) => sandboxMissingKeyView(CONFIG_PATH, t),
+  "list.deliveries": (t) => listView({ group: "webhooks", argv: ["webhooks", "deliveries", "hook_x1AbCdEfGh"], rows: DELIVERIES, page: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false }, hints: hintsFor("webhooks", "deliveries"), noun: "deliveries" }, t),
+  "webhook.test": (t) => webhookTestView({ argv: ["webhooks", "test", "hook_x1AbCdEfGh", "--event", "payment.succeeded"], result: { status: 200, body: "OK", success: true }, delivery: synthPage([DELIVERIES[0]]), deliveryArgv: ["webhooks", "deliveries", "hook_x1AbCdEfGh", "--first", "1"] }, t),
+  "webhook.test.failed": (t) => webhookTestView({ argv: ["webhooks", "test", "hook_x1AbCdEfGh", "--event", "membership.activated"], result: { status: 500, body: { error: "non_json", raw_body: "<html><body>Internal Server Error</body></html>" }, success: false }, delivery: synthPage([DELIVERIES[1]]), deliveryArgv: ["webhooks", "deliveries", "hook_x1AbCdEfGh", "--first", "1"] }, t),
+  "webhook.test.no_scope": (t) => webhookTestView({ argv: ["webhooks", "test", "hook_x1AbCdEfGh", "--event", "payment.succeeded"], result: { status: 200, body: "OK", success: true }, delivery: envelope("error.webhooks_oauth"), deliveryArgv: ["webhooks", "deliveries", "hook_x1AbCdEfGh", "--first", "1"] }, t),
   "logs.page": (t) => logsView({ argv: ["apps", "logs", "app_HKnLpw6UGGEqk6", "--level", "error"], rows: LOG_ROWS, page: { start_cursor: "c0", end_cursor: "c1", has_next_page: true, has_previous_page: false } }, t),
   "logs.empty": (t) => {
     const p = envelope("apps.logs");

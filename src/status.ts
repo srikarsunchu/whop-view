@@ -60,6 +60,8 @@ export function takesAccount(args: string[]): boolean {
   if (args.includes("--account_id")) return false;
   if (["auth", "upgrade", "accounts", "partners", "files", "--version"].includes(g)) return false;
   if (g === "apps" && v !== "list") return false;
+  // A webhook's own verbs take the hook id; only the list and create take an account.
+  if (g === "webhooks" && v !== "list" && v !== "create") return false;
   if (g === "events" && v === "pulse") return false;
   if (
     ["products", "plans", "memberships", "members", "people", "payouts", "bounties", "team-members", "disputes", "events"].includes(g) &&

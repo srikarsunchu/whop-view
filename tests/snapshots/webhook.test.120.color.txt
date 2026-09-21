@@ -1,0 +1,18 @@
+ [1mwebhook test[22m  [2mhook_x1AbCdEfGh[22m  [2mpayment.succeeded[22m
+
+ [2m── [22m[1mTest event[22m[2m ─────────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2mresult[22m  [32macknowledged · the endpoint answered 2xx[39m
+   [2mcode  [22m  200
+   [2mbody  [22m  OK
+
+ [2m── [22m[1mNewest delivery[22m[2m ────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2mevent [22m  payment.succeeded
+   [2mstatus[22m  [32mok[39m
+   [2mcode  [22m  200
+   [2mtime  [22m  210ms
+   [2msent  [22m  Sep 18, 2026 09:00 UTC · 27h ago
+   [2mbody  [22m  {"ok":true}
+   [2mid    [22m  [2mwhd_x1AbCdEfGh[22m
+
+ [2mjson[22m  [2mwhop webhooks test hook_x1AbCdEfGh --event payment.succeeded --format json[22m
+ [2m    [22m  [2mwhop webhooks deliveries hook_x1AbCdEfGh --first 1 --format json[22m

@@ -1,0 +1,10 @@
+ deliveries · 3
+
+ event                 status  code  sent     secs  replay of       id
+ payment.succeeded     ok       200  27h ago  0.21  —               whd_x1AbCdEfGh
+ membership.activated  failed   500  2d ago    1.2  —               whd_x2AbCdEfGh
+ membership.activated  ok       200  2d ago   0.34  whd_x2AbCdEfGh  whd_x3AbCdEfGh
+
+ 3 rows · no more pages
+ json  whop webhooks deliveries hook_x1AbCdEfGh --format json --filter-output
+       event,success,response_code,sent_at,total_time,replayed_from,id

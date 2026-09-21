@@ -1,0 +1,21 @@
+ webhook test  hook_x1AbCdEfGh  membership.activated
+
+ ── Test event ─────────────────────────────────────────────────────────────────
+   result  not acknowledged
+   code    500
+   body    {"error":"non_json","raw_body":"<html><body>Internal Server
+           Error</body></html>"}
+
+ ── Newest delivery ────────────────────────────────────────────────────────────
+   event   membership.activated
+   status  failed
+   code    500
+   time    1.20s
+   sent    Sep 17, 2026 09:00 UTC · 2d ago
+   body    {"error":"non_json","raw_body":"<html><body>Internal Server
+           Error</body></html>"}
+   id      whd_x2AbCdEfGh
+
+ json  whop webhooks test hook_x1AbCdEfGh --event membership.activated --format
+       json
+       whop webhooks deliveries hook_x1AbCdEfGh --first 1 --format json

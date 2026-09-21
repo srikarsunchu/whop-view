@@ -1,0 +1,13 @@
+ webhook test  hook_x1AbCdEfGh  payment.succeeded
+
+ ── Test event ─────────────────────────────────────────────────────────────────────────────────────────────────────────
+   result  acknowledged · the endpoint answered 2xx
+   code    200
+   body    OK
+
+ ── Newest delivery ────────────────────────────────────────────────────────────────────────────────────────────────────
+   status  HTTP_403 OAuth token is not authorized for the developer:manage_webhook scope. This resource requires an
+           API-key login (`whop login --api-key`).
+
+ json  whop webhooks test hook_x1AbCdEfGh --event payment.succeeded --format json
+       whop webhooks deliveries hook_x1AbCdEfGh --first 1 --format json

@@ -79,13 +79,19 @@ export function infer(key: string, value: unknown, row: Rec, hints: Hints): Cell
   if ((key === "status" || key === "visibility" || key === "access_level" || hints.status === key) && typeof value === "string" && value.length < 20) {
     return cell("status", statusLabel(value), statusLabel(value), statusRole(value));
   }
+  // A boolean the hints call the status (`success` on a webhook delivery) reads ok or failed, not yes or no.
+  if (hints.status === key && typeof value === "boolean") {
+    const label = value ? copy.detail.ok : copy.detail.failed;
+    return cell("status", label, label, value ? "good" : "bad");
+  }
   // 2 id
   if (typeof value === "string" && ID_RE.test(value)) return cell("id", value, value, "mono");
   // 3 money object
   if (isMoneyObj(value)) return cell("money", money(value), money(value), "text", "right");
   // 4 money number
   const hinted = hints.money?.includes(key);
-  if ((hinted || MONEY_KEY.test(key)) && typeof value === "number" && !/count|days|percentage|level|rate$|ratio|^return_on/i.test(key)) {
+  // `total_time` and `cpu_time_ms` match /total/ and /fee/ by accident; durations are never money.
+  if ((hinted || MONEY_KEY.test(key)) && typeof value === "number" && !/count|days|percentage|level|rate$|ratio|^return_on|_time$|_ms$|_seconds$/i.test(key)) {
     const pre = hints.formatted?.[key];
     const str = pre && typeof row[pre] === "string" ? (row[pre] as string) : money(value, typeof row.currency === "string" ? row.currency : "usd");
     return cell("money", str, str, "text", "right");

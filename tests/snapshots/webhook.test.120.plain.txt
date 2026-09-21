@@ -1,0 +1,18 @@
+ webhook test  hook_x1AbCdEfGh  payment.succeeded
+
+ ── Test event ─────────────────────────────────────────────────────────────────────────────────────────────────────────
+   result  acknowledged · the endpoint answered 2xx
+   code    200
+   body    OK
+
+ ── Newest delivery ────────────────────────────────────────────────────────────────────────────────────────────────────
+   event   payment.succeeded
+   status  ok
+   code    200
+   time    210ms
+   sent    Sep 18, 2026 09:00 UTC · 27h ago
+   body    {"ok":true}
+   id      whd_x1AbCdEfGh
+
+ json  whop webhooks test hook_x1AbCdEfGh --event payment.succeeded --format json
+       whop webhooks deliveries hook_x1AbCdEfGh --first 1 --format json

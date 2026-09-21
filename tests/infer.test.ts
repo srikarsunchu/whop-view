@@ -35,6 +35,19 @@ test("rule 2 id: prefixed ids are mono", () => {
   assert.equal(infer("id", "line_WmoyQ2IwTGtRU3JTa1Fk", {}, none).kind, "id");
 });
 
+test("rule 7 status on a boolean: the hinted status key reads ok or failed, not yes or no", () => {
+  const hints = hintsFor("webhooks", "deliveries");
+  assert.equal(hints.status, "success");
+  const ok = infer("success", true, { success: true }, hints);
+  assert.deepEqual([ok.kind, ok.short, ok.role], ["status", "ok", "good"]);
+  const failed = infer("success", false, { success: false }, hints);
+  assert.deepEqual([failed.kind, failed.short, failed.role], ["status", "failed", "bad"]);
+  assert.equal(infer("enabled", true, {}, hintsFor("webhooks")).short, "yes", "an unhinted boolean stays yes/no");
+  const secs = infer("total_time", 0.21, {}, hints);
+  assert.deepEqual([secs.kind, secs.short], ["scalar", "0.21"], "a duration is not money even though its key contains total");
+  assert.equal(infer("cpu_time_ms", 8, {}, {}).kind, "scalar");
+});
+
 test("labels: snake_case and camelCase both read as words", () => {
   assert.equal(labelFor("created_at", none), "created");
   assert.equal(labelFor("product_id", none), "product");
