@@ -37,3 +37,12 @@ test("color and plain differ only by escapes", () => {
     assert.equal(color, plain);
   }
 });
+
+// Narrow terminals get no snapshot, only the invariant: nothing may exceed the width.
+for (const w of [40, 60]) {
+  test(`every scene fits at ${w} columns`, () => {
+    for (const [name, scene] of Object.entries(SCENES)) {
+      for (const line of scene(theme(w, false))) assert.ok(width(line) <= w, `${name} @ ${w}: ${JSON.stringify(line)}`);
+    }
+  });
+}

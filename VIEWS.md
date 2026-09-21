@@ -4,7 +4,7 @@
 
 ## Rendering approach: plain ANSI
 
-Plain ANSI with a tiny layout engine, not Ink. Every view here is a static print: a table, a card, a prompt, a footer. Nothing re-renders except the spinner and the y/N prompt, and both are one line. Ink brings React, a reconciler, and a 4 MB install to draw lines that `process.stdout.write` draws in one call. It also makes snapshot tests indirect, because the output is a virtual tree instead of the bytes the terminal gets. The layout engine we need is under 200 lines: measure visible width, pad, truncate with an ellipsis, wrap at a column, and join columns. If a later view needs live keyboard navigation, that is a new decision, not this one.
+Plain ANSI with a tiny layout engine, not Ink. Every view here is a static print: a table, a card, a prompt, a footer. Nothing re-renders except the spinner and the y/N prompt, and both are one line. Ink brings React, a reconciler, and a 4 MB install to draw lines that `process.stdout.write` draws in one call. It also makes snapshot tests indirect, because the output is a virtual tree instead of the bytes the terminal gets. The layout engine we need is under 200 lines: measure visible width, pad, truncate with an ellipsis, wrap at a column, and join columns. If a later view needs live keyboard navigation, that is a new decision, not this one. That decision came on 2026-09-21 and is recorded under [Session](#session): still plain ANSI, still no dependency, one three-line live region and nothing else.
 
 ## The three layers
 
@@ -86,7 +86,7 @@ Applied to each field, in order. First match wins. Schema comes from `whop <grou
 | # | rule | detect | render |
 |---|---|---|---|
 | 1 | hidden | key in `HIDDEN` or in hints `hidden` | never shown |
-| 2 | id | string matching `^[a-z]{2,5}_[A-Za-z0-9]{8,}$` | `mono`, `muted` in lists, full in detail |
+| 2 | id | string matching `^[a-z]{2,5}_[A-Za-z0-9]{8,}$` with at least one digit or capital after the underscore | `mono`, `muted` in lists, full in detail |
 | 3 | money object | object with `amount` and `currency` | `money()`: `$10.00`, right-aligned |
 | 4 | money number | key in hints `money`, or key matches `/price|amount|balance|spend|revenue|fee/` and value is a finite number | `money(value, currency)` where `currency` is a sibling key or `usd` |
 | 5 | ledger amount | sibling `usd_amount` exists | use `usd_amount`, ignore `amount` and `currency.precision` |
@@ -265,6 +265,47 @@ Groups and order are parsed from `whop --help` at runtime, never hardcoded, so t
 
 The first line is a breadcrumb status line in the style of omp's bar: account, id, profile and method, API version, then each balance bucket. It wraps at width. Three calls run in parallel: `auth status`, `ledgers report --report_type balance_summary`, and `stats get net_revenue --from <today-7> --to <today-1> --interval day`. `stats get` requires `--from` and `--to`, so home computes them in UTC. A failed tile renders its error inline and the others still show. Sparkline is eight block characters scaled to the max point.
 
+### series
+
+```
+ net revenue · 7d  $18.56  █▁▁█▁▁▁
+
+   Sep 13  $9.28
+   Sep 14  $0.00
+   ...
+
+ json  whop stats get net_revenue --from 2026-09-12 --to 2026-09-18 --interval day --format json
+```
+
+`stats get <metric>`: metric name, total, and the sparkline from home on one line, then one row per point with the money formatted in the series currency. Zero points are muted. Before this view a series fell through to the flat detail card and printed raw numbers under a "Details" rule.
+
+## Session
+
+`wv` with no arguments in a TTY opens a session. Not an alternate screen. Output scrolls into the terminal's own buffer the way Claude Code and omp transcripts do, and the only thing ever redrawn is a three-line editor block plus one hint line:
+
+```
+ Frame › biz_VraUMckluH8dzV › sunchusrikar · oauth › API 2026-09-15 › whop 0.18.2 · wv session
+
+ ─────────────────────────────────────────────────────────────────────────────
+ ❯ products li
+ ─────────────────────────────────────────────────────────────────────────────
+   list  List Products
+```
+
+The banner is the home breadcrumb without the balance, so opening a session costs one `auth status`. The block is rule, `❯` prompt, rule (the aura editor shape, without the gradient: roles, not colors). Under it, either completion candidates or the key hint. Redraw is cursor-up-one, clear-to-end, print again. Resize redraws at the new width.
+
+**Editor.** A pure reducer, `applyKey(state, key) → { state, action? }`, in `src/tui/editor.ts`. Insert, left, right, home, end, backspace, delete, ctrl-a/e/b/f, ctrl-u/k/w, alt-b/f/d, alt-backspace, ctrl-left/right. Up and down walk history newest first and keep the live draft. Enter submits, tab completes, ctrl-l redraws, ctrl-c clears the line or quits when it is empty, ctrl-d deletes forward or quits when the line is empty. Bracketed paste is on, so a pasted command arrives as one insert. Long lines scroll horizontally around the cursor. History persists at `$XDG_STATE_HOME/whop-view/history`, 500 lines.
+
+**Completion.** `src/tui/complete.ts`. Word 0 offers groups from `whop --help` plus the builtins. Word 1 offers the group's verbs from `whop <group> --help`. Later words: a token starting with `-` offers the verb's `Options:` block, minus flags already used; after an `<a|b>` flag, its values; after the verb or an `--x_id` flag, the ids on screen from the last list. One candidate completes with a trailing space, several fill the common prefix and list under the block. Help text is cached for a day at `~/.cache/whop-view/help/`, because each `whop --help` costs a quarter second.
+
+**Commands.** A line is `wv` argv; a leading `wv` or `whop` is dropped so either can be pasted. `home`, `help`, `help <group>`, `clear`, `quit`. `!<args>` runs raw `whop` owning the terminal, for `login` and friends. A bare number `N` runs `<group> get <id>` for row N of the last list; session lists render a muted row-number gutter so N is visible, and the gutter never enters the teaching footer. Write verbs confirm inline through the same y/N prompt as the CLI: the session hands the TTY to readline and takes it back.
+
+**Shared dispatch.** `execute(argv, theme, opts)` in `src/bin.ts` runs one command end to end, prints it, and returns the exit code and any list rows. The one-shot CLI calls it once and exits; the session calls it per line. Nothing in `src/views` knows the session exists, apart from the optional numbered gutter on lists.
+
+**Not done, deliberately.** No live row highlighting with arrow keys: that needs re-rendering a table region and is a fourth line of live state for a shortcut the number gutter already provides. No gradient, no truecolor: tokens still name six roles. No `pi-tui`, no Ink.
+
+**Tests.** `tests/tui.test.ts` covers the key parser, the reducer, history, actions, the editor render at 40 columns, tokenizing, and completion against the help fixtures. The loop itself is exercised by hand in a pseudo-TTY, not in CI.
+
 ## Borrowed from omp
 
 Four patterns from the oh-my-pi TUI, reproduced in the plain renderer with no dependency: the breadcrumb status line (home), titles set into horizontal rules (detail sections and help groups), the dashed band for notices (feature-gated errors), and the name-left description-right picker shape (help). Its `@oh-my-pi/pi-tui` package was considered and rejected: it depends on the agent runtime and native addons, and every wv view is a static print.
@@ -293,6 +334,12 @@ Four patterns from the oh-my-pi TUI, reproduced in the plain renderer with no de
 - The teaching footer names the columns that survived width pressure, not the ones the hints asked for. The table reports what it kept.
 - `tsc` does not copy JSON, so `pnpm build` copies `src/hints` into `dist/hints`.
 - Homebrew's vhs 0.12 writes no GIF against ffmpeg 9 and says nothing. Tapes emit frames and `scripts/gif.sh` encodes them.
+- The id shape `[a-z]{2,5}_[A-Za-z0-9]{8,}` also matches snake_case words: `tax_behavior`, `needs_tracking`, `gross_earnings`, `ad_delivery`. Ten distinct false positives in the fixtures, so `stats list` painted a quarter of its keys muted. Real ids always carry a digit or a capital. Rule 2 requires one.
+- Node's readline swallows Ctrl-C in raw mode and emits `SIGINT` on the interface. With no listener the y/N prompt sat forever, and once stdin closed the process exited 0 as if the write had succeeded. The prompt now treats Ctrl-C, Ctrl-D, and a closed stdin as no.
+- Column caps (id 22, primary 36, others 28) applied before anything was measured, so ledger ids truncated at 120 columns with 20 to spare. Caps now apply only once the table is under width pressure.
+- The kv card assumed the value column was at least 16 wide, which was false under about 50 columns, so detail views overflowed. Sections stack key over value when the value would be narrower than 16.
+- Help text's headline was truncated to make room for the right-hand hint, so at 40 columns the header read `who…`. The hint drops first, then the API version, and only then does the headline truncate.
+- The home footer joined three commands with `·` and truncated, losing the third at 80. One teaching line per command.
 
 ## Tests
 

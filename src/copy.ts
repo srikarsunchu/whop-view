@@ -68,6 +68,16 @@ export const copy = {
     notSignedIn: "Not signed in. Run whop login.",
   },
   spinner: "Running whop…",
+  session: {
+    hint: "tab completes · ↑↓ history · ! raw whop · help · ctrl+d quits",
+    rows: (n: number) => (n === 1 ? "1 opens the row" : `1–${n} opens a row`),
+    welcome: (version: string) => `${version} · wv session`,
+    bye: "bye",
+    noRow: (n: number, max: number) => (max === 0 ? "No list on screen to pick a row from." : `Row ${n} is not on screen. Rows go 1 to ${max}.`),
+    noGet: (group: string) => `${group} has no get command.`,
+    needsTerminal: "wv session needs a terminal. Pipe whop directly.",
+    running: (cmd: string) => cmd,
+  },
 };
 
 const VERB_TITLES: Record<string, string> = {

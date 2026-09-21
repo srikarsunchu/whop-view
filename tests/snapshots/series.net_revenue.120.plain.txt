@@ -1,0 +1,11 @@
+ net revenue · 7d  $18.56  █▁▁█▁▁▁
+
+   Sep 13  $9.28
+   Sep 14  $0.00
+   Sep 15  $0.00
+   Sep 16  $9.28
+   Sep 17  $0.00
+   Sep 18  $0.00
+   Sep 19  $0.00
+
+ json  whop stats get net_revenue --from 2026-09-12 --to 2026-09-18 --interval day --format json

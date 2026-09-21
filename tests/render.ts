@@ -11,6 +11,7 @@ import { confirmView } from "../src/views/confirm.ts";
 import { errorView } from "../src/views/error.ts";
 import { helpView, parseHelp } from "../src/views/help.ts";
 import { homeView } from "../src/views/home.ts";
+import { seriesView } from "../src/views/series.ts";
 
 export const FIXTURES = join(import.meta.dirname, "fixtures");
 export const fixture = (name: string) => readFileSync(join(FIXTURES, name), "utf8");
@@ -23,10 +24,10 @@ export function theme(width: number, color: boolean): Theme {
   return { ...makeTheme({ width, color }), color };
 }
 
-function page(name: string, group: string, argv: string[], t: Theme, accountTitle?: string, canCreate?: boolean) {
+function page(name: string, group: string, argv: string[], t: Theme, accountTitle?: string, canCreate?: boolean, numbered?: boolean) {
   const p = envelope(name);
   if (!p.ok || p.payload.kind !== "page") throw new Error(`${name} is not a page`);
-  return listView({ group, argv, rows: p.payload.rows, page: p.payload.page, hints: hintsFor(group), accountTitle, canCreate }, t);
+  return listView({ group, argv, rows: p.payload.rows, page: p.payload.page, hints: hintsFor(group), accountTitle, canCreate, numbered }, t);
 }
 
 function record(name: string, group: string, argv: string[], t: Theme) {
@@ -44,6 +45,7 @@ function error(name: string, t: Theme) {
 export const SCENES: Record<string, (t: Theme) => string[]> = {
   "list.products": (t) => page("products.list", "products", ["products", "list"], t, "Hypermotion"),
   "list.plans": (t) => page("plans.list", "plans", ["plans", "list"], t),
+  "list.products.numbered": (t) => page("products.list", "products", ["products", "list"], t, "Hypermotion", undefined, true),
   "list.memberships": (t) => page("memberships.list", "memberships", ["memberships", "list"], t),
   "list.members": (t) => page("members.list", "members", ["members", "list"], t),
   "list.ledgers": (t) => page("ledgers.list", "ledgers", ["ledgers", "list"], t),
@@ -70,6 +72,11 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "error.enoent": (t) => errorView({ code: "ENOENT", message: "spawn whop ENOENT" }, t),
   "error.gated": (t) => error("error.gated", t),
   "detail.auth": (t) => record("auth.status", "auth", ["auth", "status"], t),
+  "series.net_revenue": (t) => {
+    const p = envelope("stats.net_revenue");
+    if (!p.ok || p.payload.kind !== "series") throw new Error("stats.net_revenue is not a series");
+    return seriesView({ argv: ["stats", "get", "net_revenue", "--from", "2026-09-12", "--to", "2026-09-18", "--interval", "day"], points: p.payload.points, currency: p.payload.currency }, t);
+  },
   help: (t) => helpView(parseHelp(fixture("help.txt")), t),
   "help.products": (t) => helpView(parseHelp(fixture("help.products.txt")), t, "products"),
   home: (t) =>

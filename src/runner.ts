@@ -1,6 +1,6 @@
 // Spawns the real `whop`. Decides passthrough. Caches --schema.
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { parseEnvelope, type Parsed } from "./envelope.ts";
@@ -85,4 +85,29 @@ export function schema(group: string, verb: string): unknown | null {
 export function helpText(argv: string[]): string {
   const r = spawnSync(WHOP, [...argv, "--help"], { encoding: "utf8" });
   return r.stdout || r.stderr || "";
+}
+
+const HELP_TTL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * `helpText` with a one-day disk cache. Each `whop --help` costs a quarter second, and the session
+ * asks for dozens while completing. Best effort: any cache failure falls back to a live call.
+ */
+export function cachedHelpText(argv: string[]): string {
+  const file = join(cacheDir, "help", (argv.join(".") || "root") + ".txt");
+  try {
+    if (existsSync(file) && Date.now() - statSync(file).mtimeMs < HELP_TTL_MS) return readFileSync(file, "utf8");
+  } catch {
+    /* refetch */
+  }
+  const text = helpText(argv);
+  if (text) {
+    try {
+      mkdirSync(join(cacheDir, "help"), { recursive: true });
+      writeFileSync(file, text);
+    } catch {
+      /* cache is best effort */
+    }
+  }
+  return text;
 }

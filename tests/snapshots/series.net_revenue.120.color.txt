@@ -1,0 +1,11 @@
+ [1mnet revenue · 7d[22m  $18.56  [32m█▁▁█▁▁▁[39m
+
+   [2mSep 13[22m  $9.28
+   [2mSep 14[22m  [2m$0.00[22m
+   [2mSep 15[22m  [2m$0.00[22m
+   [2mSep 16[22m  $9.28
+   [2mSep 17[22m  [2m$0.00[22m
+   [2mSep 18[22m  [2m$0.00[22m
+   [2mSep 19[22m  [2m$0.00[22m
+
+ [2mjson[22m  [2mwhop stats get net_revenue --from 2026-09-12 --to 2026-09-18 --interval day --format json[22m

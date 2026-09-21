@@ -17,7 +17,12 @@ export interface ListInput {
   accountTitle?: string;
   /** Whether `whop <group> create` exists. Decides the empty-state hint. */
   canCreate?: boolean;
+  /** Muted row numbers in a leading gutter, for the session's `N opens a row` shortcut. */
+  numbered?: boolean;
 }
+
+/** The gutter's column key. Never a real field, never in the teaching footer. */
+export const ROW_KEY = "#";
 
 export function listView(input: ListInput, theme: Theme): string[] {
   const { group, argv, rows, page, hints } = input;
@@ -35,8 +40,9 @@ export function listView(input: ListInput, theme: Theme): string[] {
   }
 
   const columns = chooseColumns(rows, hints, theme.breakpoint);
-  const cells = rows.map((r) => {
+  const cells = rows.map((r, i) => {
     const c: Record<string, TableCell> = {};
+    if (input.numbered) c[ROW_KEY] = { text: String(i + 1), role: "muted" };
     for (const col of columns) {
       const cell = infer(col.key, r[col.key], r, hints);
       c[col.key] = { text: cell.short, role: col.key === "id" ? "muted" : cell.role };
@@ -49,12 +55,13 @@ export function listView(input: ListInput, theme: Theme): string[] {
     const max = c.key === "id" ? 22 : c.priority === 0 ? 36 : 28;
     return { key: c.key, label: c.label, align, priority: c.priority, max };
   });
+  if (input.numbered) tcols.unshift({ key: ROW_KEY, label: "", align: "right", priority: 0 });
   const t = table(tcols, cells, theme);
   out.push(...t.lines);
   out.push("");
 
   // The teaching line names exactly the columns on screen, not the ones we wished for.
-  const shown = t.kept;
+  const shown = t.kept.filter((k) => k !== ROW_KEY);
   const pageLine = page.has_next_page && page.end_cursor ? copy.list.next(page.end_cursor) : copy.list.noMore;
   const teach = ["whop", ...argv, "--format", "json", "--filter-output", shown.join(",")];
   if (takesAccount(argv) && !argv.includes("--account_id")) teach.splice(1 + argv.length, 0, "--account_id", "<biz_id>");

@@ -1,7 +1,7 @@
 // One assertion per inference rule in VIEWS.md, on slices of the real fixtures.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { chooseColumns, infer } from "../src/infer.ts";
+import { chooseColumns, infer, labelFor } from "../src/infer.ts";
 import { hintsFor } from "../src/hints.ts";
 import { envelope } from "./render.ts";
 import { parseEnvelope, classify } from "../src/envelope.ts";
@@ -30,6 +30,16 @@ test("rule 2 id: prefixed ids are mono", () => {
   const c = infer("id", "prod_DQf7IZAtveRoK", {}, none);
   assert.equal(c.kind, "id");
   assert.equal(c.role, "mono");
+  // snake_case words share the shape but have no digit or capital. They are text, not ids.
+  for (const word of ["tax_behavior", "needs_tracking", "auto_refunded", "gross_earnings", "not_available"]) assert.equal(infer("key", word, {}, none).kind, "text", word);
+  assert.equal(infer("id", "line_WmoyQ2IwTGtRU3JTa1Fk", {}, none).kind, "id");
+});
+
+test("labels: snake_case and camelCase both read as words", () => {
+  assert.equal(labelFor("created_at", none), "created");
+  assert.equal(labelFor("product_id", none), "product");
+  assert.equal(labelFor("loggedIn", none), "logged in");
+  assert.equal(labelFor("hasSecret", none), "has secret");
 });
 
 test("rule 3 money object: {amount, currency} formats and right-aligns", () => {

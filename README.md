@@ -184,17 +184,53 @@ Nothing new. `wv` execs `whop` with the original argv whenever any of these hold
  Net revenue · 7d  $9.28  ▁▁█▁▁▁▁
                    Sep 14 to Sep 20
 
- auth status · ledgers report --report_type balance_summary · stats get net_revenue --from 2026-09-14 …
+ json  whop auth status --format json
+       whop ledgers report --report_type balance_summary --format json
+       whop stats get net_revenue --from 2026-09-14 --to 2026-09-20 --interval day --format json
 ```
 
 ![home](demo/home.gif)
 
 Three commands, one screen. The first line is a status line: account, profile and auth method, API version, balance. The footer names every command that produced it.
 
+## Session
+
+`wv` alone opens a session. It looks like the Claude Code or omp transcript: what you ran scrolls up into your terminal's own history, and a small editor block sits at the bottom.
+
+```
+ Frame › biz_VraUMckluH8dzV › sunchusrikar · oauth › API 2026-09-15 › whop 0.18.2 · wv session
+
+ ❯ products list
+
+ products · 2                                                                  Hypermotion
+
+    title        visibility  plan       members  created  id
+ 1  Frame        visible     Free             0  8d ago   prod_DQf7IZAtveRoK
+ 2  Hypermotion  visible     $29.00/mo        2  8d ago   prod_iQ2Zub6GFQS5Q
+
+ 2 rows · no more pages
+ json  whop products list --account_id <biz_id> --format json --filter-output title,visibility,default_plan,member_count,created_at,id
+
+ ───────────────────────────────────────────────────────────────────────────────────────────
+ ❯ 
+ ───────────────────────────────────────────────────────────────────────────────────────────
+ 1–2 opens a row · tab completes · ↑↓ history · ! raw whop · help · ctrl+d quits
+```
+
+- Tab completes groups, then verbs, then the verb's flags and their values, all read from `whop --help` and cached for a day. After a list, tab also completes the ids on screen.
+- Type a row number to open that row. `home`, `help`, `help <group>`, `clear`, `quit`.
+- `!login` or any `!<args>` runs raw `whop` with the terminal, for the commands that own it.
+- Write verbs get the same confirmation as the CLI, inline.
+- History lives at `~/.local/state/whop-view/history`. Emacs keys work: ctrl+a/e, ctrl+w, ctrl+u/k, alt+b/f. Paste is one insert.
+- Zero dependencies still. The editor is one reducer and a renderer, about 200 lines, in `src/tui/`.
+
+![session](demo/session.gif)
+
 ## Other views
 
-- `wv` alone renders the 51 groups the way `whop --help` orders them, two columns at 120 and one at 80.
+- `wv help` renders the 51 groups the way `whop --help` orders them, two columns at 120 and one at 80.
 - `wv <group>` renders that group's verbs.
+- `wv stats get <metric> --from … --to …` renders a series: total, sparkline, one money row per point.
 - `--width N` overrides the terminal width. `NO_COLOR` strips every escape.
 
 ## How it generalizes
@@ -207,7 +243,7 @@ Three layers. Tokens name six color roles and nothing else names a color. Primit
 pnpm test
 ```
 
-Snapshot tests render every view at 80 and 120 columns, with color and without, from real envelopes in `tests/fixtures`. No test calls `whop`. `WV_LIVE=1 pnpm test` adds the live byte-identity check.
+Snapshot tests render every view at 80 and 120 columns, with color and without, from real envelopes in `tests/fixtures`, and check that nothing overflows at 40 and 60. The session's key parser, editor, and completion have their own unit tests. No test calls `whop`. `WV_LIVE=1 pnpm test` adds the live byte-identity check.
 
 ```bash
 pnpm fixtures
@@ -219,4 +255,4 @@ Re-records the fixtures from your own account. Read-only commands only.
 pnpm demo
 ```
 
-Re-records the four GIFs above. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them.
+Re-records the six GIFs above. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them.
