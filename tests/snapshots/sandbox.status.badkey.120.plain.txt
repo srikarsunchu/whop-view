@@ -1,0 +1,7 @@
+ sandbox  not reachable with this key
+
+   host     http://localhost:9  from the shell
+   key      whop_wro…1234  from the shell
+   account  HTTP_401 Authentication failed
+
+ json  WHOP_API_BASE_URL=http://localhost:9 WHOP_API_KEY=<sandbox_key> whop accounts get me --format json

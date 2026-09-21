@@ -1,0 +1,13 @@
+ [1msandbox[22m  [33mnot reachable with this key[39m
+
+   [2mhost   [22m  https://sandbox-api.whop.com/api/v1  Whop's published sandbox server
+   [2mkey    [22m  [33mnone · every call will answer 401[39m
+   [2maccount[22m  [31mHTTP_401 Authentication failed[39m
+
+ The sandbox host answers every call with 401 unless it gets a sandbox API key; your production login does not work
+ there. Whop's API reference lists the host but not where its keys are issued, so get one from Whop.
+ [2mhttps://docs.whop.com/developer/api/getting-started[22m
+ wv keeps it in ~/.config/whop-view/config.json, owner-only, so no shell variable is needed. WV_SANDBOX_KEY still wins
+ when set.
+
+ [2mjson[22m  [2mWHOP_API_BASE_URL=https://sandbox-api.whop.com/api/v1 whop accounts get me --format json[22m

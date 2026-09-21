@@ -10,7 +10,10 @@ const day = (n: number) => {
   return d.toISOString().slice(0, 10);
 };
 
-const CASES: [string, string[]][] = [
+// Whop's published sandbox server. Only the base URL is needed to record what the host says to an OAuth token.
+const SANDBOX = { WHOP_API_BASE_URL: "https://sandbox-api.whop.com/api/v1", WHOP_API_KEY: "" };
+
+const CASES: [string, string[], NodeJS.ProcessEnv?][] = [
   ["products.list", ["products", "list"]],
   ["products.get", ["products", "get", "prod_iQ2Zub6GFQS5Q"]],
   ["plans.list", ["plans", "list"]],
@@ -43,6 +46,7 @@ const CASES: [string, string[]][] = [
   ["verifications.list", ["verifications", "list"]],
   ["payouts.methods.limits", ["payouts", "methods", "--include_limits"]],
   ["error.webhooks_oauth", ["webhooks", "list"]],
+  ["error.sandbox_oauth", ["accounts", "get", "me"], SANDBOX],
 ];
 
 // Fixtures are committed. Nothing a real person could be identified by survives recording:
@@ -73,10 +77,12 @@ const biz = (() => {
     return "";
   }
 })();
-for (const [name, argsIn] of CASES) {
+for (const [name, argsIn, extraEnv] of CASES) {
   if (only.length && !only.includes(name)) continue;
   const args = argsIn.map((a) => (a === "<biz_id>" ? biz : a));
-  const r = spawnSync("whop", [...args, "--format", "json", "--full-output"], { encoding: "utf8" });
+  const env = { ...process.env, ...extraEnv };
+  for (const [k, v] of Object.entries(extraEnv ?? {})) if (v === "") delete env[k];
+  const r = spawnSync("whop", [...args, "--format", "json", "--full-output"], { encoding: "utf8", env });
   writeFileSync(join(dir, `${name}.json`), redact(r.stdout));
   console.log(`${name}: exit ${r.status}, ${r.stdout.length} bytes`);
 }

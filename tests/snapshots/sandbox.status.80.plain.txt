@@ -1,0 +1,8 @@
+ sandbox  reachable
+
+   host     https://sandbox-api.whop.com/api/v1  Whop's published sandbox server
+   key      whop_san…1234  from ~/.config/whop-view/config.json
+   account  Frame (sandbox)  biz_sandboxAb12
+
+ json  WHOP_API_BASE_URL=https://sandbox-api.whop.com/api/v1
+       WHOP_API_KEY=<sandbox_key> whop accounts get me --format json

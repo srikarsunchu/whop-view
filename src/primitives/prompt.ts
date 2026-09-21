@@ -19,6 +19,34 @@ export interface PromptOptions {
   accept?: { test: (answer: string) => boolean; hint: string };
 }
 
+/**
+ * Prints a question and returns the line typed, trimmed. Empty, Ctrl-C, Ctrl-D, and a closed stdin all
+ * resolve `null`, so a caller can treat "nothing" as "skip" without a second code path.
+ */
+export function ask(question: string, hint: string, theme: Theme, opts: Pick<PromptOptions, "input" | "output"> = {}): Promise<string | null> {
+  const input = opts.input ?? process.stdin;
+  const output = opts.output ?? process.stdout;
+  return new Promise((resolve) => {
+    const rl = createInterface({ input, output });
+    let done = false;
+    const finish = (answer: string | null) => {
+      if (done) return;
+      done = true;
+      rl.close();
+      resolve(answer && answer.trim() ? answer.trim() : null);
+    };
+    rl.on("SIGINT", () => {
+      output.write("\n");
+      finish(null);
+    });
+    rl.on("close", () => {
+      if (!done) output.write("\n");
+      finish(null);
+    });
+    rl.question(" " + paint(theme, "accent", question) + " " + paint(theme, "muted", hint) + " ", finish);
+  });
+}
+
 export function prompt(question: string, theme: Theme, opts: PromptOptions = {}): Promise<Answer> {
   const input = opts.input ?? process.stdin;
   const output = opts.output ?? process.stdout;

@@ -4,11 +4,15 @@ import assert from "node:assert/strict";
 import { PassThrough } from "node:stream";
 import { shellJoin, shellQuote, teach } from "../src/argv.ts";
 import { capFrom, timeoutFrom, DEFAULT_CAP, DEFAULT_TIMEOUT_SECONDS } from "../src/bin.ts";
-import { prompt } from "../src/primitives/prompt.ts";
+import { ask, prompt } from "../src/primitives/prompt.ts";
 import { amountMatcher, describeMethod, limitFor, moneyOf, speedOf } from "../src/views/confirm.ts";
 import { withAfter } from "../src/views/list.ts";
 import { parseEnvelope } from "../src/envelope.ts";
-import { modeFrom, whopEnv, SANDBOX_URL } from "../src/runner.ts";
+import { modeFrom, sandboxKey, sandboxUrl, whopEnv, SANDBOX_URL } from "../src/runner.ts";
+import { configPath, maskKey, readConfig, saveSandboxKey, writeConfig } from "../src/config.ts";
+import { mkdtempSync, readFileSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { theme } from "./render.ts";
 
 test("argv: quoting happens once, only when needed, and placeholders stay bare", () => {
@@ -76,15 +80,67 @@ test("prompt: y is yes, anything else is no, and no timeout means it waits for t
   assert.equal(await ask(""), "no");
 });
 
-test("sandbox: the flag or WV_SANDBOX picks the mode; the env points whop at the sandbox host and key", () => {
+test("ask: returns the trimmed line, and null for empty, Ctrl-D, or a closed stdin", async () => {
+  const run = (feed: (input: PassThrough) => void) => {
+    const input = new PassThrough();
+    const output = new PassThrough();
+    output.resume();
+    const p = ask("Key?", "[whop_…/enter]", theme(80, false), { input, output });
+    feed(input);
+    return p;
+  };
+  assert.equal(await run((i) => i.write("  whop_abc123  \n")), "whop_abc123");
+  assert.equal(await run((i) => i.write("\n")), null);
+  assert.equal(await run((i) => i.end()), null);
+});
+
+test("sandbox: the flag, WV_SANDBOX, or a shell already pointed at the sandbox host picks the mode", () => {
   assert.equal(modeFrom(false, {}), "production");
   assert.equal(modeFrom(true, {}), "sandbox");
   assert.equal(modeFrom(false, { WV_SANDBOX: "1" }), "sandbox");
   assert.equal(modeFrom(false, { WV_SANDBOX: "0" }), "production");
+  assert.equal(modeFrom(false, { WHOP_API_BASE_URL: SANDBOX_URL }), "sandbox", "the banner must not say production while calls go to the sandbox");
+  assert.equal(modeFrom(false, { WHOP_API_BASE_URL: "https://api.whop.com/api/v1" }), "production");
+});
+
+test("sandbox env: a sandbox key never reaches production, a production key never reaches the sandbox", () => {
+  const none = {};
   const base = { PATH: "/bin", WHOP_API_KEY: "whop_live" };
-  assert.deepEqual(whopEnv("production", base), base);
-  assert.deepEqual(whopEnv("sandbox", base), { ...base, WHOP_API_BASE_URL: SANDBOX_URL });
-  assert.deepEqual(whopEnv("sandbox", { ...base, WV_SANDBOX_KEY: "whop_test", WV_SANDBOX_URL: "http://localhost:9" }), { ...base, WV_SANDBOX_KEY: "whop_test", WV_SANDBOX_URL: "http://localhost:9", WHOP_API_BASE_URL: "http://localhost:9", WHOP_API_KEY: "whop_test" });
+  // Production passes the shell through and never injects the config's sandbox key.
+  assert.deepEqual(whopEnv("production", base, { sandbox: { key: "whop_test" } }), base);
+  assert.deepEqual(whopEnv("production", { ...base, WV_SANDBOX_KEY: "whop_test" }, none), { ...base, WV_SANDBOX_KEY: "whop_test" });
+  // Sandbox without a sandbox key drops the shell's key rather than sending it to the sandbox host.
+  assert.deepEqual(whopEnv("sandbox", base, none), { PATH: "/bin", WHOP_API_BASE_URL: SANDBOX_URL });
+  // With one, from the shell or the config, it is the only key the child sees.
+  assert.deepEqual(whopEnv("sandbox", { ...base, WV_SANDBOX_KEY: "whop_test", WV_SANDBOX_URL: "http://localhost:9" }, none), { ...base, WV_SANDBOX_KEY: "whop_test", WV_SANDBOX_URL: "http://localhost:9", WHOP_API_BASE_URL: "http://localhost:9", WHOP_API_KEY: "whop_test" });
+  assert.deepEqual(whopEnv("sandbox", base, { sandbox: { key: "whop_cfg", url: "http://localhost:8" } }), { PATH: "/bin", WHOP_API_BASE_URL: "http://localhost:8", WHOP_API_KEY: "whop_cfg" });
+  // The shell wins over the config, and each source is named.
+  assert.deepEqual(sandboxKey({ WV_SANDBOX_KEY: "whop_env" }, { sandbox: { key: "whop_cfg" } }), { key: "whop_env", source: "env" });
+  assert.deepEqual(sandboxKey({}, { sandbox: { key: "whop_cfg" } }), { key: "whop_cfg", source: "config" });
+  assert.deepEqual(sandboxKey({}, none), { source: "none" });
+  assert.deepEqual(sandboxUrl({}, none), { url: SANDBOX_URL, source: "default" });
+  assert.deepEqual(sandboxUrl({}, { sandbox: { url: "http://x" } }), { url: "http://x", source: "config" });
+});
+
+test("config: lives under XDG_CONFIG_HOME or WV_CONFIG, round-trips, is owner-only, and a broken file reads as empty", () => {
+  const dir = mkdtempSync(join(tmpdir(), "wv-config-"));
+  assert.equal(configPath({ XDG_CONFIG_HOME: "/x" }), "/x/whop-view/config.json");
+  assert.equal(configPath({ HOME: "/home/me" }), "/home/me/.config/whop-view/config.json");
+  const env = { WV_CONFIG: join(dir, "nested", "config.json") };
+  assert.deepEqual(readConfig(env), {}, "missing file is an empty config");
+  const file = saveSandboxKey("whop_test_key_1234", env);
+  assert.equal(file, env.WV_CONFIG);
+  assert.deepEqual(readConfig(env), { sandbox: { key: "whop_test_key_1234" } });
+  assert.equal(statSync(file).mode & 0o777, 0o600);
+  writeConfig({ ...readConfig(env), sandbox: { ...readConfig(env).sandbox, url: "http://x" } }, env);
+  saveSandboxKey("whop_other_key_5678", env);
+  assert.deepEqual(readConfig(env), { sandbox: { key: "whop_other_key_5678", url: "http://x" } }, "saving a key keeps the rest");
+  const broken = { WV_CONFIG: join(dir, "broken.json") };
+  writeConfig({} as never, broken);
+  readFileSync(broken.WV_CONFIG);
+  assert.deepEqual(readConfig({ WV_CONFIG: join(dir, "nope", "x.json") }), {});
+  assert.equal(maskKey("whop_abcdefghijklmnop"), "whop_abc…mnop");
+  assert.equal(maskKey("short"), "shor…");
 });
 
 test("typed amount: the amount in any common spelling is yes, y is not", () => {

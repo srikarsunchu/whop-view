@@ -1,0 +1,6 @@
+ ▌ The sandbox refused this login                                          500ms
+
+   The sandbox host answered 401 to the key whop_wro…1234. It is not a sandbox
+   key, or it was revoked.
+
+   fix  wv sandbox status

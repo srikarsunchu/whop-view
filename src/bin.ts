@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 // wv: human view layer for the Whop CLI. Renders when a person is looking, execs `whop` otherwise.
+import { realpathSync } from "node:fs";
 import { makeTheme, type Theme } from "./tokens.ts";
-import { helpText, modeFrom, passthrough, run, shouldPassthrough, whopEnv, type Mode } from "./runner.ts";
+import { helpText, modeFrom, passthrough, run, sandboxKey, sandboxUrl, shouldPassthrough, whopEnv, type Mode } from "./runner.ts";
+import { configPath, maskKey, saveSandboxKey } from "./config.ts";
+import { sandboxMissingKeyView, sandboxSavedView, sandboxStatusView } from "./views/sandbox.ts";
+import { ask } from "./primitives/prompt.ts";
 import { hintsFor } from "./hints.ts";
 import { isWrite, MONEY_GROUPS } from "./status.ts";
 import { teach } from "./argv.ts";
@@ -27,7 +31,7 @@ import type { Parsed, Rec } from "./envelope.ts";
 const print = (lines: string[]) => process.stdout.write(lines.join("\n") + "\n");
 
 /** Words that are wv's, not whop's. */
-const OURS = new Set(["home", "help", "gtm", "doctor"]);
+const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox"]);
 
 export interface Outcome {
   code: number;
@@ -101,6 +105,9 @@ async function main(argvIn: string[]) {
   // `--plan` never writes, so it is safe without a terminal and must never fall through to a real `whop` create.
   if (shouldPassthrough(argv) && !plan) passthrough(argv, env);
 
+  // Sandbox mode with no key: say so once, before anything runs, and offer to keep a key in wv's config.
+  if (mode === "sandbox" && argv[0] !== "sandbox" && !sandboxKey().key) await offerSandboxKey(theme);
+
   if (argv.length === 0) {
     const acct = await identity(env);
     process.exit(await session({ theme, execute: (a, t) => execute(a, t, { numbered: true, mode }), account: acct, mode }));
@@ -130,6 +137,13 @@ export async function execute(argv: string[], theme: Theme, opts: ExecuteOptions
   if (group === "home") return home(theme, mode);
   if (group === "gtm") return gtm(theme, mode);
   if (group === "doctor") return doctor(theme, mode);
+  if (group === "sandbox") {
+    if (verb && verb !== "status") {
+      print([" " + copy.sandbox.unknownVerb(verb)]);
+      return { code: 2 };
+    }
+    return sandboxStatus(theme);
+  }
   if (!verb || verb.startsWith("--")) {
     print(helpView(parseHelp(helpText([group])), theme, group));
     return { code: 0 };
@@ -303,9 +317,13 @@ async function methodsFor(id: string | undefined, currency: string, speed: strin
 /** Prints the right view for a payload. Returns the rows and list geometry when it was a list. */
 function render(parsed: Parsed, group: string, argv: string[], theme: Theme, opts: ExecuteOptions): Pick<Outcome, "rows" | "list" | "teach" | "next"> {
   if (!parsed.ok) {
+    // The sandbox host answers a wrong or missing key with 401. That is not "not signed in"; it is the sandbox key.
+    if (opts.mode === "sandbox" && /^HTTP_40[14]$/.test(parsed.error.code)) {
+      const { key } = sandboxKey();
+      print(errorView({ ...parsed.error, code: "SANDBOX_AUTH", message: key ? copy.sandbox.keyRejected(maskKey(key)) : copy.sandbox.rejectsOauth }, theme));
+      return {};
+    }
     print(errorView(parsed.error, theme));
-    // The sandbox host answers an OAuth token with 401 or 404. Say which variable fixes it.
-    if (opts.mode === "sandbox" && /^HTTP_40[134]$/.test(parsed.error.code) && !process.env.WV_SANDBOX_KEY) print(["", " " + copy.error.sandboxKey]);
     return {};
   }
   const verb = argv[1];
@@ -451,7 +469,52 @@ async function doctor(theme: Theme, mode: Mode): Promise<Outcome> {
   return { code: blocked(checks(input)) ? 1 : 0 };
 }
 
-main(process.argv.slice(2)).catch((e) => {
-  process.stderr.write(`wv: ${e instanceof Error ? e.message : String(e)}\n`);
-  process.exit(1);
-});
+/**
+ * The screen for sandbox mode without a key, then one question. A pasted key that looks like one is
+ * saved owner-only to wv's config; anything else continues without a key and the 401 explains itself.
+ */
+async function offerSandboxKey(theme: Theme): Promise<void> {
+  const file = configPath();
+  print(sandboxMissingKeyView(file, theme));
+  print([""]);
+  const answer = await ask(copy.sandbox.askKey, copy.sandbox.askHint, theme);
+  if (!answer) {
+    print([" " + copy.sandbox.skipped, ""]);
+    return;
+  }
+  if (!/^whop_[A-Za-z0-9_-]{8,}$/.test(answer)) {
+    print([" " + copy.sandbox.notAKey, ""]);
+    return;
+  }
+  saveSandboxKey(answer);
+  print([...sandboxSavedView(file, theme), ""]);
+}
+
+/** `wv sandbox status`: ping the sandbox host with whatever key wv has and say what was used. Always the sandbox, whatever the mode. */
+async function sandboxStatus(theme: Theme): Promise<Outcome> {
+  const env = whopEnv("sandbox");
+  const { key, source: keySource } = sandboxKey();
+  const { url, source: urlSource } = sandboxUrl();
+  const spin = spinner(copy.spinner.sandbox, theme);
+  const { parsed } = await run(["accounts", "get", "me"], env);
+  spin.stop();
+  print(sandboxStatusView({ url, urlSource, key, keySource, configPath: configPath(), account: parsed }, theme));
+  return { code: parsed.ok ? 0 : 1 };
+}
+
+// Only when this file is the program. Tests import `capFrom` and friends from here, and under `node --test`
+// an unguarded main would exec `whop` with no arguments and exit before a single test ran.
+const isMain = (() => {
+  try {
+    // `wv` is a symlink to dist/bin.js: argv[1] keeps the link, import.meta.filename is the target.
+    return realpathSync(process.argv[1] ?? "") === import.meta.filename;
+  } catch {
+    return false;
+  }
+})();
+if (isMain) {
+  main(process.argv.slice(2)).catch((e) => {
+    process.stderr.write(`wv: ${e instanceof Error ? e.message : String(e)}\n`);
+    process.exit(1);
+  });
+}

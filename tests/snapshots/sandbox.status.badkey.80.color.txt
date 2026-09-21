@@ -1,0 +1,8 @@
+ [1msandbox[22m  [33mnot reachable with this key[39m
+
+   [2mhost   [22m  http://localhost:9  from the shell
+   [2mkey    [22m  [32mwhop_wro…1234  from the shell[39m
+   [2maccount[22m  [31mHTTP_401 Authentication failed[39m
+
+ [2mjson[22m  [2mWHOP_API_BASE_URL=http://localhost:9 WHOP_API_KEY=<sandbox_key> whop[22m
+       [2maccounts get me --format json[22m

@@ -266,7 +266,37 @@ Three checks block: signed in, identity, and a visible product with a plan. When
 
 ### Sandbox
 
-Whop's CLI docs say there is no sandbox mode. Link ships `--test`, which returns a fake card and never touches the real payment method, and that is the thing to ask Whop for. Until it exists, `wv --sandbox <anything>` (or `WV_SANDBOX=1`) runs the child `whop` with `WHOP_API_BASE_URL` pointed at `sandbox-api.whop.com/api/v1` and, when `WV_SANDBOX_KEY` is set, hands it that key. The session banner, the home status line, and the confirm badge read `sandbox` in green instead of `production` in yellow, the cap and the timeout do not apply, and the warning says no real money moves. The sandbox host does not accept an OAuth login, so without a sandbox key every call errors and the error names the variable to set. `WV_SANDBOX_URL` overrides the host.
+Whop's CLI docs say there is no sandbox mode. Link ships `--test`, which returns a fake card and never touches the real payment method, and that is the thing to ask Whop for. Until it exists, `wv --sandbox <anything>` (or `WV_SANDBOX=1`, or a shell whose `WHOP_API_BASE_URL` already names the sandbox host) runs the child `whop` against `sandbox-api.whop.com/api/v1`. The session banner, the home status line, and the confirm badge read `sandbox` in green instead of `production` in yellow, the cap and the timeout do not apply, and the warning says no real money moves.
+
+The sandbox host needs its own API key; it answers an OAuth login with 401. `wv` keeps that key in its own config file, `~/.config/whop-view/config.json`, owner-only, so it is not a shell variable you have to know about. The first sandbox command without a key prints why and offers to save one:
+
+```
+ ▌ The sandbox needs its own key                                sandbox · no key
+
+   The sandbox host answers every call with 401 unless it gets a sandbox API
+   key; your production login does not work there. Whop's API reference lists
+   the host but not where its keys are issued, so get one from Whop.
+   https://docs.whop.com/developer/api/getting-started
+   wv keeps it in ~/.config/whop-view/config.json, owner-only, so no shell
+   variable is needed. WV_SANDBOX_KEY still wins when set.
+
+ Paste a sandbox key to save it, or press enter to continue without one [whop_…/enter]
+```
+
+`wv sandbox status` pings the sandbox host with `accounts get me` and says which host and key were used and where each came from:
+
+```
+ sandbox  reachable
+
+   host     https://sandbox-api.whop.com/api/v1  Whop's published sandbox server
+   key      whop_san…1234  from ~/.config/whop-view/config.json
+   account  Frame (sandbox)  biz_sandboxAb12
+
+ json  WHOP_API_BASE_URL=https://sandbox-api.whop.com/api/v1
+       WHOP_API_KEY=<sandbox_key> whop accounts get me --format json
+```
+
+Two rules hold, and both are tested against a fake `whop` that echoes its environment: a sandbox key never reaches production, and a production key never reaches the sandbox. Production mode passes your shell through untouched and never injects the saved sandbox key. Sandbox mode forces the host, hands over the sandbox key when `wv` has one, and otherwise removes `WHOP_API_KEY` from the child so whatever your shell exported stays home. A 401 in sandbox mode renders as `The sandbox refused this login` with `wv sandbox status` as the fix, not as `Not signed in`. `WV_SANDBOX_KEY` and `WV_SANDBOX_URL` still win over the file when set.
 
 ![sandbox](demo/sandbox-ads.gif)
 
@@ -379,7 +409,7 @@ A write verb inside the session gets the same confirmation, then hands the termi
 - `wv doctor` is the setup checklist above; it exits 1 when signing in, identity, or a sellable product is missing.
 - `wv stats get <metric> --from … --to …` renders a series: total, sparkline, one money row per point.
 - `--width N` overrides the terminal width. `NO_COLOR` strips every escape.
-- Every teaching footer is built from an argv array and shell-quoted once, so a product title with a space or a quote pastes back as the same command. `WV_PAYOUT_CAP`, `WV_CONFIRM_TIMEOUT`, `WV_SANDBOX`, `WV_SANDBOX_KEY`, and `WV_SANDBOX_URL` are the only knobs; each is described under [`payouts create`](#payouts-create) and [Sandbox](#sandbox).
+- Every teaching footer is built from an argv array and shell-quoted once, so a product title with a space or a quote pastes back as the same command. `WV_PAYOUT_CAP`, `WV_CONFIRM_TIMEOUT`, `WV_SANDBOX`, `WV_SANDBOX_KEY`, `WV_SANDBOX_URL`, and `WV_CONFIG` (the config file path, default `~/.config/whop-view/config.json`) are the only knobs; each is described under [`payouts create`](#payouts-create) and [Sandbox](#sandbox).
 
 ## How it generalizes
 

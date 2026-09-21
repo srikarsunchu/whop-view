@@ -1,0 +1,8 @@
+ [33m▌[39m [1mThe sandbox needs its own key[22m                                [33msandbox · no key[39m
+
+   The sandbox host answers every call with 401 unless it gets a sandbox API
+   key; your production login does not work there. Whop's API reference lists
+   the host but not where its keys are issued, so get one from Whop.
+   [2mhttps://docs.whop.com/developer/api/getting-started[22m
+   wv keeps it in ~/.config/whop-view/config.json, owner-only, so no shell
+   variable is needed. WV_SANDBOX_KEY still wins when set.

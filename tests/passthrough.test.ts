@@ -35,8 +35,9 @@ exit 1
   return script;
 }
 
+// Hermetic: no real wv config, no real sandbox variables from the developer's shell.
 const wv = (args: string[], env: NodeJS.ProcessEnv = {}) =>
-  spawnSync(node, ["--experimental-strip-types", "--no-warnings", bin, ...args], { encoding: "utf8", env: { ...process.env, ...env } });
+  spawnSync(node, ["--experimental-strip-types", "--no-warnings", bin, ...args], { encoding: "utf8", env: { ...process.env, WV_CONFIG: "/nonexistent/wv.json", WV_SANDBOX_KEY: "", WV_SANDBOX_URL: "", WV_SANDBOX: "", ...env } });
 
 test("piped stdout: wv emits whop's bytes untouched and keeps its exit code", () => {
   const fake = fakeWhop();
@@ -60,6 +61,23 @@ test("piped stdout: --sandbox is stripped before the exec and the child sees the
   assert.match(r.stderr, /^BASE: https:\/\/sandbox-api\.whop\.com\/api\/v1 KEY: whop_test$/m);
   const plain = wv(["products", "list"], { WV_WHOP_BIN: fake, WHOP_API_BASE_URL: "", WHOP_API_KEY: "" });
   assert.match(plain.stderr, /^BASE: unset KEY: unset$/m, "production must not touch the host");
+});
+
+test("piped stdout: keys stay on their own side, from the shell and from the config file", () => {
+  const fake = fakeWhop();
+  const cfg = join(mkdtempSync(join(tmpdir(), "wv-cfg-")), "config.json");
+  writeFileSync(cfg, JSON.stringify({ sandbox: { key: "whop_from_config" } }));
+  // A production key in the shell never reaches the sandbox host.
+  const stripped = wv(["--sandbox", "products", "list"], { WV_WHOP_BIN: fake, WHOP_API_BASE_URL: "", WHOP_API_KEY: "whop_live" });
+  assert.match(stripped.stderr, /^BASE: https:\/\/sandbox-api\.whop\.com\/api\/v1 KEY: unset$/m);
+  // The config's sandbox key reaches the sandbox host, and never production.
+  const fromConfig = wv(["--sandbox", "products", "list"], { WV_WHOP_BIN: fake, WV_CONFIG: cfg, WHOP_API_BASE_URL: "", WHOP_API_KEY: "" });
+  assert.match(fromConfig.stderr, /KEY: whop_from_config$/m);
+  const prod = wv(["products", "list"], { WV_WHOP_BIN: fake, WV_CONFIG: cfg, WV_SANDBOX_KEY: "whop_env_sandbox", WHOP_API_BASE_URL: "", WHOP_API_KEY: "" });
+  assert.match(prod.stderr, /^BASE: unset KEY: unset$/m, "neither the config key nor WV_SANDBOX_KEY may reach production");
+  // A shell already pointed at the sandbox host is sandbox mode: the shell's key is dropped there too.
+  const shell = wv(["products", "list"], { WV_WHOP_BIN: fake, WHOP_API_BASE_URL: "https://sandbox-api.whop.com/api/v1", WHOP_API_KEY: "whop_live" });
+  assert.match(shell.stderr, /KEY: unset$/m);
 });
 
 test("piped stdout: failure exit codes are preserved", () => {

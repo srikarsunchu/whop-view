@@ -1,0 +1,5 @@
+ [31m▌[39m [1mThe sandbox refused this login[22m                                                                                  [31m500ms[39m
+
+   The sandbox host answered 401 to the key whop_wro…1234. It is not a sandbox key, or it was revoked.
+
+   [2mfix[22m  [2mwv sandbox status[22m

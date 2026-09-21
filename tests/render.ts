@@ -16,6 +16,7 @@ import { summaryView } from "../src/views/summary.ts";
 import { adPlanView, adRefusedView, type AdPlanInput } from "../src/views/adplan.ts";
 import { gtmView } from "../src/views/gtm.ts";
 import { doctorView, DOCTOR_ACTIONS, type DoctorInput } from "../src/views/doctor.ts";
+import { sandboxMissingKeyView, sandboxStatusView } from "../src/views/sandbox.ts";
 
 export const FIXTURES = join(import.meta.dirname, "fixtures");
 export const fixture = (name: string) => readFileSync(join(FIXTURES, name), "utf8");
@@ -145,7 +146,14 @@ export const DOCTOR_READY: DoctorInput = {
   commands: [...DOCTOR_COMMANDS, ["webhooks", "deliveries", "hook_x1AbCdEfGh", "--first", "20"]],
 };
 
+const CONFIG_PATH = "~/.config/whop-view/config.json";
+
 export const SCENES: Record<string, (t: Theme) => string[]> = {
+  "sandbox.status": (t) => sandboxStatusView({ url: "https://sandbox-api.whop.com/api/v1", urlSource: "default", key: "whop_sandbox_key_abcdef1234", keySource: "config", configPath: CONFIG_PATH, account: synth({ id: "biz_sandboxAb12", title: "Frame (sandbox)", route: "frame-sandbox" }) }, t),
+  "sandbox.status.nokey": (t) => sandboxStatusView({ url: "https://sandbox-api.whop.com/api/v1", urlSource: "default", keySource: "none", configPath: CONFIG_PATH, account: envelope("error.sandbox_oauth") }, t),
+  "sandbox.status.badkey": (t) => sandboxStatusView({ url: "http://localhost:9", urlSource: "env", key: "whop_wrong_key_abcdef1234", keySource: "env", configPath: CONFIG_PATH, account: envelope("error.sandbox_oauth") }, t),
+  "sandbox.missing_key": (t) => sandboxMissingKeyView(CONFIG_PATH, t),
+  "error.sandbox_auth": (t) => errorView({ code: "SANDBOX_AUTH", message: "The sandbox host answered 401 to the key whop_wro…1234. It is not a sandbox key, or it was revoked.", durationMs: 500 }, t),
   doctor: (t) => doctorView(DOCTOR, t),
   "doctor.ready": (t) => doctorView(DOCTOR_READY, t),
   "doctor.signed_out": (t) => doctorView({ ...DOCTOR, accountTitle: undefined, accountId: undefined, permissions: undefined, auth: synth({ loggedIn: false }), profiles: synth({ active: null, profiles: [] }), webhooks: envelope("error.webhooks_oauth") }, t),

@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "no
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { parseEnvelope, type Parsed } from "./envelope.ts";
+import { readConfig, type Config } from "./config.ts";
 
 export const WHOP = process.env.WV_WHOP_BIN ?? "whop";
 
@@ -11,20 +12,48 @@ export type Mode = "production" | "sandbox";
 
 // The CLI joins paths onto the base as given, so the version prefix has to be here. Without it every call is a bare 404.
 export const SANDBOX_URL = "https://sandbox-api.whop.com/api/v1";
+const SANDBOX_HOST = /sandbox-api\.whop\.com/;
 
-/** `--sandbox` or `WV_SANDBOX=1`. */
+/**
+ * `--sandbox`, `WV_SANDBOX=1`, or a shell whose `WHOP_API_BASE_URL` already points at the sandbox host.
+ * The last one matters for honesty: the banner must never say production while the calls go elsewhere.
+ */
 export function modeFrom(sandboxFlag: boolean, env: NodeJS.ProcessEnv = process.env): Mode {
-  return sandboxFlag || (env.WV_SANDBOX !== undefined && env.WV_SANDBOX !== "" && env.WV_SANDBOX !== "0") ? "sandbox" : "production";
+  if (sandboxFlag) return "sandbox";
+  if (env.WV_SANDBOX !== undefined && env.WV_SANDBOX !== "" && env.WV_SANDBOX !== "0") return "sandbox";
+  if (env.WHOP_API_BASE_URL && SANDBOX_HOST.test(env.WHOP_API_BASE_URL)) return "sandbox";
+  return "production";
+}
+
+export type Source = "env" | "config" | "default" | "none";
+
+/** The sandbox key wv knows about: `WV_SANDBOX_KEY` first, then the config file. */
+export function sandboxKey(env: NodeJS.ProcessEnv = process.env, config: Config = readConfig(env)): { key?: string; source: Source } {
+  if (env.WV_SANDBOX_KEY) return { key: env.WV_SANDBOX_KEY, source: "env" };
+  if (config.sandbox?.key) return { key: config.sandbox.key, source: "config" };
+  return { source: "none" };
+}
+
+/** The sandbox host: `WV_SANDBOX_URL`, then the config file, then Whop's published sandbox server. */
+export function sandboxUrl(env: NodeJS.ProcessEnv = process.env, config: Config = readConfig(env)): { url: string; source: Source } {
+  if (env.WV_SANDBOX_URL) return { url: env.WV_SANDBOX_URL, source: "env" };
+  if (config.sandbox?.url) return { url: config.sandbox.url, source: "config" };
+  return { url: SANDBOX_URL, source: "default" };
 }
 
 /**
- * Environment for the child `whop`. Sandbox mode points it at the sandbox host and, when one is set,
- * hands it the sandbox key: the host answers like production but rejects an OAuth token with 401.
+ * Environment for the child `whop`. Two rules, both tested: a sandbox key never reaches production, and
+ * a production key never reaches the sandbox. Production mode passes the shell through untouched; the
+ * config file's sandbox key is never injected there. Sandbox mode forces the host, hands over the sandbox
+ * key when wv has one, and otherwise removes `WHOP_API_KEY` so whatever the shell exported stays home.
+ * The sandbox host rejects the OAuth token that remains with 401, and the error names the fix.
  */
-export function whopEnv(mode: Mode, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+export function whopEnv(mode: Mode, env: NodeJS.ProcessEnv = process.env, config: Config = readConfig(env)): NodeJS.ProcessEnv {
   if (mode !== "sandbox") return env;
-  const out: NodeJS.ProcessEnv = { ...env, WHOP_API_BASE_URL: env.WV_SANDBOX_URL || SANDBOX_URL };
-  if (env.WV_SANDBOX_KEY) out.WHOP_API_KEY = env.WV_SANDBOX_KEY;
+  const out: NodeJS.ProcessEnv = { ...env, WHOP_API_BASE_URL: sandboxUrl(env, config).url };
+  const { key } = sandboxKey(env, config);
+  if (key) out.WHOP_API_KEY = key;
+  else delete out.WHOP_API_KEY;
   return out;
 }
 
