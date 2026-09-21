@@ -14,6 +14,7 @@ export interface Catalog {
 /** Built-in words the session understands that `whop` does not. */
 export const BUILTINS: Candidate[] = [
   { name: "home", desc: "identity, balance, and a 7-day net revenue sparkline" },
+  { name: "gtm", desc: "funnel, people, audiences, campaigns, offers, and launch gaps" },
   { name: "help", desc: "every command group" },
   { name: "copy", desc: "copy a row's id, or json for the agent command, to the clipboard" },
   { name: "next", desc: "the next page of the last list" },

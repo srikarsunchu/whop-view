@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "data": {
+    "data": {
+      "points": []
+    }
+  },
+  "meta": {
+    "command": "stats get",
+    "duration": "603ms"
+  }
+}

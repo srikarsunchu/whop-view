@@ -15,6 +15,7 @@ import { adPlanView, adRefusedView, budgetOf, commitment, isAdPlan, jsonFlags, r
 import { errorView } from "./views/error.ts";
 import { helpView, parseHelp } from "./views/help.ts";
 import { homeView } from "./views/home.ts";
+import { gtmView } from "./views/gtm.ts";
 import { seriesView } from "./views/series.ts";
 import { summaryView } from "./views/summary.ts";
 import { prompt } from "./primitives/prompt.ts";
@@ -25,7 +26,7 @@ import type { Parsed, Rec } from "./envelope.ts";
 const print = (lines: string[]) => process.stdout.write(lines.join("\n") + "\n");
 
 /** Words that are wv's, not whop's. */
-const OURS = new Set(["home", "help"]);
+const OURS = new Set(["home", "help", "gtm"]);
 
 export interface Outcome {
   code: number;
@@ -126,6 +127,7 @@ export async function execute(argv: string[], theme: Theme, opts: ExecuteOptions
   const mode = opts.mode ?? "production";
   const env = whopEnv(mode);
   if (group === "home") return home(theme, mode);
+  if (group === "gtm") return gtm(theme, mode);
   if (!verb || verb.startsWith("--")) {
     print(helpView(parseHelp(helpText([group])), theme, group));
     return { code: 0 };
@@ -377,6 +379,31 @@ async function home(theme: Theme, mode: Mode): Promise<Outcome> {
   const api = parseHelp(helpText([])).api;
   print(homeView({ auth: auth.parsed, balance: balance.parsed, revenue: revenue.parsed, from, to, commands: cmds, api, mode }, theme));
   return { code: auth.code || balance.code || revenue.code };
+}
+
+/** `wv gtm`: the loop on one screen. Eleven reads in parallel, every one taught in the footer. */
+async function gtm(theme: Theme, mode: Mode): Promise<Outcome> {
+  const env = whopEnv(mode);
+  const from = isoDay(daysAgo(7));
+  const to = isoDay(daysAgo(1));
+  const metrics = ["page_visits", "new_users", "gross_revenue", "ad_spend"];
+  const cmds: string[][] = [
+    ...metrics.map((m) => ["stats", "get", m, "--from", from, "--to", to, "--interval", "day"]),
+    ["people", "list", "--last_seen_within_days", "7"],
+    ["audiences", "list"],
+    ["ad-campaigns", "list"],
+    ["promo-codes", "list"],
+    ["social-accounts", "list"],
+    ["accounts", "preferences"],
+  ];
+  const spin = spinner(copy.spinner.gtm, theme);
+  const [acct, ...results] = await Promise.all([identity(env), ...cmds.map((c) => run(c, env))]);
+  spin.stop();
+  const series: Record<string, Parsed> = {};
+  metrics.forEach((m, i) => (series[m] = results[i].parsed));
+  const [people, audiences, campaigns, promoCodes, social, preferences] = results.slice(metrics.length).map((r) => r.parsed);
+  print(gtmView({ accountTitle: acct?.title, accountId: acct?.id, mode, from, to, series, people, audiences, campaigns, promoCodes, social, preferences, commands: cmds }, theme));
+  return { code: results.some((r) => r.code) ? 1 : 0 };
 }
 
 main(process.argv.slice(2)).catch((e) => {

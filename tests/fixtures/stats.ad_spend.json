@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "data": {
+    "data": {
+      "points": [],
+      "currency": "usd"
+    }
+  },
+  "meta": {
+    "command": "stats get",
+    "duration": "234ms"
+  }
+}

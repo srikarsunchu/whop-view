@@ -1,0 +1,47 @@
+ [1mHypermotion[22m[2m › [22m[2mbiz_VraUMckluH8dzV[22m[2m › [22m[33mproduction[39m[2m › [22m[1mgtm[22m
+ [2mlast 7 days · Sep 14 to Sep 20[22m
+
+ [2m── [22m[1mFunnel[22m[2m ─────────────────────────────────────────────────────────────────────[22m
+   [2mstore visits [22m  [2m     0  ▁▁▁▁▁▁▁[22m
+   [2mnew users    [22m       1  ▁▁█▁▁▁▁
+   [2mgross revenue[22m  $10.00  ▁▁█▁▁▁▁
+   [2mad spend     [22m  [2m $0.00  ▁▁▁▁▁▁▁[22m
+
+ [2m── [22m[1mPeople[22m[2m ─────────────────────────────────────────────────────────────────────[22m
+   [2mseen · 7d[22m  2 people · 2 customers · 2 contactable · 0 attributed to a source
+
+ [2m── [22m[1mAudiences[22m[2m ──────────────────────────────────────────────────────────────────[22m
+   [2m—[22m  [2mnone yet · whop audiences create --help[22m
+
+ [2m── [22m[1mCampaigns[22m[2m ──────────────────────────────────────────────────────────────────[22m
+ [2mNo campaigns yet.[22m
+ [2mtry[22m  [2mwv ads create --help[22m
+
+ [2m── [22m[1mOffers[22m[2m ─────────────────────────────────────────────────────────────────────[22m
+   [2m—[22m  [2mnone yet · whop promo-codes create --help[22m
+
+ [33m── [39m[1mBefore a launch[22m[33m ────────────────────────────────────────────────────────────[39m
+ [33m✗[39m No visit carries a source: the pixel is not installed on your pages, so
+   nothing is attributed.
+ [2mfix[22m  [2mwhop events validate_pixel[22m
+ [33m✗[39m No Meta page is connected, so every ad command will refuse.
+ [2mfix[22m  [2mwhop social-accounts connect --platform meta_business --scopes advertise[22m
+      [2m--redirect_url <url>[22m
+ [33m✗[39m No ads payment method on the account, so ads will not deliver.
+ [33m✗[39m Economic Intelligence is off, so `whop economic-intelligence` returns 403.
+ [2mfix[22m  [2mwhop accounts update-preferences --economic_intelligence true[22m
+
+ [2mjson[22m  [2mwhop stats get page_visits --from 2026-09-14 --to 2026-09-20 --interval[22m
+       [2mday --format json[22m
+ [2m    [22m  [2mwhop stats get new_users --from 2026-09-14 --to 2026-09-20 --interval day[22m
+       [2m--format json[22m
+ [2m    [22m  [2mwhop stats get gross_revenue --from 2026-09-14 --to 2026-09-20 --interval[22m
+       [2mday --format json[22m
+ [2m    [22m  [2mwhop stats get ad_spend --from 2026-09-14 --to 2026-09-20 --interval day[22m
+       [2m--format json[22m
+ [2m    [22m  [2mwhop people list --last_seen_within_days 7 --format json[22m
+ [2m    [22m  [2mwhop audiences list --format json[22m
+ [2m    [22m  [2mwhop ad-campaigns list --format json[22m
+ [2m    [22m  [2mwhop promo-codes list --format json[22m
+ [2m    [22m  [2mwhop social-accounts list --format json[22m
+ [2m    [22m  [2mwhop accounts preferences --format json[22m

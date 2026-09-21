@@ -9,7 +9,8 @@ export const WHOP = process.env.WV_WHOP_BIN ?? "whop";
 
 export type Mode = "production" | "sandbox";
 
-export const SANDBOX_URL = "https://sandbox-api.whop.com";
+// The CLI joins paths onto the base as given, so the version prefix has to be here. Without it every call is a bare 404.
+export const SANDBOX_URL = "https://sandbox-api.whop.com/api/v1";
 
 /** `--sandbox` or `WV_SANDBOX=1`. */
 export function modeFrom(sandboxFlag: boolean, env: NodeJS.ProcessEnv = process.env): Mode {

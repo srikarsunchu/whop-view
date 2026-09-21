@@ -57,7 +57,7 @@ test("piped stdout: --sandbox is stripped before the exec and the child sees the
   const r = wv(["--sandbox", "products", "list"], { WV_WHOP_BIN: fake, WV_SANDBOX_KEY: "whop_test", WHOP_API_BASE_URL: "", WHOP_API_KEY: "" });
   assert.equal(r.stdout, fixture("products.list.plain.txt"));
   assert.match(r.stderr, /^ARGS: products list$/m, "--sandbox must never reach whop");
-  assert.match(r.stderr, /^BASE: https:\/\/sandbox-api\.whop\.com KEY: whop_test$/m);
+  assert.match(r.stderr, /^BASE: https:\/\/sandbox-api\.whop\.com\/api\/v1 KEY: whop_test$/m);
   const plain = wv(["products", "list"], { WV_WHOP_BIN: fake, WHOP_API_BASE_URL: "", WHOP_API_KEY: "" });
   assert.match(plain.stderr, /^BASE: unset KEY: unset$/m, "production must not touch the host");
 });

@@ -14,6 +14,7 @@ import { homeView } from "../src/views/home.ts";
 import { seriesView } from "../src/views/series.ts";
 import { summaryView } from "../src/views/summary.ts";
 import { adPlanView, adRefusedView, type AdPlanInput } from "../src/views/adplan.ts";
+import { gtmView } from "../src/views/gtm.ts";
 
 export const FIXTURES = join(import.meta.dirname, "fixtures");
 export const fixture = (name: string) => readFileSync(join(FIXTURES, name), "utf8");
@@ -83,7 +84,35 @@ const AD_PLAN: AdPlanInput = {
   timeoutSeconds: 120,
 };
 
+const GTM_COMMANDS = [
+  ...["page_visits", "new_users", "gross_revenue", "ad_spend"].map((m) => ["stats", "get", m, "--from", "2026-09-14", "--to", "2026-09-20", "--interval", "day"]),
+  ["people", "list", "--last_seen_within_days", "7"],
+  ["audiences", "list"],
+  ["ad-campaigns", "list"],
+  ["promo-codes", "list"],
+  ["social-accounts", "list"],
+  ["accounts", "preferences"],
+];
+
 export const SCENES: Record<string, (t: Theme) => string[]> = {
+  gtm: (t) =>
+    gtmView(
+      {
+        accountTitle: "Hypermotion",
+        accountId: "biz_VraUMckluH8dzV",
+        from: "2026-09-14",
+        to: "2026-09-20",
+        series: { page_visits: envelope("stats.page_visits"), new_users: envelope("stats.new_users"), gross_revenue: envelope("stats.gross_revenue"), ad_spend: envelope("stats.ad_spend") },
+        people: envelope("people.list"),
+        audiences: envelope("audiences.list"),
+        campaigns: envelope("ad-campaigns.list"),
+        promoCodes: envelope("promo-codes.list"),
+        social: envelope("social-accounts.list"),
+        preferences: envelope("accounts.preferences"),
+        commands: GTM_COMMANDS,
+      },
+      t,
+    ),
   "adplan.ads.nested": (t) => adPlanView(AD_PLAN, t),
   "adplan.ads.plan_only": (t) => adPlanView({ ...AD_PLAN, planOnly: true, cap: undefined, timeoutSeconds: undefined }, t),
   "adplan.ads.no_page": (t) => adPlanView({ ...AD_PLAN, social: [], paysFrom: undefined, reach: { error: "No Meta ad account available for reach estimates" } }, t),

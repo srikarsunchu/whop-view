@@ -78,6 +78,17 @@ Rules:
 - Sandbox mode skips the cap and the timeout and still runs the estimate, which the sandbox host will usually refuse; the card shows that refusal.
 - The callout tag drops to its own line when the title and the badge do not both fit, since `Create an ad campaign` plus the badge is wider than 40 columns.
 
+## GTM view
+
+`wv gtm` (`src/views/gtm.ts`) composes the primitives into one read-only screen. `bin.ts` runs `auth status` plus ten reads in parallel: `stats get` for `page_visits`, `new_users`, `gross_revenue`, `ad_spend` over the last seven whole days, `people list --last_seen_within_days 7`, `audiences list`, `ad-campaigns list`, `promo-codes list`, `social-accounts list`, and `accounts preferences`. The view takes the parsed envelopes, so every branch renders from fixtures.
+
+- Funnel: `daySeries` lays Whop's sparse points onto every day of the window, so a series with one non-zero day still draws seven cells. Totals right-align to the widest so the sparklines share a column.
+- People: one line counting the page: seen, customers, contactable, attributed to any source. `has_next_page` adds a `+`.
+- Audiences and Offers: kv rows keyed by name or code, status role from `STATUS_COLOR`, up to six each.
+- Campaigns: a table of title, status, delivery, spend, results, cost per result, and ROAS, with the empty state pointing at `wv ads create --help`.
+- Before a launch: `gaps()` derives the blockers from the data already on screen (no attributed person, no usable page, no ads payment method, Economic Intelligence off) and each carries its fix as a footer command.
+- The footer teaches every command that fed the screen, one per line, like `home`.
+
 ## Passthrough rules
 
 `wv` renders only when all of these hold. Otherwise it execs `whop` with the original argv, inherits stdio, and exits with its code.
@@ -264,7 +275,7 @@ Verbs that trigger it: `create update delete cancel pause resume transfer deploy
 
 **Money gate.** A money group with `--amount` gets the Link-shaped approval on top. Before the prompt, `wv` runs `payouts methods --include_limits --currency <cur>` and `ledgers report --report_type balance_summary --currency <cur>` alongside `auth status`, and adds three rows. `to` is the saved payout method behind `--payout_method_id` as `nickname account_reference  id`, falling back to `institution_name` then the destination category, with the bare id plus a `warn` note when it is not in the list. `balance` is the available amount and what remains after, in `bad` when negative. `cap` is Whop's live limit for the payout's speed (`limits.<speed>.max_amount`, with `daily_amount_remaining` when sent) next to `wv`'s own cap, in `bad` when the amount is over Whop's. Three refusals, in order: over Whop's limit (`refusedView` prints Whop's `error_message` verbatim, since "complete identity verification" beats any paraphrase), over `wv`'s cap, over the balance. Each is a `bad` callout tagged `not run`, the same rows, exit 2, and `whop` is never called. The cap is `WV_PAYOUT_CAP` in whole currency units, default 500, `none` to disable. The prompt for a live money write is `Type 250 to send it [250/N]`, accepting the amount in any common spelling (`amountMatcher`), and `y` is not consent. A money prompt expires after `WV_CONFIRM_TIMEOUT` seconds, default 120, and prints `Not run. The prompt sat for 2 minutes.` with exit 130. The last line of every production money confirm is `try first  wv --sandbox <same argv>`. A balance or limit that cannot be read simply has no row; the API answers a valid report with a web page now and then, and a missing `payout:withdrawal:read` scope drops `limits`, and neither must block a payout.
 
-**Sandbox.** `--sandbox` or `WV_SANDBOX=1` sets the mode. `whopEnv` in the runner gives the child `WHOP_API_BASE_URL` (`WV_SANDBOX_URL` or `https://sandbox-api.whop.com`) and `WHOP_API_KEY` from `WV_SANDBOX_KEY` when set. In sandbox the badge reads `writes to sandbox`, the gutter is `warn`, the warning says no real money moves, the cap and the timeout are off, and there is no `try first` line. The banner and home status line show `sandbox` in `good` instead of `production` in `warn`. A 401, 403, or 404 in sandbox mode without a sandbox key adds one line naming `WV_SANDBOX_KEY`.
+**Sandbox.** `--sandbox` or `WV_SANDBOX=1` sets the mode. `whopEnv` in the runner gives the child `WHOP_API_BASE_URL` (`WV_SANDBOX_URL` or `https://sandbox-api.whop.com/api/v1`; the binary joins request paths onto the base as given, so the `/api/v1` suffix is required) and `WHOP_API_KEY` from `WV_SANDBOX_KEY` when set. In sandbox the badge reads `writes to sandbox`, the gutter is `warn`, the warning says no real money moves, the cap and the timeout are off, and there is no `try first` line. The banner and home status line show `sandbox` in `good` instead of `production` in `warn`. A 401, 403, or 404 in sandbox mode without a sandbox key adds one line naming `WV_SANDBOX_KEY`.
 
 ### summary
 
@@ -396,7 +407,7 @@ Four patterns from the oh-my-pi TUI, reproduced in the plain renderer with no de
 - Nested objects without a name flatten two levels in detail, so `verification` shows `individual status  verified` instead of `2 fields`.
 - Whop's CLI docs say there is no sandbox. The API spec lists `sandbox-api.whop.com`, the binary supports `WHOP_API_BASE_URL`, and that host answers like production but rejects an OAuth token with 401. So: a sandbox exists, the CLI does not expose it, and there is no dry-run flag. The confirm view says "runs against production" rather than "no sandbox".
 - The API occasionally answers a valid `get` with an HTML page. That renders as "Not a JSON response" rather than a raw doctype.
-- On 2026-09-21 the sandbox host answered `products list` under an OAuth login with 404, not the 401 seen earlier. The sandbox hint fires on either.
+- A bare `https://sandbox-api.whop.com` base answers every call with an empty 404, because the binary requests `/accounts/me` and friends relative to the base as given. The 404 first seen on 2026-09-21 was that, not the host changing its mind; with `/api/v1` the OAuth answer is the real 401. The sandbox hint fires on either code.
 - vhs 0.12 only writes frames into a directory that does not exist yet. A rerun over an old `demo/<name>.frames/` keeps the stale capture and says nothing, so `pnpm demo` clears them first.
 - A page's sibling keys survive as `extra` on the envelope (`limits` on `payouts methods --include_limits`). `recommended_action` is dropped there as everywhere.
 - Teaching footers and the confirm command line are argv arrays until `footer` or `confirmView` prints them. `src/argv.ts` quotes anything outside `[A-Za-z0-9_@%+=:,./-]` with POSIX single quotes and leaves `<biz_id>` placeholders bare. Product titles and notes are user text and will land in a command eventually; this is where that is solved once.

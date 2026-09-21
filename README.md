@@ -186,9 +186,43 @@ After:
 
 The plan is the sandbox. Whop has no test mode for ads, so before any `create` or `update` under `ads`, `ad-groups`, or `ad-campaigns`, `wv` fetches the campaign and group the command points at, asks `accounts preferences` for the ads payment method, `social-accounts list` for the page the ad runs under, and runs `ad-groups estimate_reach` for real with the group's targeting. The whole tree is one card: what exists, what is `new`, what it will cost, and who pays. A daily budget with no end date is shown as its 30-day commitment, and a commitment over `WV_AD_CAP` ($500 unless set, `none` to turn off) refuses before `whop` is called. When the reach estimate fails, the card says so in Whop's words, since the create will usually fail the same way. `wv ads create … --plan` prints the card and exits without asking, which is the dry-run the CLI does not have.
 
+### `gtm`
+
+`wv gtm` is the loop on one screen: the funnel over the last seven days, who was here, the audiences, the live campaigns, the offers, and the one-time gaps that block a launch. Eleven reads run in parallel and every number is a `whop` command the footer teaches.
+
+```
+ Hypermotion › biz_VraUMckluH8dzV › production › gtm
+ last 7 days · Sep 14 to Sep 20
+
+ ── Funnel ──────────────────────────────────────────────────────────────
+   store visits        0  ▁▁▁▁▁▁▁
+   new users           1  ▁▁▁▁▁▁█
+   gross revenue  $10.00  ▁▁▁▁▁▁█
+   ad spend        $0.00  ▁▁▁▁▁▁▁
+
+ ── People ──────────────────────────────────────────────────────────────
+   seen · 7d  2 people · 2 customers · 2 contactable · 0 attributed to a source
+
+ ── Campaigns ───────────────────────────────────────────────────────────
+ No campaigns yet.
+ try  wv ads create --help
+
+ ── Before a launch ─────────────────────────────────────────────────────
+ ✗ No visit carries a source: the pixel is not installed on your pages, so
+   nothing is attributed.
+ fix  whop events validate_pixel
+ ✗ No Meta page is connected, so every ad command will refuse.
+ fix  whop social-accounts connect --platform meta_business --scopes advertise
+      --redirect_url <url>
+ ✗ Economic Intelligence is off, so `whop economic-intelligence` returns 403.
+ fix  whop accounts update-preferences --economic_intelligence true
+```
+
+The gaps are read from what the screen already fetched, not guessed: no person with a source means no pixel, an empty `social-accounts list` means no page, `accounts preferences` says whether an ads payment method and Economic Intelligence exist. Each gap names the command that fixes it.
+
 ### Sandbox
 
-Whop's CLI docs say there is no sandbox mode. Link ships `--test`, which returns a fake card and never touches the real payment method, and that is the thing to ask Whop for. Until it exists, `wv --sandbox <anything>` (or `WV_SANDBOX=1`) runs the child `whop` with `WHOP_API_BASE_URL` pointed at `sandbox-api.whop.com` and, when `WV_SANDBOX_KEY` is set, hands it that key. The session banner, the home status line, and the confirm badge read `sandbox` in green instead of `production` in yellow, the cap and the timeout do not apply, and the warning says no real money moves. The sandbox host does not accept an OAuth login, so without a sandbox key every call errors and the error names the variable to set. `WV_SANDBOX_URL` overrides the host.
+Whop's CLI docs say there is no sandbox mode. Link ships `--test`, which returns a fake card and never touches the real payment method, and that is the thing to ask Whop for. Until it exists, `wv --sandbox <anything>` (or `WV_SANDBOX=1`) runs the child `whop` with `WHOP_API_BASE_URL` pointed at `sandbox-api.whop.com/api/v1` and, when `WV_SANDBOX_KEY` is set, hands it that key. The session banner, the home status line, and the confirm badge read `sandbox` in green instead of `production` in yellow, the cap and the timeout do not apply, and the warning says no real money moves. The sandbox host does not accept an OAuth login, so without a sandbox key every call errors and the error names the variable to set. `WV_SANDBOX_URL` overrides the host.
 
 ### A typo
 

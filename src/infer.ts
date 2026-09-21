@@ -85,7 +85,7 @@ export function infer(key: string, value: unknown, row: Rec, hints: Hints): Cell
   if (isMoneyObj(value)) return cell("money", money(value), money(value), "text", "right");
   // 4 money number
   const hinted = hints.money?.includes(key);
-  if ((hinted || MONEY_KEY.test(key)) && typeof value === "number" && !/count|days|percentage|level/i.test(key)) {
+  if ((hinted || MONEY_KEY.test(key)) && typeof value === "number" && !/count|days|percentage|level|rate$|ratio|^return_on/i.test(key)) {
     const pre = hints.formatted?.[key];
     const str = pre && typeof row[pre] === "string" ? (row[pre] as string) : money(value, typeof row.currency === "string" ? row.currency : "usd");
     return cell("money", str, str, "text", "right");
@@ -128,6 +128,8 @@ export function infer(key: string, value: unknown, row: Rec, hints: Hints): Cell
       .filter(([, v]) => v.trim());
     return cell("objects", `${n} ${labelFor(key, hints)}`, `${n} ${labelFor(key, hints)}`, "text", "left", extra.length ? extra : undefined);
   }
+  // an object that is only an id (`ad_campaign: { id }`) is a bare relation, not a card
+  if (isObj(value) && Object.keys(value).length === 1 && typeof value.id === "string") return cell("id", value.id, value.id, "mono");
   // nested object without a name: flatten to extra lines in detail, two levels deep
   if (isObj(value)) {
     const extra: [string, string][] = [];

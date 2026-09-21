@@ -1,0 +1,47 @@
+ Hypermotion › biz_VraUMckluH8dzV › production › gtm
+ last 7 days · Sep 14 to Sep 20
+
+ ── Funnel ─────────────────────────────────────────────────────────────────────
+   store visits        0  ▁▁▁▁▁▁▁
+   new users           1  ▁▁█▁▁▁▁
+   gross revenue  $10.00  ▁▁█▁▁▁▁
+   ad spend        $0.00  ▁▁▁▁▁▁▁
+
+ ── People ─────────────────────────────────────────────────────────────────────
+   seen · 7d  2 people · 2 customers · 2 contactable · 0 attributed to a source
+
+ ── Audiences ──────────────────────────────────────────────────────────────────
+   —  none yet · whop audiences create --help
+
+ ── Campaigns ──────────────────────────────────────────────────────────────────
+ No campaigns yet.
+ try  wv ads create --help
+
+ ── Offers ─────────────────────────────────────────────────────────────────────
+   —  none yet · whop promo-codes create --help
+
+ ── Before a launch ────────────────────────────────────────────────────────────
+ ✗ No visit carries a source: the pixel is not installed on your pages, so
+   nothing is attributed.
+ fix  whop events validate_pixel
+ ✗ No Meta page is connected, so every ad command will refuse.
+ fix  whop social-accounts connect --platform meta_business --scopes advertise
+      --redirect_url <url>
+ ✗ No ads payment method on the account, so ads will not deliver.
+ ✗ Economic Intelligence is off, so `whop economic-intelligence` returns 403.
+ fix  whop accounts update-preferences --economic_intelligence true
+
+ json  whop stats get page_visits --from 2026-09-14 --to 2026-09-20 --interval
+       day --format json
+       whop stats get new_users --from 2026-09-14 --to 2026-09-20 --interval day
+       --format json
+       whop stats get gross_revenue --from 2026-09-14 --to 2026-09-20 --interval
+       day --format json
+       whop stats get ad_spend --from 2026-09-14 --to 2026-09-20 --interval day
+       --format json
+       whop people list --last_seen_within_days 7 --format json
+       whop audiences list --format json
+       whop ad-campaigns list --format json
+       whop promo-codes list --format json
+       whop social-accounts list --format json
+       whop accounts preferences --format json

@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "data": {
+    "data": {
+      "points": [
+        {
+          "timestamp": 1789516800,
+          "value": 10
+        }
+      ],
+      "currency": "usd"
+    }
+  },
+  "meta": {
+    "command": "stats get",
+    "duration": "282ms"
+  }
+}
