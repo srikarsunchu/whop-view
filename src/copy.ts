@@ -398,6 +398,12 @@ export const copy = {
     needsTerminal: (what: string) => `wv ${what} needs a terminal. Pipe whop directly.`,
     running: (cmd: string) => cmd,
   },
+  /** The gate as an agent reads it: one JSON envelope on stdout, no prompt. */
+  agent: {
+    confirm: (cmd: string, mode: Mode) => `${cmd} writes to ${mode}. wv did not run it.`,
+    confirmHint: "Show the plan to the person. Rerun the command in `rerun` to run it, or add --plan to see the plan and run nothing.",
+    needsTerminal: (what: string) => `wv ${what} draws a screen and needs a terminal. Pass --format json for the data.`,
+  },
 };
 
 const VERB_TITLES: Record<string, string> = {

@@ -15,18 +15,28 @@ function fakeWhop(): string {
   const dir = mkdtempSync(join(tmpdir(), "wv-fake-"));
   const script = join(dir, "whop");
   // Echoes argv to stderr so tests can assert what wv passed through, prints the plain fixture.
+  // The reads the gate needs answer from fixtures. `WV_FAKE_METHODS` swaps the payout methods fixture, so a
+  // test can choose between Whop's own limit (the recorded one blocks every payout) and none.
   writeFileSync(
     script,
     `#!/bin/sh
 echo "ARGS: $*" >&2
 echo "BASE: \${WHOP_API_BASE_URL:-unset} KEY: \${WHOP_API_KEY:-unset}" >&2
-if [ "$1" = "products" ] && [ "$2" = "list" ]; then
-  case "$*" in
-    *--format*json*--full-output*) cat "${join(FIXTURES, "products.list.json")}" ;;
-    *) cat "${join(FIXTURES, "products.list.plain.txt")}" ;;
-  esac
-  exit 0
-fi
+fx() { cat "${FIXTURES}/$1"; exit 0; }
+case "$1 $2" in
+  "products list")
+    case "$*" in
+      *--format*json*--full-output*) fx products.list.json ;;
+      *) fx products.list.plain.txt ;;
+    esac ;;
+  "auth status") fx auth.status.json ;;
+  "ledgers report") fx ledgers.report.json ;;
+  "payouts methods") fx "\${WV_FAKE_METHODS:-payouts.methods.limits.json}" ;;
+  "accounts preferences") fx accounts.preferences.json ;;
+  "social-accounts list") fx social-accounts.list.json ;;
+  "ad-groups estimate_reach") echo '{"ok":false,"error":{"code":"HTTP_400","message":"no estimate"},"meta":{"command":"ad-groups estimate_reach","duration":"1ms"}}'; exit 1 ;;
+  "payouts create"|"products update"|"ads create") echo '{"ok":true,"data":{"id":"fake_1"},"meta":{"command":"'"$1 $2"'","duration":"1ms"}}'; exit 0 ;;
+esac
 echo '{"code":"COMMAND_NOT_FOUND","message":"nope"}'
 exit 1
 `,
@@ -97,4 +107,119 @@ test("live: wv products list | cat is byte-identical to whop products list", { s
   const r = wv(["products", "list"]);
   assert.equal(r.stdout, real.stdout);
   assert.equal(r.status, real.status);
+});
+
+// The agent gate: a write in a pipe is gated like a write in a terminal, but the card is JSON and the
+// prompt is exit 2 with `rerun`. Nothing below reaches the fake `whop` as a write unless the test says so.
+const GROUP = '{"ad_campaign_id":"adcamp_x1","title":"US 25-44","budget_amount":40,"budget_type":"daily","optimization_goal":"conversions","conversion_event":"purchase","placements":"automatic","demographics":{"minimum_age":25,"maximum_age":44,"gender":"all"},"regions":{"include":{"countries":["US"]}}}';
+const gateEnv = (extra: NodeJS.ProcessEnv = {}) => ({ WV_WHOP_BIN: fakeWhop(), WHOP_API_BASE_URL: "", WHOP_API_KEY: "", WV_PAYOUT_CAP: "", WV_AD_CAP: "", WV_RAW: "", ...extra });
+const envelopeOf = (r: ReturnType<typeof wv>) => JSON.parse(r.stdout) as { ok: boolean; error?: { code: string; message: string; hint?: string }; plan?: Record<string, unknown>; rerun?: string[]; meta: { command: string; wrapper: string; mode: string } };
+const wroteTo = (r: ReturnType<typeof wv>, cmd: string) => new RegExp(`^ARGS: ${cmd}`, "m").test(r.stderr);
+
+test("agent gate: a write without --yes is CONFIRMATION_REQUIRED, exit 2, and whop never runs it", () => {
+  const r = wv(["products", "update", "prod_1", "--title", "Frame Pro"], gateEnv());
+  assert.equal(r.status, 2);
+  const e = envelopeOf(r);
+  assert.equal(e.ok, false);
+  assert.equal(e.error?.code, "CONFIRMATION_REQUIRED");
+  assert.deepEqual(e.rerun, ["wv", "products", "update", "prod_1", "--title", "Frame Pro", "--yes"]);
+  assert.deepEqual(e.meta, { command: "products update", wrapper: "wv", mode: "production" });
+  assert.equal(e.plan?.kind, "write");
+  assert.equal(e.plan?.command, "whop products update prod_1 --title 'Frame Pro'");
+  assert.deepEqual(e.plan?.account, { id: "biz_VraUMckluH8dzV", title: "Frame" });
+  assert.ok(wroteTo(r, "auth status"), "identity is read");
+  assert.equal(wroteTo(r, "products update"), false, "the write must not reach whop");
+});
+
+test("agent gate: --yes execs whop with the argv it expects, --yes stripped", () => {
+  const r = wv(["products", "update", "prod_1", "--title", "x", "--yes"], gateEnv());
+  assert.equal(r.status, 0);
+  assert.match(r.stderr, /^ARGS: products update prod_1 --title x$/m);
+  assert.match(r.stdout, /"id": ?"fake_1"/);
+});
+
+test("agent gate: --plan is the plan alone, ok true, exit 0", () => {
+  const r = wv(["payouts", "create", "--amount", "5", "--payout_method_id", "potk_1", "--plan"], gateEnv());
+  assert.equal(r.status, 0);
+  const e = envelopeOf(r);
+  assert.equal(e.ok, true);
+  assert.equal(e.error, undefined);
+  assert.equal(e.rerun, undefined);
+  assert.deepEqual(e.plan?.money, { amount: 5, currency: "usd" });
+  assert.deepEqual(e.plan?.balance, { available: 18.56, currency: "usd" });
+  assert.equal(wroteTo(r, "payouts create"), false);
+});
+
+test("agent gate: Whop's own limit refuses first, in Whop's words, with no rerun", () => {
+  const r = wv(["payouts", "create", "--amount", "5", "--payout_method_id", "potk_1"], gateEnv());
+  assert.equal(r.status, 2);
+  const e = envelopeOf(r);
+  assert.equal(e.error?.code, "WHOP_LIMIT");
+  assert.match(e.error?.message ?? "", /identity verification/);
+  assert.equal(e.rerun, undefined);
+  assert.equal((e.plan?.limit as { code: string }).code, "kyc_completed");
+});
+
+test("agent gate: the wv cap and the balance refuse when Whop does not", () => {
+  const cap = wv(["payouts", "create", "--amount", "600", "--payout_method_id", "potk_1"], gateEnv({ WV_FAKE_METHODS: "payouts.methods.json" }));
+  assert.equal(cap.status, 2);
+  assert.equal(envelopeOf(cap).error?.code, "WV_CAP");
+  assert.match(envelopeOf(cap).error?.hint ?? "", /WV_PAYOUT_CAP=600/);
+  const bal = wv(["payouts", "create", "--amount", "100", "--payout_method_id", "potk_1"], gateEnv({ WV_FAKE_METHODS: "payouts.methods.json", WV_PAYOUT_CAP: "1000" }));
+  assert.equal(bal.status, 2);
+  assert.equal(envelopeOf(bal).error?.code, "INSUFFICIENT_BALANCE");
+  const ok = wv(["payouts", "create", "--amount", "10", "--payout_method_id", "potk_1"], gateEnv({ WV_FAKE_METHODS: "payouts.methods.json" }));
+  assert.equal(envelopeOf(ok).error?.code, "CONFIRMATION_REQUIRED");
+  assert.deepEqual(envelopeOf(ok).rerun, ["wv", "payouts", "create", "--amount", "10", "--payout_method_id", "potk_1", "--yes"]);
+});
+
+test("agent gate: sandbox skips the cap, the limit, and the balance, and says so in meta", () => {
+  const r = wv(["--sandbox", "payouts", "create", "--amount", "600", "--payout_method_id", "potk_1"], gateEnv({ WV_SANDBOX_KEY: "whop_test" }));
+  assert.equal(r.status, 2);
+  const e = envelopeOf(r);
+  assert.equal(e.error?.code, "CONFIRMATION_REQUIRED");
+  assert.equal(e.meta.mode, "sandbox");
+  assert.equal(e.plan?.cap, undefined);
+});
+
+test("agent gate: an ad write is the plan tree with its commitment; over the ad cap refuses", () => {
+  const args = ["ads", "create", "--title", "Launch", "--ad_group", GROUP, "--headlines", '["a"]'];
+  const refused = wv(args, gateEnv());
+  assert.equal(refused.status, 2);
+  const e = envelopeOf(refused);
+  assert.equal(e.error?.code, "WV_AD_CAP");
+  assert.equal(e.plan?.kind, "ad");
+  assert.deepEqual(e.plan?.commitment, { total: 1200, days: 30, openEnded: true });
+  assert.equal(wroteTo(refused, "ads create"), false);
+  const asked = envelopeOf(wv(args, gateEnv({ WV_AD_CAP: "none" })));
+  assert.equal(asked.error?.code, "CONFIRMATION_REQUIRED");
+  assert.equal((asked.plan?.reach as { error: string }).error, "no estimate");
+  assert.equal(asked.rerun?.at(-1), "--yes");
+  const plan = wv([...args, "--plan"], gateEnv());
+  assert.equal(plan.status, 0);
+  assert.equal(envelopeOf(plan).ok, true);
+});
+
+test("agent gate: WV_RAW and the flags that never execute pass a write straight through", () => {
+  const raw = wv(["products", "update", "prod_1", "--title", "x"], gateEnv({ WV_RAW: "1" }));
+  assert.match(raw.stderr, /^ARGS: products update prod_1 --title x$/m);
+  const schema = wv(["payouts", "create", "--schema"], gateEnv());
+  assert.match(schema.stderr, /^ARGS: payouts create --schema$/m);
+});
+
+test("agent gate: --format json on a write is still a write", () => {
+  const r = wv(["payouts", "create", "--amount", "5", "--payout_method_id", "potk_1", "--format", "json"], gateEnv());
+  assert.equal(r.status, 2);
+  assert.equal(envelopeOf(r).error?.code, "WHOP_LIMIT");
+  assert.equal(wroteTo(r, "payouts create"), false);
+});
+
+test("agent gate: a wv refusal before any whop call is the same envelope on stdout", () => {
+  const preset = wv(["stats", "get", "page_visits", "--last", "3x"], gateEnv());
+  assert.equal(preset.status, 2);
+  assert.equal(envelopeOf(preset).error?.code, "BAD_PRESET");
+  assert.equal(preset.stderr.includes("ARGS:"), false, "whop never ran");
+  const file = wv(["ads", "create", "--ad_group", "@/nonexistent/group.json"], gateEnv());
+  assert.equal(file.status, 2);
+  assert.equal(envelopeOf(file).error?.code, "JSON_FLAGS");
 });

@@ -366,16 +366,29 @@ Eight gaps a developer or software seller hits in the Whop CLI, and where each l
 
 ## What agents see
 
-Nothing new. `wv` execs `whop` with the original argv whenever any of these hold:
+Reads: nothing new. `wv` execs `whop` with the original argv whenever any of these hold:
 
-- stdout is not a TTY
+- stdout is not a TTY and the command is a read
 - `--format`, `--full-output`, `--filter-output`, `--llms`, `--schema`, `--help`, or any `--token-*` flag is present
 - `WV_RAW=1`
-
-`--sandbox` and `--width` are `wv`'s own flags and are stripped before the exec, so `wv --sandbox products list | cat` is `whop products list` against the sandbox host.
 - the command owns the terminal itself: `login`, `logout`, `quickstart`, `upgrade`, `apps dev|deploy|init|pull`
 
-`wv products list | cat` is byte-identical to `whop products list`. There is a test for it.
+`--sandbox`, `--width`, `--plan`, and `--yes` are `wv`'s own flags and are stripped before the exec, so `wv --sandbox products list | cat` is `whop products list` against the sandbox host. `wv products list | cat` is byte-identical to `whop products list`. There is a test for it.
+
+Writes: the same gate a person gets, as JSON. `whop --llms-full` marks 149 commands "Confirm with the user before executing this destructive command" and enforces none of it, and there is no `--dry-run`. So a write in a pipe without `--yes` never reaches `whop`. It exits 2 with the plan and the command that runs it:
+
+```
+$ wv payouts create --amount 5 --payout_method_id potk_x | cat
+{
+  "ok": false,
+  "error": { "code": "CONFIRMATION_REQUIRED", "message": "whop payouts create --amount 5 --payout_method_id potk_x writes to production. wv did not run it.", "hint": "Show the plan to the person. Rerun the command in `rerun` to run it, or add --plan to see the plan and run nothing." },
+  "plan": { "kind": "write", "command": "whop payouts create --amount 5 --payout_method_id potk_x", "account": { "id": "biz_…", "title": "Frame" }, "money": { "amount": 5, "currency": "usd" }, "balance": { "available": 18.56, "currency": "usd" }, "cap": 500, "limit": { "speed": "standard", "max": 0, "code": "kyc_completed", "message": "Please complete identity verification before requesting a withdrawal." } },
+  "rerun": ["wv", "payouts", "create", "--amount", "5", "--payout_method_id", "potk_x", "--yes"],
+  "meta": { "command": "payouts create", "wrapper": "wv", "mode": "production" }
+}
+```
+
+The agent shows the plan to the person and runs `rerun`. `--plan` returns `{ ok: true, plan }` and runs nothing, for every write. Refusals use the same shape with no `rerun`: `WHOP_LIMIT` in Whop's words, `WV_CAP`, `INSUFFICIENT_BALANCE`, `WV_AD_CAP`. For ads the plan is the campaign tree, the reach estimate, and the committed spend. `--format json` on a write does not lift the gate; `--schema` and `--help` do, since they run nothing. `WV_RAW=1` turns all of it off. A bad `--last` preset or a missing `@file` is the same envelope with `BAD_PRESET`, `EVENTS_RANGE`, or `JSON_FLAGS`.
 
 ### `home`
 

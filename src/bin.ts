@@ -13,12 +13,13 @@ import { exitCodeFor, licenseView, verdict } from "./views/license.ts";
 import { followHeader, followIntervalMs, followStopped, logLines, logsView, newEntries, newest, pollArgv } from "./views/logs.ts";
 import { hintsFor } from "./hints.ts";
 import { isWrite, MONEY_GROUPS } from "./status.ts";
+import { adPlan, adRefusedEnvelope, agentGated, confirmationEnvelope, moneyPlan, planEnvelope, refusedEnvelope, serialize, wvErrorEnvelope, type AgentEnvelope } from "./agent.ts";
 import { teach } from "./argv.ts";
 import { daysAgo, isoDay } from "./format.ts";
 import { copy } from "./copy.ts";
 import { listViewWithMeta, withAfter, type ListRender } from "./views/list.ts";
 import { detailView } from "./views/detail.ts";
-import { amountMatcher, confirmView, describeMethod, flagsToRecord, limitFor, moneyOf, refusedView, speedOf, type Balance, type WhopLimit } from "./views/confirm.ts";
+import { amountMatcher, confirmView, describeMethod, flagsToRecord, limitFor, moneyOf, refusedView, speedOf, type Balance, type ConfirmInput, type RefusedInput, type WhopLimit } from "./views/confirm.ts";
 import { money } from "./format.ts";
 import { adPlanView, adRefusedView, budgetOf, commitment, isAdPlan, jsonFlags, reachArgv, treeFromArgv, type AdPlanInput, type AdTree, type Reach } from "./views/adplan.ts";
 import { errorView } from "./views/error.ts";
@@ -105,23 +106,13 @@ async function main(argvIn: string[]) {
   const theme = makeTheme({ width });
   // Date presets are wv's flags too: resolve them before a pipe execs `whop`, and refuse a range Whop would.
   const dates = resolveDates(own.argv);
-  if (dates.error && !process.stdout.isTTY) {
-    process.stderr.write(`wv: ${dates.error.message}${dates.error.hint ? " " + dates.error.hint : ""}\n`);
-    process.exit(2);
-  }
-  const json = assembleFor(dates.argv);
-  if (json.error && !process.stdout.isTTY) {
-    process.stderr.write(`wv: ${json.error.message}\n`);
-    process.exit(2);
-  }
-  const argv = json.argv;
   const mode = modeFrom(sandbox);
   const env = whopEnv(mode);
+  // No terminal: an agent or a script. Errors and the gate come back as JSON on stdout; everything else execs `whop`.
+  if (!process.stdout.isTTY) return agentMain(own.argv, dates, mode, env, plan);
+  const json = assembleFor(dates.argv);
+  const argv = json.argv;
 
-  if (OURS.has(argv[0]) && !process.stdout.isTTY) {
-    process.stderr.write(`wv: ${copy.session.needsTerminal(argv[0])}\n`);
-    process.exit(2);
-  }
   // `--plan` never writes, so it is safe without a terminal and must never fall through to a real `whop` create.
   // `memberships check <key>` is wv's verb over `memberships get <key>`; a pipe gets the get.
   if (shouldPassthrough(argv) && !plan) passthrough(argv0IsCheck(argv) ? ["memberships", "get", ...argv.slice(2)] : argv, env);
@@ -134,6 +125,45 @@ async function main(argvIn: string[]) {
     process.exit(await session({ theme, execute: (a, t) => execute(a, t, { numbered: true, mode }), account: acct, mode }));
   }
   process.exit((await execute(argv, theme, { mode, plan, follow })).code);
+}
+
+const emit = (e: AgentEnvelope, code: number): never => {
+  process.stdout.write(serialize(e));
+  process.exit(code);
+};
+
+/**
+ * The pipe. A wv refusal (bad preset, bad `@file`) is a JSON envelope, exit 2. A write without `--yes` is
+ * gated exactly as in a terminal, but the card is data and the prompt is exit 2 with `rerun`; `--plan` is
+ * the data alone, exit 0. `--yes`, `WV_RAW`, and every read exec `whop` with the argv it expects.
+ */
+async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates>, mode: Mode, env: NodeJS.ProcessEnv, plan: boolean): Promise<never> {
+  if (dates.error) emit(wvErrorEnvelope(argvIn, mode, dates.error), 2);
+  const json = assembleFor(dates.argv);
+  if (json.error) emit(wvErrorEnvelope(argvIn, mode, json.error), 2);
+  const argv = json.argv;
+  if (OURS.has(argv[0])) {
+    process.stderr.write(`wv: ${copy.session.needsTerminal(argv[0])}\n`);
+    process.exit(2);
+  }
+  // `whop` rejects `--yes` as an unknown flag. It is wv's, and it never reaches the child.
+  const yes = argv.includes("--yes");
+  const args = argv.filter((a) => a !== "--yes");
+  if (!process.env.WV_RAW && agentGated(args) && (!yes || plan)) {
+    const [group, verb] = args;
+    const live = mode !== "sandbox";
+    if (isAdPlan(group, verb)) {
+      const input = await adPlanFor(group, verb, args, env, mode, plan);
+      if (plan) emit(planEnvelope(args, mode, adPlan(input)), 0);
+      if (live && input.budget && input.cap != null && commitment(input.budget).total > input.cap) emit(adRefusedEnvelope(input), 2);
+      emit(confirmationEnvelope(args, mode, adPlan(input)), 2);
+    }
+    const gate = await moneyGateFor(group, verb, args, env, mode);
+    if (plan) emit(planEnvelope(args, mode, moneyPlan(gate.input)), 0);
+    if (gate.refusal) emit(refusedEnvelope({ ...gate.input, reason: gate.refusal }), 2);
+    emit(confirmationEnvelope(args, mode, moneyPlan(gate.input)), 2);
+  }
+  passthrough(argv0IsCheck(args) ? ["memberships", "get", ...args.slice(2)] : args, env);
 }
 
 export interface ExecuteOptions {
@@ -185,7 +215,6 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
 
   if (group === "apps" && verb === "logs" && opts.follow) return followLogs(argv, theme, env);
 
-  const hints = hintsFor(group, verb);
   const yes = argv.includes("--yes");
   const args = argv.filter((a) => a !== "--yes");
 
@@ -217,35 +246,18 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
     // Money gate. Like Link's approval: the amount, where it goes, and what it draws from are on screen,
     // a cap refuses before the network, and a prompt left sitting is not consent.
     const m = MONEY_GROUPS.has(group) ? moneyOf(args) : null;
-    const methodId = flagsToRecord(args).payout_method_id;
     const spin = spinner(m ? copy.spinner.money : copy.spinner.identity, theme);
-    const [acct, balance, methods] = await Promise.all([
-      identity(env),
-      m ? balanceFor(m.currency, env) : undefined,
-      m || typeof methodId === "string" ? methodsFor(typeof methodId === "string" ? methodId : undefined, m?.currency ?? "usd", speedOf(args), env) : undefined,
-    ]).finally(() => spin.stop());
-    const live = m && mode !== "sandbox";
-    const cap = live ? capFrom() : undefined;
-    const limit = live ? methods?.limit : undefined;
-    const timeoutSeconds = live ? timeoutFrom() : undefined;
-    const input = { group, verb, argv: args, hints, accountTitle: acct?.title, accountId: acct?.id, mode, destination: methods?.destination, balance, cap, limit, timeoutSeconds };
-    // Refusals, cheapest reason first. Whop's own limit wins over wv's when both are exceeded: it is the real one.
-    if (live && limit && m.amount > limit.max) {
-      print(refusedView({ ...input, reason: "whop" }, theme));
-      return { code: 2 };
-    }
-    if (live && cap != null && m.amount > cap) {
-      print(refusedView({ ...input, reason: "cap" }, theme));
-      return { code: 2 };
-    }
-    if (live && balance && m.amount > balance.available) {
-      print(refusedView({ ...input, reason: "balance" }, theme));
+    const gate = await moneyGateFor(group, verb, args, env, mode).finally(() => spin.stop());
+    const { input, live } = gate;
+    if (gate.refusal) {
+      print(refusedView({ ...input, reason: gate.refusal }, theme));
       return { code: 2 };
     }
     print(confirmView(input, theme));
     // Money: type the amount back. Everything else: y.
     const shown = m ? money(m.amount, m.currency).replace(/^[^\d]+/, "") : "";
-    const accept = live ? { test: amountMatcher(m.amount), hint: copy.confirm.amountNo(shown) } : undefined;
+    const accept = live && m ? { test: amountMatcher(m.amount), hint: copy.confirm.amountNo(shown) } : undefined;
+    const timeoutSeconds = input.timeoutSeconds;
     const answer = await prompt(live ? copy.confirm.typeAmount(shown) : copy.confirm.question, theme, { timeoutMs: timeoutSeconds ? timeoutSeconds * 1000 : undefined, accept });
     if (answer !== "yes") {
       print([" " + (answer === "timeout" && timeoutSeconds ? copy.confirm.expired(timeoutSeconds) : copy.confirm.aborted)]);
@@ -307,6 +319,40 @@ async function webhookTest(args: string[], theme: Theme, env: NodeJS.ProcessEnv)
   spin.stop();
   print(webhookTestView({ argv: args, result: parsed.payload.record, delivery: delivery.parsed, deliveryArgv }, theme));
   return { code: parsed.payload.record.success === true ? 0 : 1, group: "webhooks", teach: teach(args) };
+}
+
+interface MoneyGate {
+  input: ConfirmInput;
+  /** True when a real amount goes to production: the cap, the limit, the balance, and the typed amount apply. */
+  live: boolean;
+  /** Set when wv refuses before any `whop` call. Cheapest reason first; Whop's own limit beats wv's cap, since it is the real one. */
+  refusal?: RefusedInput["reason"];
+}
+
+/**
+ * Everything the money gate shows and decides, shared by the terminal card and the agent envelope: identity,
+ * the balance in the payout's currency, the saved method behind `--payout_method_id`, and Whop's live limit.
+ */
+async function moneyGateFor(group: string, verb: string, args: string[], env: NodeJS.ProcessEnv, mode: Mode): Promise<MoneyGate> {
+  const m = MONEY_GROUPS.has(group) ? moneyOf(args) : null;
+  const methodId = flagsToRecord(args).payout_method_id;
+  const [acct, balance, methods] = await Promise.all([
+    identity(env),
+    m ? balanceFor(m.currency, env) : undefined,
+    m || typeof methodId === "string" ? methodsFor(typeof methodId === "string" ? methodId : undefined, m?.currency ?? "usd", speedOf(args), env) : undefined,
+  ]);
+  const live = !!m && mode !== "sandbox";
+  const cap = live ? capFrom() : undefined;
+  const limit = live ? methods?.limit : undefined;
+  const timeoutSeconds = live ? timeoutFrom() : undefined;
+  const input: ConfirmInput = { group, verb, argv: args, hints: hintsFor(group, verb), accountTitle: acct?.title, accountId: acct?.id, mode, destination: methods?.destination, balance, cap, limit, timeoutSeconds };
+  let refusal: MoneyGate["refusal"];
+  if (live && m) {
+    if (limit && m.amount > limit.max) refusal = "whop";
+    else if (cap != null && m.amount > cap) refusal = "cap";
+    else if (balance && m.amount > balance.available) refusal = "balance";
+  }
+  return { input, live, refusal };
 }
 
 /**
