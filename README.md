@@ -262,6 +262,8 @@ The gaps are read from what the screen already fetched, not guessed: no person w
        …
 ```
 
+![doctor](demo/doctor.gif)
+
 Three checks block: signed in, identity, and a visible product with a plan. When any of those fails, `wv doctor` exits 1, so a deploy script or an agent can gate on it. The rest are warnings. Identity is read from Whop's own payout limit rather than guessed: `payouts methods --include_limits` says in Whop's words why a standard payout would be refused, and that line is the check. The api key check runs `permissions check` on the six scopes a seller needs and says which the active login lacks; when a saved api-key profile exists it names it, otherwise it gives the login command and points at the dashboard, which is the only place a key is minted. The pixel, page, ads payment, and Economic Intelligence checks are the gaps `wv gtm` already derives. Webhooks count as alive when one has a successful delivery in the last seven days; an oauth login cannot list them at all, and the check says so instead of failing.
 
 ### Sandbox
@@ -295,6 +297,8 @@ The sandbox host needs its own API key; it answers an OAuth login with 401. `wv`
  json  WHOP_API_BASE_URL=https://sandbox-api.whop.com/api/v1
        WHOP_API_KEY=<sandbox_key> whop accounts get me --format json
 ```
+
+![sandbox status](demo/sandbox-status.gif)
 
 Two rules hold, and both are tested against a fake `whop` that echoes its environment: a sandbox key never reaches production, and a production key never reaches the sandbox. Production mode passes your shell through untouched and never injects the saved sandbox key. Sandbox mode forces the host, hands over the sandbox key when `wv` has one, and otherwise removes `WHOP_API_KEY` from the child so whatever your shell exported stays home. A 401 in sandbox mode renders as `The sandbox refused this login` with `wv sandbox status` as the fix, not as `Not signed in`. `WV_SANDBOX_KEY` and `WV_SANDBOX_URL` still win over the file when set.
 
@@ -460,6 +464,8 @@ A write verb inside the session gets the same confirmation, then hands the termi
        --filter-output status,product_id,plan_id,current_period_end,…
 ```
 
+![license check](demo/license-check.gif)
+
 - `wv webhooks test <hook_id> --event payment.succeeded` sends Whop's sample payload and then fetches the newest delivery, so the round trip is one screen: whether the endpoint acknowledged, the response code and body, and the delivery's event, status, code, time, and age. Exit 1 when the endpoint did not answer 2xx. `wv webhooks deliveries <hook_id>` is a table of event, status, code, seconds, replay of, sent, id. Both need an API-key login; an OAuth login gets the 403 with the login as the fix.
 
 ```
@@ -498,6 +504,8 @@ A write verb inside the session gets the same confirmation, then hands the termi
 
  stopped · 4 lines
 ```
+
+![logs follow](demo/logs-follow.gif)
 - `wv stats get <metric> --from … --to …` renders a series: total, sparkline, one money row per point.
 - `wv stats get <metric> --last 7d` (or `30d`, `90d`, any `Nd`), `--this month`, and `--last month` do the date math. Stats presets are whole UTC days, ending yesterday for `--last Nd` like `home` and `gtm`; the footer shows the resolved `--from` and `--to`, so `copy json` pastes real dates. The same presets work on `wv events list`, where they are timestamps and `--last Nd` rolls to now. Whop refuses an events range over 30 days, so `wv` refuses it first, in Whop's words, before anything runs. The presets resolve before a pipe too, so `wv stats get net_revenue --last 7d --format json` is `whop` with the dates filled in.
 - `--width N` overrides the terminal width. `NO_COLOR` strips every escape.
@@ -525,4 +533,4 @@ Re-records the fixtures from your own account. Read-only commands only. `pnpm fi
 pnpm demo
 ```
 
-Re-records the seven GIFs above. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them.
+Re-records every GIF above. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them. The `sandbox-status` and `logs-follow` tapes start `scripts/mock-api.ts` on port 8931 themselves, a stand-in for the sandbox host that answers `accounts get me` and grows an app's log by one line every couple of seconds; `pnpm demo:mock` runs it on its own. The `sandbox-ads` tape expects a richer mock on the same port that was never committed, so it records against whatever answers there.
