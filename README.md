@@ -218,6 +218,8 @@ The plan is the sandbox. Whop has no test mode for ads, so before any `create` o
  fix  whop accounts update-preferences --economic_intelligence true
 ```
 
+![gtm](demo/gtm.gif)
+
 The gaps are read from what the screen already fetched, not guessed: no person with a source means no pixel, an empty `social-accounts list` means no page, `accounts preferences` says whether an ads payment method and Economic Intelligence exist. Each gap names the command that fixes it.
 
 ### Sandbox
