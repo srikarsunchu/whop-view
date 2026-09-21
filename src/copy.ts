@@ -871,7 +871,7 @@ export const copy = {
     failed: (why: string) => `wv --mcp did not answer: ${why}`,
     timeout: "no answer within fifteen seconds",
     noTools: "the server answered with no tools",
-    register: (command: string) => `Register it: whop mcp add --agent claude-code --command "${command}"`,
+    register: (command: string) => `Register it beside whop's server: claude mcp add -s user wv -- ${command}. Or in its place: wv mcp add --agent claude-code`,
   },
 };
 
