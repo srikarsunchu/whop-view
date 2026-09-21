@@ -1,14 +1,20 @@
 # whop-view
 
-`wv` is a human view layer for the [Whop CLI](https://whop.sh). It wraps `whop`, asks it for JSON, and renders a table, a card, a confirmation, or an error when a person is looking. When a pipe, a script, or an agent is looking, it execs `whop` untouched.
+`wv` wraps the [Whop CLI](https://whop.sh) for the two kinds of caller it has. When a person is at the terminal, it asks `whop` for JSON and renders a table, a card, a confirmation, or an error. When an agent or a script is on a pipe, every read is `whop`'s own bytes, and around them it adds what an agent needs and the CLI does not give: writes come back as a plan to approve instead of running, exit codes say what went wrong, screens come back as JSON, `--all` follows the cursor, and `wv agent <group>` is a manifest sized for a context window. A skill, [`whop-gtm`](skills/whop-gtm/SKILL.md), teaches an agent the go-to-market loop on top of it, with its command reference generated from the live CLI.
 
-The design is in [VIEWS.md](./VIEWS.md). This README shows it.
+The design is in [VIEWS.md](./VIEWS.md). This README shows it: the people layer first, then [what agents see](#what-agents-see).
 
 > Unofficial, personal-use prototype. Not affiliated with, endorsed by, or distributed by Whop. "Whop" is a trademark of its owner. Built against `whop` 0.18.2, API 2026-09-15.
 
 ## Why
 
-The CLI shipped agent-first and it shows. Every command prints every field as TOON. In a terminal that TOON is syntax-colored and empty fields are folded away, which helps, but two products are still 69 lines with no columns, no alignment, and ISO timestamps. `--format md` prints `[object Object]` for nested fields. Errors are two lines. `payouts create` moves real money with no confirmation and no dry-run flag. A sandbox API host exists, but the CLI only reaches it through `WHOP_API_BASE_URL` with a separate sandbox key, and Whop's own CLI docs say there is no sandbox mode. People are not fine with that, and agents are less fine than they look: every failure exits 1, the "confirm before executing" tag on 149 commands is a comment nothing enforces, and the documented `--filter-output` syntax returns nothing on a list. `wv` adds the people layer, one rendering system every command group gets for free from inference plus small hint files, and an agent layer that leaves every read untouched: writes in a pipe come back as a plan to approve, screens come back as JSON, exit codes mean something, and `wv agent <group>` is the manifest `--llms` should have been.
+The CLI shipped agent-first, and neither of its callers is well served yet.
+
+For a person: every command prints every field as TOON, so two products are 69 lines with no columns, no alignment, and ISO timestamps. `--format md` prints `[object Object]` for nested fields. Errors are two lines. `payouts create` moves real money with no confirmation and no dry-run flag. A sandbox host exists, but the CLI reaches it only through `WHOP_API_BASE_URL` with a separate key, and the docs say there is no sandbox mode. Objects and arrays have to be typed as JSON on the command line.
+
+For an agent: `whop --llms-full` tags 149 commands "confirm with the user before executing" and enforces none of it, so a model with shell access is one token away from a payout. Every failure exits 1, so a script cannot branch without parsing the body. The documented `--filter-output` syntax returns nothing on a list. Nothing follows a cursor. `--llms` is 16 KB with no flags and `--llms-full` is 338 KB, and neither fits a turn. The one skill `whop skills add` installs says nothing about ads, audiences, bounties, or stats.
+
+`wv` answers both from one core: inference rules plus small hint files classify every field of every response, so each command group gets the people layer for free, and the same plan a person confirms on a card is the JSON an agent gets on a pipe. `WV_RAW=1` turns all of it off.
 
 ## Install
 
