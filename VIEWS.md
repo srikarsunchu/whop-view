@@ -1,6 +1,6 @@
 # VIEWS.md
 
-`wv` is the human view layer for the Whop CLI. It wraps `whop`, asks it for JSON, and renders for a person. Agents and scripts never see it. Written against `whop` 0.18.2, API 2026-09-15, from real envelopes captured on 2026-09-19 and 2026-09-21.
+`wv` wraps the Whop CLI for both of its callers. For a person it asks `whop` for JSON and renders a table, a card, a confirmation, or an error; for an agent or a script on a pipe it forwards every read as `whop`'s own bytes and adds what the CLI leaves out: a write comes back as a plan to approve ([Agent gate](#agent-gate)), the exit code says what went wrong, `wv doctor` and `wv gtm` answer as JSON, `--all` follows the cursor, and `wv agent <group>` is a manifest that fits a context window ([Agent manifest](#agent-manifest)). One core serves both: the inference rules and hint files that classify a response for the terminal are what the plan and the JSON screens are built from, and the passthrough rules ([Passthrough rules](#passthrough-rules)) decide which face a call gets. The `whop-gtm` skill sits on top and its command reference is generated from the manifest. Written against `whop` 0.18.2, API 2026-09-15, from real envelopes captured on 2026-09-19 and 2026-09-21.
 
 ## Rendering approach: plain ANSI
 
