@@ -272,6 +272,17 @@ In a terminal nothing changes: the rendered error view and whop's status, as bef
 
 **Not yet.** One tool per recipe with a typed input schema. The skills as MCP prompts and resources. The other five skills over MCP. A recording of the elicitation prompt in Claude desktop. These are the next steps, in that order.
 
+## Plugin
+
+The repo is a Claude Code marketplace with one plugin, itself: `.claude-plugin/marketplace.json` lists `whop-view` with `source: "./"`, and `.claude-plugin/plugin.json` names it, declares the `wv` server, and points at nothing else, because `skills/` and `hooks/` are found by convention. Two commands install everything the team needs, and the packaging decisions were each forced by a test:
+
+- **The server runs the source.** `node --experimental-strip-types src/bin.ts --mcp`. `dist/` is not committed and a plugin install is a copy of the repo, so a built server would have meant committing build output or a postinstall. wv has no runtime dependency, Node 22.6 strips types, and the flag is accepted by every later Node, so the source is the program.
+- **The server is declared in `plugin.json`, not `.mcp.json`.** A `.mcp.json` at the repo root is also project-scope MCP config for anyone who opens the repo, where `${CLAUDE_PLUGIN_ROOT}` is unset and the server fails with a warning. `mcpServers` inside the plugin manifest is only read by the plugin loader. `claude plugin details` counts zero servers for the inline form; `claude mcp list` from another directory shows it connected.
+- **The path is the exact `${CLAUDE_PLUGIN_ROOT}` form.** The loader substitutes that spelling and no other: `${CLAUDE_PLUGIN_ROOT:-$PWD}` came out as a literal `$PWD`, and `${CLAUDE_PLUGIN_ROOT:-.}` resolved against a cwd that is not the plugin root. Both were tried; both failed to connect from outside the repo.
+- **One hook, one line.** `hooks/hooks.json` runs `hooks/scripts/check-setup.sh` at SessionStart with a five-second timeout: Node 22.6 or newer and `whop` on PATH, then either "ready" with two things to ask for or "missing" with the install commands. It never blocks, and it does not check login, since the whop-setup skill does that properly.
+
+Whop's own server is left out. Its 298 tools write on the first call, and a plugin whose point is the gate should not ship the way around it. A person who wants both adds it with `whop mcp add`.
+
 ## Agent manifest
 
 `wv agent [group]` (`src/views/manifest.ts`) is the tier between `whop --llms` (16 KB, a command list with no flags) and `whop --llms-full` (338 KB, every flag of every command). One Markdown page per group, plain, no color, no width, the same in a pipe and a terminal. `bin.ts` reads the group list from the root help, the verbs from the group's help (both through the one-day help cache), and each verb's flags from `--schema` through the runner's schema cache, so a warm page costs no `whop` calls.

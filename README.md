@@ -20,7 +20,21 @@ For a person: every command prints every field as TOON, so two products are 69 l
 
 `wv` answers both from one core: inference rules plus small hint files classify every field of every response, so each command group gets the people layer for free, and the same plan a person confirms on a card is the JSON an agent gets on a pipe. `WV_RAW=1` turns all of it off.
 
-## Install
+## Install for a team
+
+Two commands in Claude Code, no clone, no build, no PATH:
+
+```bash
+claude plugin marketplace add srikarsunchu/whop-view
+```
+
+```bash
+claude plugin install whop-view@whop-view
+```
+
+That installs the `wv` MCP server and the seven skills together. The server runs the TypeScript source directly on Node 22.6 or newer, so there is nothing to build and no dependency to install. At the start of every session a one-line check says whether Node and the `whop` CLI are there; when they are not, it says what to install, and the whop-setup skill takes it from `whop login` to a business that can sell. Whop's own server is not included on purpose: its tools write on the first call, and the point of this one is that nothing does.
+
+## Install from source
 
 ```bash
 git clone https://github.com/srikarsunchu/whop-view && cd whop-view && pnpm install && pnpm build && pnpm link --global
