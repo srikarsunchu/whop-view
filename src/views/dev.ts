@@ -94,9 +94,10 @@ function appRows(input: DevInput): KvRow[] {
 
 function buildTable(input: DevInput, theme: Theme): string[] {
   const c = copy.dev;
-  if (!input.builds) return [];
-  const list = rows(input.builds);
-  if (!list) return wrap(errLine(input.builds) || copy.detail.empty, theme.width - 1).map((l) => " " + paint(theme, input.builds.ok ? "muted" : "warn", l));
+  const builds = input.builds;
+  if (!builds) return [];
+  const list = rows(builds);
+  if (!list) return wrap(errLine(builds) || copy.detail.empty, theme.width - 1).map((l) => " " + paint(theme, builds.ok ? "muted" : "warn", l));
   if (!list.length) return wrap(c.noBuilds, theme.width - 1).map((l) => " " + paint(theme, "muted", l));
   const cols: TableColumn[] = [
     { key: "platform", label: c.cols.platform, align: "left", priority: 1 },
@@ -120,9 +121,10 @@ function buildTable(input: DevInput, theme: Theme): string[] {
 
 function domainTable(input: DevInput, theme: Theme): string[] {
   const c = copy.dev;
-  if (!input.domains) return [];
-  const list = rows(input.domains);
-  if (!list) return wrap(errLine(input.domains) || copy.detail.empty, theme.width - 1).map((l) => " " + paint(theme, input.domains.ok ? "muted" : "warn", l));
+  const domains = input.domains;
+  if (!domains) return [];
+  const list = rows(domains);
+  if (!list) return wrap(errLine(domains) || copy.detail.empty, theme.width - 1).map((l) => " " + paint(theme, domains.ok ? "muted" : "warn", l));
   if (!list.length) return wrap(c.noDomains, theme.width - 1).map((l) => " " + paint(theme, "muted", l));
   const cols: TableColumn[] = [
     { key: "domain", label: c.cols.domain, align: "left", priority: 0, max: 36 },
