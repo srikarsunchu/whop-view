@@ -162,7 +162,7 @@ After:
              objective  sales
              budget     on each ad group
    group     US 25-44 · purchase  new
-             budget     $40.00/day
+             budget     $15.00/day
              goal       conversions on purchase
              targeting  US · ages 25–44 · automatic placements
    ad        Frame · launch v1  new
@@ -170,7 +170,7 @@ After:
              url       https://hypermotion.art/frame
 
    reach       1.5M–1.8M people on meta
-   spend       $40.00/day · $1,200.00 over 30 days · no end date
+   spend       $15.00/day · $450.00 over 30 days · no end date
    pays from   visa ••••4242
    balance     $418.56 available
    runs under  Hypermotion (facebook) @hypermotion
@@ -181,8 +181,10 @@ After:
    ads deliver and is charged afterward. The prompt expires in 2 minutes.
 
  try first  wv --sandbox ads create …
- Type 40 to create it [40/N]
+ Type 15.00 to create it [15.00/N]
 ```
+
+![ads create](demo/ads-create.gif)
 
 The plan is the sandbox. Whop has no test mode for ads, so before any `create` or `update` under `ads`, `ad-groups`, or `ad-campaigns`, `wv` fetches the campaign and group the command points at, asks `accounts preferences` for the ads payment method, `social-accounts list` for the page the ad runs under, and runs `ad-groups estimate_reach` for real with the group's targeting. The whole tree is one card: what exists, what is `new`, what it will cost, and who pays. A daily budget with no end date is shown as its 30-day commitment, and a commitment over `WV_AD_CAP` ($500 unless set, `none` to turn off) refuses before `whop` is called. When the reach estimate fails, the card says so in Whop's words, since the create will usually fail the same way. `wv ads create … --plan` prints the card and exits without asking, which is the dry-run the CLI does not have.
 
@@ -225,6 +227,10 @@ The gaps are read from what the screen already fetched, not guessed: no person w
 ### Sandbox
 
 Whop's CLI docs say there is no sandbox mode. Link ships `--test`, which returns a fake card and never touches the real payment method, and that is the thing to ask Whop for. Until it exists, `wv --sandbox <anything>` (or `WV_SANDBOX=1`) runs the child `whop` with `WHOP_API_BASE_URL` pointed at `sandbox-api.whop.com/api/v1` and, when `WV_SANDBOX_KEY` is set, hands it that key. The session banner, the home status line, and the confirm badge read `sandbox` in green instead of `production` in yellow, the cap and the timeout do not apply, and the warning says no real money moves. The sandbox host does not accept an OAuth login, so without a sandbox key every call errors and the error names the variable to set. `WV_SANDBOX_URL` overrides the host.
+
+![sandbox](demo/sandbox-ads.gif)
+
+The recording above runs `wv --sandbox ads create` against a local mock of the API, since the sandbox host needs its own key: the same gate, a `writes to sandbox` badge, a y/N prompt instead of a typed budget, and the created ad rendered after the write.
 
 ### A typo
 
