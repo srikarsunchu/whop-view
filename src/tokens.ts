@@ -1,6 +1,6 @@
 // The only file that names a color. Everything else speaks in roles.
 
-export type Role = "text" | "muted" | "accent" | "good" | "warn" | "bad" | "mono";
+export type Role = "text" | "muted" | "accent" | "good" | "warn" | "bad" | "mono" | "selected";
 
 const SGR: Record<Role, [string, string]> = {
   text: ["", ""],
@@ -10,6 +10,8 @@ const SGR: Record<Role, [string, string]> = {
   warn: ["\x1b[33m", "\x1b[39m"],
   bad: ["\x1b[31m", "\x1b[39m"],
   mono: ["\x1b[2m", "\x1b[22m"],
+  /** Inverse video. The picked row in a session list. Inner color escapes survive it. */
+  selected: ["\x1b[7m", "\x1b[27m"],
 };
 
 export interface Theme {

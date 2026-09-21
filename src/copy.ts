@@ -1,5 +1,9 @@
 // Every string a person reads.
 
+export type Mode = "production" | "sandbox";
+
+const duration = (seconds: number) => (seconds % 60 === 0 ? `${seconds / 60} minute${seconds === 60 ? "" : "s"}` : `${seconds} seconds`);
+
 export const copy = {
   list: {
     of: (n: number, total: number | null) => (total == null || total === n ? `${n} ${n === 1 ? "row" : "rows"}` : `${n} of ${total}`),
@@ -24,12 +28,34 @@ export const copy = {
   },
   confirm: {
     title: (group: string, verb: string) => `${VERB_TITLES[verb] ?? titleVerb(verb)} ${GROUP_NOUNS[group] ?? group.replace(/-/g, " ")}`,
-    badge: "writes to production",
+    badge: (mode: Mode) => (mode === "sandbox" ? "writes to sandbox" : "writes to production"),
     warning: "This runs against production. The Whop CLI has no dry-run.",
+    sandboxWarning: "This runs against the sandbox host. No real money moves.",
     money: "This moves real money.",
+    expires: (seconds: number) => `The prompt expires in ${duration(seconds)}.`,
     question: "Run it?",
     yesNo: "[y/N]",
     aborted: "Not run.",
+    expired: (seconds: number) => `Not run. The prompt sat for ${duration(seconds)}.`,
+    /** Row labels the money gate adds on top of the flags. */
+    to: "to",
+    from: "from",
+    balance: "balance",
+    cap: "cap",
+    available: (available: string, after: string) => `${available} available · ${after} after`,
+    perPayout: (cap: string) => `${cap} per payout`,
+    noCap: "none",
+    unknownMethod: "not among the saved payout methods",
+    tryFirst: "try first",
+    refused: {
+      cap: "Over the payout cap",
+      balance: "Over the available balance",
+      badge: "not run",
+      capBody: (amount: string, cap: string) => `${amount} is more than the ${cap} cap wv allows per payout.`,
+      balanceBody: (amount: string, available: string) => `${amount} is more than the ${available} available in this currency.`,
+      raise: (dollars: number) => `Raise it for one shell with WV_PAYOUT_CAP=${dollars}, or turn it off with WV_PAYOUT_CAP=none.`,
+      sandbox: "Try it against the sandbox first:",
+    },
   },
   error: {
     titles: {
@@ -52,6 +78,7 @@ export const copy = {
       HTTP_403: "whop login --api-key",
       ENOENT: "curl -fsSL https://whop.com/install.sh | sh",
     } as Record<string, string>,
+    sandboxKey: "The sandbox host does not accept an OAuth login. Put a sandbox API key in WV_SANDBOX_KEY.",
     fix: "fix",
     field: (path: string, msg: string) => `--${path}  ${msg}`,
     suggested: "Suggested commands:",
@@ -67,10 +94,34 @@ export const copy = {
     range: (from: string, to: string) => `${from} to ${to}`,
     notSignedIn: "Not signed in. Run whop login.",
   },
-  spinner: "Running whop…",
+  spinner: {
+    running: (argv: string[]) => `Running whop ${argv.join(" ")}…`,
+    identity: "Checking who you are…",
+    money: "Checking who you are, the balance, and the payout method…",
+    home: "Running auth status, ledgers report, stats get…",
+  },
   session: {
-    hint: "tab completes · ↑↓ history · ! raw whop · help · ctrl+d quits",
+    hints: {
+      idle: "tab completes · ↑↓ history · ! raw whop · help · esc esc quits",
+      completing: "tab cycles · enter picks · esc closes",
+    },
+    mode: (mode: Mode) => mode,
+    tip: "Tip",
+    /** [prefix, command, suffix]. One is shown at random under the banner. */
+    tips: [
+      ["Type ", "1", " after a list to open that row"],
+      ["Type ", "!login", " to run raw whop with the terminal"],
+      ["Press ", "tab", " after a list to complete the ids on screen"],
+      ["Type ", "copy 1", " to put a row's id on the clipboard"],
+      ["Type ", "copy json", " to put the agent command under the last view on the clipboard"],
+      ["Type ", "help products", " to see one group's commands"],
+      ["Type ", "home", " for balance and a 7-day revenue sparkline"],
+    ] as [string, string, string][],
+    copied: (id: string) => `Copied ${id}`,
+    noTeach: "Nothing to copy yet. Run a list or a get first.",
     rows: (n: number) => (n === 1 ? "1 opens the row" : `1–${n} opens a row`),
+    pick: (n: number) => (n === 1 ? "↑↓ or 1 picks the row · ↵ opens" : `↑↓ or 1–${n} picks a row · ↵ opens`),
+    picked: (n: number) => `↵ opens row ${n} · esc clears`,
     welcome: (version: string) => `${version} · wv session`,
     bye: "bye",
     noRow: (n: number, max: number) => (max === 0 ? "No list on screen to pick a row from." : `Row ${n} is not on screen. Rows go 1 to ${max}.`),

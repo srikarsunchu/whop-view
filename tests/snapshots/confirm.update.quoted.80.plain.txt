@@ -1,0 +1,11 @@
+ ▌ Update a product                                         writes to production
+
+   whop products update prod_DQf7IZAtveRoK --title 'Frame Pro'\''s "beta"'
+   --headline 'one; two && three'
+
+   target    prod_DQf7IZAtveRoK
+   title     Frame Pro's "beta"
+   headline  one; two && three
+
+   This runs against production. The Whop CLI has no dry-run.
+

@@ -1,6 +1,6 @@
 // A one-line editor as a pure reducer, plus its renderer. State in, state out; the session owns the TTY.
 import { width } from "../ansi.ts";
-import { paint, type Theme } from "../tokens.ts";
+import { paint, type Role, type Theme } from "../tokens.ts";
 import { rule } from "../primitives/rule.ts";
 import type { Key } from "./keys.ts";
 
@@ -163,13 +163,32 @@ export interface EditorRender {
 }
 
 export const PROMPT = "❯";
-const MAX_CANDIDATES = 8;
+export const MAX_CANDIDATES = 8;
+
+export interface EditorRenderOptions {
+  /** The key hint for the current state. Always the last line. */
+  hint: string;
+  candidates?: Candidate[];
+  /** Index into `candidates` drawn with a pointer. */
+  selected?: number;
+  /** A one-line message in place of the hint. */
+  notice?: string;
+  noticeRole?: Role;
+}
+
+/** The slice of a candidate list to show so that `selected` stays in view. */
+export function candidateWindow(selected: number, total: number, max = MAX_CANDIDATES): { start: number; end: number } {
+  if (total <= max) return { start: 0, end: total };
+  const start = Math.max(0, Math.min(selected - Math.floor(max / 2), total - max));
+  return { start, end: start + max };
+}
 
 /**
- * The live region: a rule, the prompt line, a rule, then either completion candidates or the
- * key hint. Text longer than the line scrolls horizontally so the cursor stays visible.
+ * The live region: a rule, the prompt line, a rule, then completion candidates when there are
+ * any, then the key hint or a notice. Text longer than the line scrolls horizontally so the
+ * cursor stays visible.
  */
-export function renderEditor(s: EditorState, theme: Theme, opts: { hint: string; candidates?: Candidate[]; notice?: string }): EditorRender {
+export function renderEditor(s: EditorState, theme: Theme, opts: EditorRenderOptions): EditorRender {
   const lead = ` ${paint(theme, "accent", PROMPT)} `;
   const room = Math.max(8, theme.width - 3 - 1);
   const cs = chars(s.text);
@@ -178,18 +197,27 @@ export function renderEditor(s: EditorState, theme: Theme, opts: { hint: string;
   const visible = cs.slice(start, start + room).join("");
   const prompt = lead + visible;
   const lines = [rule(theme), prompt, rule(theme)];
-  if (opts.notice) lines.push(" " + paint(theme, "warn", opts.notice));
-  else if (opts.candidates?.length) {
-    const cands = opts.candidates.slice(0, MAX_CANDIDATES);
+  if (opts.candidates?.length) {
+    const all = opts.candidates;
+    const sel = opts.selected ?? -1;
+    const win = candidateWindow(Math.max(0, sel), all.length);
+    const cands = all.slice(win.start, win.end);
     const nameW = Math.max(...cands.map((c) => width(c.name)));
-    for (const c of cands) {
+    if (win.start > 0) lines.push("   " + paint(theme, "muted", `↑ ${win.start} above`));
+    cands.forEach((c, i) => {
+      const on = win.start + i === sel;
+      const mark = on ? paint(theme, "accent", PROMPT) + " " : "  ";
       const desc = c.desc ? "  " + paint(theme, "muted", truncateTo(c.desc, theme.width - 4 - nameW - 2)) : "";
-      lines.push("   " + c.name.padEnd(nameW) + desc);
-    }
-    if (opts.candidates.length > MAX_CANDIDATES) lines.push("   " + paint(theme, "muted", `… ${opts.candidates.length - MAX_CANDIDATES} more`));
-  } else lines.push(" " + paint(theme, "muted", truncateTo(opts.hint, theme.width - 1)));
+      lines.push(" " + mark + (on ? paint(theme, "accent", padTo(c.name, nameW)) : padTo(c.name, nameW)) + desc);
+    });
+    if (win.end < all.length) lines.push("   " + paint(theme, "muted", `↓ ${all.length - win.end} below`));
+  }
+  if (opts.notice) lines.push(" " + paint(theme, opts.noticeRole ?? "warn", truncateTo(opts.notice, theme.width - 1)));
+  else lines.push(" " + paint(theme, "muted", truncateTo(opts.hint, theme.width - 1)));
   return { lines, cursorRow: 1, cursorCol: 3 + width(cs.slice(start, s.cursor).join("")) };
 }
+
+const padTo = (s: string, n: number) => s + " ".repeat(Math.max(0, n - width(s)));
 
 function truncateTo(s: string, n: number): string {
   if (width(s) <= n) return s;

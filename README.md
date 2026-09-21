@@ -120,19 +120,30 @@ After:
    whop payouts create --amount 250 --currency usd --payout_method_id potk_x1
    --speed standard
 
-   amount            $250.00 usd
-   payout method id  potk_x1
-   speed             standard
-   from              Hypermotion  biz_VraUMckluH8dzV
+   amount   $250.00 usd
+   to       Chase checking ••4242  potk_x1
+   speed    standard
+   from     Hypermotion  biz_VraUMckluH8dzV
+   balance  $418.56 available · $168.56 after
+   cap      $500.00 per payout
 
-   This runs against production. The Whop CLI has no dry-run. This moves real money.
+   This runs against production. The Whop CLI has no dry-run. This moves real
+   money. The prompt expires in 2 minutes.
 
+ try first  wv --sandbox payouts create --amount 250 --currency usd
+            --payout_method_id potk_x1 --speed standard
  Run it? [y/N]
 ```
 
 ![payouts create](demo/payout-create.gif)
 
-Every write verb gets this. Money groups and destructive verbs get the red gutter, other writes get yellow. `--yes` skips it. A pipe never sees it.
+The gate is shaped like Link's approval step, since a y/N prompt is not enough for a command that moves money. Before it asks, `wv` looks up the saved payout method behind `--payout_method_id` and the available balance in the payout's currency, so the amount, where it goes, and the ledger it draws from are all on one card. Two cases refuse before `whop` is called and exit 2: an amount over the per-payout cap, and an amount over the available balance. The cap is $500 unless `WV_PAYOUT_CAP` says otherwise, in whole currency units; `none` turns it off. A prompt left sitting is not consent, so a money prompt expires after two minutes (`WV_CONFIRM_TIMEOUT` in seconds, `none` to wait) and exits 130 like a `n`. The last line is the same command against the sandbox, so the safe path is on screen rather than in an env var you have to know about.
+
+Every write verb gets the confirmation. Money groups and destructive verbs get the red gutter, other writes get yellow. `--yes` skips it. A pipe never sees it.
+
+### Sandbox
+
+Whop's CLI docs say there is no sandbox mode. Link ships `--test`, which returns a fake card and never touches the real payment method, and that is the thing to ask Whop for. Until it exists, `wv --sandbox <anything>` (or `WV_SANDBOX=1`) runs the child `whop` with `WHOP_API_BASE_URL` pointed at `sandbox-api.whop.com` and, when `WV_SANDBOX_KEY` is set, hands it that key. The session banner, the home status line, and the confirm badge read `sandbox` in green instead of `production` in yellow, the cap and the timeout do not apply, and the warning says no real money moves. The sandbox host does not accept an OAuth login, so without a sandbox key every call errors and the error names the variable to set. `WV_SANDBOX_URL` overrides the host.
 
 ### A typo
 
@@ -172,6 +183,8 @@ Nothing new. `wv` execs `whop` with the original argv whenever any of these hold
 - stdout is not a TTY
 - `--format`, `--full-output`, `--filter-output`, `--llms`, `--schema`, `--help`, or any `--token-*` flag is present
 - `WV_RAW=1`
+
+`--sandbox` and `--width` are `wv`'s own flags and are stripped before the exec, so `wv --sandbox products list | cat` is `whop products list` against the sandbox host.
 - the command owns the terminal itself: `login`, `logout`, `quickstart`, `upgrade`, `apps dev|deploy|init|pull`
 
 `wv products list | cat` is byte-identical to `whop products list`. There is a test for it.
@@ -198,9 +211,10 @@ Three commands, one screen. The first line is a status line: account, profile an
 `wv` alone opens a session. It looks like the Claude Code or omp transcript: what you ran scrolls up into your terminal's own history, and a small editor block sits at the bottom.
 
 ```
- Frame › biz_VraUMckluH8dzV › sunchusrikar · oauth › API 2026-09-15 › whop 0.18.2 · wv session
+ Frame › biz_VraUMckluH8dzV › production › sunchusrikar · oauth › API 2026-09-15 › whop 0.18.2 · wv session
+ ● Tip  Type 1 after a list to open that row
 
- ❯ products list
+ ▌ products list
 
  products · 2                                                                  Hypermotion
 
@@ -214,11 +228,12 @@ Three commands, one screen. The first line is a status line: account, profile an
  ───────────────────────────────────────────────────────────────────────────────────────────
  ❯ 
  ───────────────────────────────────────────────────────────────────────────────────────────
- 1–2 opens a row · tab completes · ↑↓ history · ! raw whop · help · ctrl+d quits
+ 1–2 opens a row · tab completes · ↑↓ history · ! raw whop · help · esc esc quits
 ```
 
-- Tab completes groups, then verbs, then the verb's flags and their values, all read from `whop --help` and cached for a day. After a list, tab also completes the ids on screen.
-- Type a row number to open that row. `home`, `help`, `help <group>`, `clear`, `quit`.
+- Tab completes groups, then verbs, then the verb's flags and their values, all read from `whop --help` and cached for a day. After a list, tab also completes the ids on screen. Several matches open a list under the editor: tab moves the pointer, enter picks, esc closes. When nothing starts with what you typed, in-order matches fill in, so `mbrsh` finds `memberships`.
+- Type a row number to open that row. `copy 1` puts that row's id on the clipboard; `copy json` puts the agent command from the last teaching footer there, quoted for a shell. `home`, `help`, `help <group>`, `clear`, `quit`, or esc twice.
+- The banner names the account and says `production`, because every command in it runs against production. One tip shows under it, a different one each time.
 - `!login` or any `!<args>` runs raw `whop` with the terminal, for the commands that own it.
 - Write verbs get the same confirmation as the CLI, inline.
 - History lives at `~/.local/state/whop-view/history`. Emacs keys work: ctrl+a/e, ctrl+w, ctrl+u/k, alt+b/f. Paste is one insert.
@@ -236,6 +251,7 @@ A write verb inside the session gets the same confirmation, then hands the termi
 - `wv <group>` renders that group's verbs.
 - `wv stats get <metric> --from … --to …` renders a series: total, sparkline, one money row per point.
 - `--width N` overrides the terminal width. `NO_COLOR` strips every escape.
+- Every teaching footer is built from an argv array and shell-quoted once, so a product title with a space or a quote pastes back as the same command. `WV_PAYOUT_CAP`, `WV_CONFIRM_TIMEOUT`, `WV_SANDBOX`, `WV_SANDBOX_KEY`, and `WV_SANDBOX_URL` are the only knobs; each is described under [`payouts create`](#payouts-create) and [Sandbox](#sandbox).
 
 ## How it generalizes
 

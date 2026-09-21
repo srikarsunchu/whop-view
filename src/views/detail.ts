@@ -3,6 +3,7 @@ import { ID_RE, infer, labelFor, type Cell } from "../infer.ts";
 import type { Hints } from "../hints.ts";
 import { kv, type KvRow, type KvSection } from "../primitives/kv.ts";
 import { footer } from "../primitives/footer.ts";
+import { teach } from "../argv.ts";
 import { paint, type Theme } from "../tokens.ts";
 import { copy } from "../copy.ts";
 
@@ -41,7 +42,7 @@ export function detailView(input: DetailInput, theme: Theme): string[] {
   const kvSections: KvSection[] = (Object.keys(sections) as (keyof typeof sections)[]).map((k) => ({ title: copy.detail.sections[k], rows: sections[k] }));
   const body = kv(kvSections, theme);
   if (body.length) out.push(...body, "");
-  out.push(...footer([[copy.list.json, ["whop", ...argv, "--format", "json"].join(" ")]], theme));
+  out.push(...footer([[copy.list.json, teach(argv)]], theme));
   return out;
 }
 

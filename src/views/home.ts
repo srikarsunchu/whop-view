@@ -1,6 +1,7 @@
 import type { Parsed, Rec } from "../envelope.ts";
 import { money, shortDate } from "../format.ts";
 import { footer } from "../primitives/footer.ts";
+import { teach } from "../argv.ts";
 import { paint, type Role, type Theme } from "../tokens.ts";
 import { width } from "../ansi.ts";
 import { copy } from "../copy.ts";
@@ -13,7 +14,9 @@ export interface HomeInput {
   revenue: Parsed;
   from: string;
   to: string;
-  commands: string[];
+  commands: string[][];
+  /** `sandbox` when wv is pointed at the sandbox host. */
+  mode?: "production" | "sandbox";
   /** API version from `whop --help`, shown in the status line. */
   api?: string;
 }
@@ -33,7 +36,7 @@ export function homeView(input: HomeInput, theme: Theme): string[] {
   if (input.auth.ok && input.auth.payload.kind === "status") {
     const s = input.auth.payload.record;
     const account = s.account as Rec | undefined;
-    segs.push([String(account?.title ?? ""), "accent"], [String(account?.id ?? ""), "muted"], [`${s.profile ?? ""} · ${s.method ?? ""}`, "text"]);
+    segs.push([String(account?.title ?? ""), "accent"], [String(account?.id ?? ""), "muted"], [copy.session.mode(input.mode ?? "production"), input.mode === "sandbox" ? "good" : "warn"], [`${s.profile ?? ""} · ${s.method ?? ""}`, "text"]);
   } else if (input.auth.ok) segs.push([copy.home.notSignedIn, "warn"]);
   if (input.api) segs.push([`${copy.help.api} ${input.api}`, "muted"]);
   const bal = balanceRows(input.balance);
@@ -49,7 +52,7 @@ export function homeView(input: HomeInput, theme: Theme): string[] {
   if (second) out.push(" " + " ".repeat(width(title) + 2) + paint(theme, "muted", second[0] + (second[1] ? "  " + second[1] : "")));
   out.push("");
   // One teaching line per command, so none of the three is ever truncated away.
-  out.push(...footer(input.commands.map((c, i): [string, string] => [i === 0 ? copy.list.json : " ".repeat(copy.list.json.length), `whop ${c} --format json`]), theme));
+  out.push(...footer(input.commands.map((c, i): [string, string[]] => [i === 0 ? copy.list.json : " ".repeat(copy.list.json.length), teach(c)]), theme));
   return out;
 }
 

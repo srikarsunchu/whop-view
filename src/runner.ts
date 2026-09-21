@@ -7,6 +7,26 @@ import { parseEnvelope, type Parsed } from "./envelope.ts";
 
 export const WHOP = process.env.WV_WHOP_BIN ?? "whop";
 
+export type Mode = "production" | "sandbox";
+
+export const SANDBOX_URL = "https://sandbox-api.whop.com";
+
+/** `--sandbox` or `WV_SANDBOX=1`. */
+export function modeFrom(sandboxFlag: boolean, env: NodeJS.ProcessEnv = process.env): Mode {
+  return sandboxFlag || (env.WV_SANDBOX !== undefined && env.WV_SANDBOX !== "" && env.WV_SANDBOX !== "0") ? "sandbox" : "production";
+}
+
+/**
+ * Environment for the child `whop`. Sandbox mode points it at the sandbox host and, when one is set,
+ * hands it the sandbox key: the host answers like production but rejects an OAuth token with 401.
+ */
+export function whopEnv(mode: Mode, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  if (mode !== "sandbox") return env;
+  const out: NodeJS.ProcessEnv = { ...env, WHOP_API_BASE_URL: env.WV_SANDBOX_URL || SANDBOX_URL };
+  if (env.WV_SANDBOX_KEY) out.WHOP_API_KEY = env.WV_SANDBOX_KEY;
+  return out;
+}
+
 const PASSTHROUGH_FLAGS = ["--format", "--full-output", "--filter-output", "--llms", "--llms-full", "--schema", "--help", "-h", "--version", "-v"];
 const OWN_TERMINAL = new Set(["login", "logout", "quickstart", "upgrade"]);
 const OWN_TERMINAL_APPS = new Set(["dev", "deploy", "init", "pull"]);
@@ -21,8 +41,8 @@ export function shouldPassthrough(argv: string[], env: NodeJS.ProcessEnv = proce
 }
 
 /** Exec whop with the original argv, inheriting stdio. Never returns. */
-export function passthrough(argv: string[]): never {
-  const r = spawnSync(WHOP, argv, { stdio: "inherit" });
+export function passthrough(argv: string[], env: NodeJS.ProcessEnv = process.env): never {
+  const r = spawnSync(WHOP, argv, { stdio: "inherit", env });
   if (r.error) {
     process.stderr.write(`wv: could not run ${WHOP}: ${r.error.message}\n`);
     process.exit(127);
@@ -37,9 +57,9 @@ export interface RunResult {
 }
 
 /** Runs `whop <argv> --format json --full-output` and parses stdout. stderr is forwarded. */
-export function run(argv: string[]): Promise<RunResult> {
+export function run(argv: string[], env: NodeJS.ProcessEnv = process.env): Promise<RunResult> {
   return new Promise((resolve) => {
-    const child = spawn(WHOP, [...argv, "--format", "json", "--full-output"], { stdio: ["inherit", "pipe", "pipe"] });
+    const child = spawn(WHOP, [...argv, "--format", "json", "--full-output"], { stdio: ["inherit", "pipe", "pipe"], env });
     let out = "";
     let err = "";
     child.stdout.on("data", (d) => (out += d));

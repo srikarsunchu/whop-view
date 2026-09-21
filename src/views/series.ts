@@ -1,5 +1,6 @@
 import { money, shortDate } from "../format.ts";
 import { footer } from "../primitives/footer.ts";
+import { teach } from "../argv.ts";
 import { kv } from "../primitives/kv.ts";
 import { paint, type Theme } from "../tokens.ts";
 import { copy } from "../copy.ts";
@@ -33,6 +34,6 @@ export function seriesView(input: SeriesInput, theme: Theme): string[] {
     ),
   );
   out.push("");
-  out.push(...footer([[copy.list.json, ["whop", ...argv, "--format", "json"].join(" ")]], theme));
+  out.push(...footer([[copy.list.json, teach(argv)]], theme));
   return out;
 }

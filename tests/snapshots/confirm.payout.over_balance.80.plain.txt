@@ -1,4 +1,4 @@
- ▌ Create a payout                                          writes to production
+ ▌ Over the available balance                                            not run
 
    whop payouts create --amount 250 --currency usd --payout_method_id potk_x1
    --speed standard
@@ -7,11 +7,10 @@
    to       Chase checking ••4242  potk_x1
    speed    standard
    from     Hypermotion  biz_VraUMckluH8dzV
-   balance  $418.56 available · $168.56 after
+   balance  $18.56 available · -$231.44 after
    cap      $500.00 per payout
 
-   This runs against production. The Whop CLI has no dry-run. This moves real
-   money. The prompt expires in 2 minutes.
+   $250.00 is more than the $18.56 available in this currency.
 
  try first  wv --sandbox payouts create --amount 250 --currency usd
             --payout_method_id potk_x1 --speed standard

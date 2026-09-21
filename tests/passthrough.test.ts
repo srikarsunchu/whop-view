@@ -19,6 +19,7 @@ function fakeWhop(): string {
     script,
     `#!/bin/sh
 echo "ARGS: $*" >&2
+echo "BASE: \${WHOP_API_BASE_URL:-unset} KEY: \${WHOP_API_KEY:-unset}" >&2
 if [ "$1" = "products" ] && [ "$2" = "list" ]; then
   case "$*" in
     *--format*json*--full-output*) cat "${join(FIXTURES, "products.list.json")}" ;;
@@ -49,6 +50,16 @@ test("piped stdout: --format json passes through without --full-output being add
   const fake = fakeWhop();
   const r = wv(["products", "list", "--format", "json"], { WV_WHOP_BIN: fake });
   assert.match(r.stderr, /^ARGS: products list --format json$/m);
+});
+
+test("piped stdout: --sandbox is stripped before the exec and the child sees the sandbox host and key", () => {
+  const fake = fakeWhop();
+  const r = wv(["--sandbox", "products", "list"], { WV_WHOP_BIN: fake, WV_SANDBOX_KEY: "whop_test", WHOP_API_BASE_URL: "", WHOP_API_KEY: "" });
+  assert.equal(r.stdout, fixture("products.list.plain.txt"));
+  assert.match(r.stderr, /^ARGS: products list$/m, "--sandbox must never reach whop");
+  assert.match(r.stderr, /^BASE: https:\/\/sandbox-api\.whop\.com KEY: whop_test$/m);
+  const plain = wv(["products", "list"], { WV_WHOP_BIN: fake, WHOP_API_BASE_URL: "", WHOP_API_KEY: "" });
+  assert.match(plain.stderr, /^BASE: unset KEY: unset$/m, "production must not touch the host");
 });
 
 test("piped stdout: failure exit codes are preserved", () => {

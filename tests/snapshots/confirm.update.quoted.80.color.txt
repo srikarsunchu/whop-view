@@ -1,0 +1,11 @@
+ [33m▌[39m [1mUpdate a product[22m                                         [33mwrites to production[39m
+
+   [2mwhop products update prod_DQf7IZAtveRoK --title 'Frame Pro'\''s "beta"'
+   --headline 'one; two && three'[22m
+
+   [2mtarget  [22m  [2mprod_DQf7IZAtveRoK[22m
+   [2mtitle   [22m  Frame Pro's "beta"
+   [2mheadline[22m  one; two && three
+
+   [2mThis runs against production. The Whop CLI has no dry-run.[22m
+

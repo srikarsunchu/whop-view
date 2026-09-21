@@ -204,20 +204,31 @@ Bare ids in relations are looked up only if the hints say `resolve: true` for th
 ### confirm
 
 ```
- ▌ Send a payout                                        writes to production
+ ▌ Create a payout                                          writes to production
 
    whop payouts create --amount 250 --currency usd --payout_method_id potk_x1
+   --speed standard
 
-   amount     $250.00 usd
-   speed      standard
-   from       Hypermotion  biz_VraUMckluH8dzV
+   amount   $250.00 usd
+   to       Chase checking ••4242  potk_x1
+   speed    standard
+   from     Hypermotion  biz_VraUMckluH8dzV
+   balance  $418.56 available · $168.56 after
+   cap      $500.00 per payout
 
-   This runs against production. The Whop CLI has no dry-run. This moves real money.
+   This runs against production. The Whop CLI has no dry-run. This moves real
+   money. The prompt expires in 2 minutes.
 
+ try first  wv --sandbox payouts create --amount 250 --currency usd
+            --payout_method_id potk_x1 --speed standard
  Run it? [y/N]
 ```
 
-Verbs that trigger it: `create update delete cancel pause resume transfer deploy publish unpublish replay extend invite duplicate retry_payment transfer_ownership form_company` and any verb under `payouts swaps transfers cards deposits`. Money groups and `delete`, `cancel`, `transfer_ownership` get `bad` gutter; other writes get `warn`. Summary rows come from the flags given, rendered through the same inference rules. `--yes` skips the prompt. Non-TTY never reaches this view. On `n` exit 130 without calling `whop`.
+Verbs that trigger it: `create update delete cancel pause resume transfer deploy publish unpublish replay extend invite duplicate retry_payment transfer_ownership form_company` and any verb under `payouts swaps transfers cards deposits`. Money groups and `delete`, `cancel`, `transfer_ownership` get `bad` gutter; other writes get `warn`. Summary rows come from the flags given, rendered through the same inference rules. The command line is the argv shell-quoted once, so a title with a space shows the way it must be typed. `--yes` skips the prompt. Non-TTY never reaches this view. On `n` exit 130 without calling `whop`.
+
+**Money gate.** A money group with `--amount` gets the Link-shaped approval on top. Before the prompt, `wv` runs `payouts methods` and `ledgers report --report_type balance_summary --currency <cur>` alongside `auth status`, and adds three rows: `to` is the saved payout method behind `--payout_method_id` as `nickname ••last4  id` (the bare id plus a `warn` note when it is not in the list), `balance` is the available amount and what remains after, in `bad` when negative, and `cap` is the per-payout cap. Over the cap or over the balance, the view is `refusedView` instead: a `bad` callout tagged `not run`, the same rows, one sentence saying which limit and how to raise it, exit 2, and `whop` is never called. The cap is `WV_PAYOUT_CAP` in whole currency units, default 500, `none` to disable. The prompt takes `timeoutMs`; a money prompt expires after `WV_CONFIRM_TIMEOUT` seconds, default 120, and prints `Not run. The prompt sat for 2 minutes.` with exit 130. The last line of every production money confirm is `try first  wv --sandbox <same argv>`. A balance that cannot be read simply has no row; the API answers a valid report with a web page now and then, and that must not block a payout.
+
+**Sandbox.** `--sandbox` or `WV_SANDBOX=1` sets the mode. `whopEnv` in the runner gives the child `WHOP_API_BASE_URL` (`WV_SANDBOX_URL` or `https://sandbox-api.whop.com`) and `WHOP_API_KEY` from `WV_SANDBOX_KEY` when set. In sandbox the badge reads `writes to sandbox`, the gutter is `warn`, the warning says no real money moves, the cap and the timeout are off, and there is no `try first` line. The banner and home status line show `sandbox` in `good` instead of `production` in `warn`. A 401, 403, or 404 in sandbox mode without a sandbox key adds one line naming `WV_SANDBOX_KEY`.
 
 ### error
 
@@ -284,27 +295,34 @@ The first line is a breadcrumb status line in the style of omp's bar: account, i
 `wv` with no arguments in a TTY opens a session. Not an alternate screen. Output scrolls into the terminal's own buffer the way Claude Code and omp transcripts do, and the only thing ever redrawn is a three-line editor block plus one hint line:
 
 ```
- Frame › biz_VraUMckluH8dzV › sunchusrikar · oauth › API 2026-09-15 › whop 0.18.2 · wv session
+ Frame › biz_VraUMckluH8dzV › production › sunchusrikar · oauth › API 2026-09-15 › whop 0.18.2 · wv session
+ ● Tip  Type 1 after a list to open that row
 
  ─────────────────────────────────────────────────────────────────────────────
- ❯ products li
+ ❯ products
  ─────────────────────────────────────────────────────────────────────────────
-   list  List Products
+ ❯ list     List Products
+   get      Retrieve Product
+ tab cycles · enter picks · esc closes
 ```
 
-The banner is the home breadcrumb without the balance, so opening a session costs one `auth status`. The block is rule, `❯` prompt, rule (the aura editor shape, without the gradient: roles, not colors). Under it, either completion candidates or the key hint. Redraw is cursor-up-one, clear-to-end, print again. Resize redraws at the new width.
+The banner is the home breadcrumb without the balance, so opening a session costs one `auth status`, plus a `production` segment in `warn` so the stakes are always on screen, plus one tip drawn at random from `copy.session.tips`. The block is rule, `❯` prompt, rule (the aura editor shape, without the gradient: roles, not colors). Under it, completion candidates when there are several, then the key hint, which swaps by state: the idle hint, or the picker's keys while candidates are open. Redraw is cursor-up-one, clear-to-end, print again. Resize redraws at the new width. What you typed is echoed with the same `▌` gutter callouts use, in `accent`.
 
-**Editor.** A pure reducer, `applyKey(state, key) → { state, action? }`, in `src/tui/editor.ts`. Insert, left, right, home, end, backspace, delete, ctrl-a/e/b/f, ctrl-u/k/w, alt-b/f/d, alt-backspace, ctrl-left/right. Up and down walk history newest first and keep the live draft. Enter submits, tab completes, ctrl-l redraws, ctrl-c clears the line or quits when it is empty, ctrl-d deletes forward or quits when the line is empty. Bracketed paste is on, so a pasted command arrives as one insert. Long lines scroll horizontally around the cursor. History persists at `$XDG_STATE_HOME/whop-view/history`, 500 lines.
+**Editor.** A pure reducer, `applyKey(state, key) → { state, action? }`, in `src/tui/editor.ts`. Insert, left, right, home, end, backspace, delete, ctrl-a/e/b/f, ctrl-u/k/w, alt-b/f/d, alt-backspace, ctrl-left/right. Up and down walk history newest first and keep the live draft. Enter submits, tab completes, ctrl-l redraws, ctrl-c clears the line or quits when it is empty, ctrl-d deletes forward or quits when the line is empty, and two escapes within half a second on an empty line quit. Bracketed paste is on, so a pasted command arrives as one insert. Long lines scroll horizontally around the cursor. History persists at `$XDG_STATE_HOME/whop-view/history`, 500 lines.
 
-**Completion.** `src/tui/complete.ts`. Word 0 offers groups from `whop --help` plus the builtins. Word 1 offers the group's verbs from `whop <group> --help`. Later words: a token starting with `-` offers the verb's `Options:` block, minus flags already used; after an `<a|b>` flag, its values; after the verb or an `--x_id` flag, the ids on screen from the last list. One candidate completes with a trailing space, several fill the common prefix and list under the block. Help text is cached for a day at `~/.cache/whop-view/help/`, because each `whop --help` costs a quarter second.
+**Completion.** `src/tui/complete.ts`. Word 0 offers groups from `whop --help` plus the builtins. Word 1 offers the group's verbs from `whop <group> --help`. Later words: a token starting with `-` offers the verb's `Options:` block, minus flags already used; after an `<a|b>` flag, its values; after the verb or an `--x_id` flag, the ids on screen from the last list. One candidate completes with a trailing space, several fill the common prefix and open a picker under the block: tab moves the pointer, enter puts the pick on the line, esc closes, any other key closes and edits. The list shows eight at a time in a window that follows the pointer, with `↑ N above` and `↓ N below`. Prefix matches win outright in catalog order, so tab behaves like a shell. Only when nothing starts with the word do in-order subsequence matches appear, scored prefix 100 then subsequence 50 plus density, shorter first (the Dodo CLI palette's ranking). A lone subsequence match completes like a lone prefix match; several share no prefix, so the line stays put. Help text is cached for a day at `~/.cache/whop-view/help/`, because each `whop --help` costs a quarter second.
 
-**Commands.** A line is `wv` argv; a leading `wv` or `whop` is dropped so either can be pasted. `home`, `help`, `help <group>`, `clear`, `quit`. `!<args>` runs raw `whop` owning the terminal, for `login` and friends. A bare number `N` runs `<group> get <id>` for row N of the last list; session lists render a muted row-number gutter so N is visible, and the gutter never enters the teaching footer. Write verbs confirm inline through the same y/N prompt as the CLI: the session hands the TTY to readline and takes it back.
+**Commands.** A line is `wv` argv; a leading `wv` or `whop` is dropped so either can be pasted. `home`, `help`, `help <group>`, `clear`, `quit`, `copy <N>`, `copy json`. `!<args>` runs raw `whop` owning the terminal, for `login` and friends. A bare number `N` runs `<group> get <id>` for row N of the last list; `copy N` puts that id on the clipboard through OSC 52 plus `pbcopy`, `wl-copy`, `xclip`, `xsel`, or `clip`, whichever is there, and confirms with a `good` notice; `copy json` copies the agent command from the last teaching footer, the same argv the footer printed, quoted by `shellJoin` once; session lists render a muted row-number gutter so N is visible, and the gutter never enters the teaching footer. Write verbs confirm inline through the same y/N prompt as the CLI: the session hands the TTY to readline and takes it back.
 
 **Shared dispatch.** `execute(argv, theme, opts)` in `src/bin.ts` runs one command end to end, prints it, and returns the exit code and any list rows. The one-shot CLI calls it once and exits; the session calls it per line. Nothing in `src/views` knows the session exists, apart from the optional numbered gutter on lists.
 
 **Not done, deliberately.** No live row highlighting with arrow keys: that needs re-rendering a table region and is a fourth line of live state for a shortcut the number gutter already provides. No gradient, no truecolor: tokens still name six roles. No `pi-tui`, no Ink.
 
 **Tests.** `tests/tui.test.ts` covers the key parser, the reducer, history, actions, the editor render at 40 columns, tokenizing, and completion against the help fixtures. The loop itself is exercised by hand in a pseudo-TTY, not in CI.
+
+## Borrowed from the Dodo CLI
+
+Eight session patterns from `dodopayments-cli` 3.1.0, reproduced without its OpenTUI and Solid runtime: the state-dependent hint row, a spinner whose label moves as a command progresses (`spinner().update`), the mode badge in the status row (theirs is TEST or LIVE, ours is `production`), the gutter on echoed input, prefix-then-subsequence ranking with a windowed picker, double-escape to quit, clipboard through OSC 52, and a random tip under the banner. Not borrowed: mouse selection, bordered tables, per-group heading colors, the full-screen scrollbox, and the ASCII wordmark.
 
 ## Borrowed from omp
 
@@ -322,6 +340,8 @@ Four patterns from the oh-my-pi TUI, reproduced in the plain renderer with no de
 - Nested objects without a name flatten two levels in detail, so `verification` shows `individual status  verified` instead of `2 fields`.
 - Whop's CLI docs say there is no sandbox. The API spec lists `sandbox-api.whop.com`, the binary supports `WHOP_API_BASE_URL`, and that host answers like production but rejects an OAuth token with 401. So: a sandbox exists, the CLI does not expose it, and there is no dry-run flag. The confirm view says "runs against production" rather than "no sandbox".
 - The API occasionally answers a valid `get` with an HTML page. That renders as "Not a JSON response" rather than a raw doctype.
+- On 2026-09-21 the sandbox host answered `products list` under an OAuth login with 404, not the 401 seen earlier. The sandbox hint fires on either.
+- Teaching footers and the confirm command line are argv arrays until `footer` or `confirmView` prints them. `src/argv.ts` quotes anything outside `[A-Za-z0-9_@%+=:,./-]` with POSIX single quotes and leaves `<biz_id>` placeholders bare. Product titles and notes are user text and will land in a command eventually; this is where that is solved once.
 
 - `payments list` does not exist. Payments hints target `payments status <id>`. The payments feed is `ledgers list`.
 - `stats get` requires `--from` and `--to`. Home supplies a 7-day UTC window.

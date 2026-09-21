@@ -2,8 +2,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { parseKeys } from "../src/tui/keys.ts";
-import { applyKey, emptyEditor, renderEditor, replaceSpan, type EditorState } from "../src/tui/editor.ts";
-import { complete, tokenize, toArgv, type Catalog } from "../src/tui/complete.ts";
+import { applyKey, candidateWindow, emptyEditor, renderEditor, replaceSpan, type EditorState } from "../src/tui/editor.ts";
+import { complete, rank, score, tokenize, toArgv, type Catalog } from "../src/tui/complete.ts";
+import { osc52 } from "../src/tui/clipboard.ts";
+import { banner } from "../src/tui/session.ts";
 import { parseHelp, parseOptions } from "../src/views/help.ts";
 import { fixture, theme } from "./render.ts";
 import { strip, width } from "../src/ansi.ts";
@@ -172,4 +174,50 @@ test("parseOptions skips global options and reads arguments", () => {
       ["--platform_covers_fees", undefined, false],
     ],
   );
+});
+
+test("complete: prefix matches win outright, subsequence matches only when nothing starts with the word", async () => {
+  const groups = await catalog.groups();
+  const mbr = rank(groups, "mbr").map((c) => c.name);
+  assert.deepEqual(mbr.slice(0, 2), ["members", "memberships"], `denser and shorter first, got ${mbr.join(",")}`);
+  const prod = await complete("prod", 4, catalog);
+  assert.deepEqual(prod.candidates.map((c) => c.name), ["products"], "promo-codes is a subsequence hit and stays hidden behind a prefix hit");
+  const one = await complete("mbrsh", 5, catalog);
+  assert.equal(one.replace?.text, "memberships ", "a lone subsequence hit completes like a lone prefix hit");
+  const several = await complete("mbrs", 4, catalog);
+  assert.ok(several.candidates.length > 1);
+  assert.equal(several.replace, undefined, "several subsequence hits never move the line");
+  assert.equal(score("pl", "plans") > score("pl", "payouts"), true);
+  assert.equal(score("zz", "plans"), 0);
+});
+
+test("editor: candidate window keeps the pointer in view and marks the selection", () => {
+  assert.deepEqual(candidateWindow(0, 5), { start: 0, end: 5 });
+  assert.deepEqual(candidateWindow(0, 20), { start: 0, end: 8 });
+  assert.deepEqual(candidateWindow(10, 20), { start: 6, end: 14 });
+  assert.deepEqual(candidateWindow(19, 20), { start: 12, end: 20 });
+  const t = theme(60, false);
+  const cands = Array.from({ length: 20 }, (_, i) => ({ name: `name${i}`, desc: `desc ${i}` }));
+  const r = renderEditor(emptyEditor(), t, { hint: "the hint", candidates: cands, selected: 10 });
+  const plain = r.lines.map(strip);
+  assert.equal(plain[3], "   ↑ 6 above");
+  assert.match(plain[8], /^ ❯ name10\s+desc 10$/);
+  assert.equal(plain[12], "   ↓ 6 below");
+  assert.equal(plain[13], " the hint", "the hint follows the candidates");
+  for (const l of r.lines) assert.ok(width(l) <= 60);
+  const n = renderEditor(emptyEditor(), t, { hint: "the hint", notice: "Copied prod_x", noticeRole: "good" });
+  assert.equal(strip(n.lines[3]), " Copied prod_x");
+});
+
+test("clipboard: OSC 52 carries the text in base64", () => {
+  assert.equal(osc52("prod_x"), "\x1b]52;c;" + Buffer.from("prod_x").toString("base64") + "\x07");
+});
+
+test("session banner: production sits after the account, and the tip is pinned by index", () => {
+  const t = theme(120, false);
+  const lines = banner(t, { title: "Frame", id: "biz_x", profile: "sri", method: "oauth" }, "2026-09-15", "whop 0.18.2", 0).map(strip);
+  assert.equal(lines[0], " Frame › biz_x › production › sri · oauth › API 2026-09-15 › whop 0.18.2 · wv session");
+  assert.match(lines[1], /^ ● Tip  Type 1 after a list/);
+  assert.match(banner(t, null, undefined, "whop", 7).map(strip)[1], /Tip/, "an out-of-range index wraps");
+  assert.ok(!banner(t, null, undefined, "whop", 0).map(strip)[0].includes("production"), "no account, no badge");
 });

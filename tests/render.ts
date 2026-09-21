@@ -7,7 +7,7 @@ import { makeTheme, type Theme } from "../src/tokens.ts";
 import { setNow } from "../src/format.ts";
 import { listView } from "../src/views/list.ts";
 import { detailView } from "../src/views/detail.ts";
-import { confirmView } from "../src/views/confirm.ts";
+import { confirmView, refusedView } from "../src/views/confirm.ts";
 import { errorView } from "../src/views/error.ts";
 import { helpView, parseHelp } from "../src/views/help.ts";
 import { homeView } from "../src/views/home.ts";
@@ -42,6 +42,15 @@ function error(name: string, t: Theme) {
   return errorView(p.error, t);
 }
 
+const PAYOUT = {
+  group: "payouts",
+  verb: "create",
+  argv: ["payouts", "create", "--amount", "250", "--currency", "usd", "--payout_method_id", "potk_x1", "--speed", "standard"],
+  hints: hintsFor("payouts"),
+  accountTitle: "Hypermotion",
+  accountId: "biz_VraUMckluH8dzV",
+};
+
 export const SCENES: Record<string, (t: Theme) => string[]> = {
   "list.products": (t) => page("products.list", "products", ["products", "list"], t, "Hypermotion"),
   "list.plans": (t) => page("plans.list", "plans", ["plans", "list"], t),
@@ -56,11 +65,12 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "list.empty.nocreate": (t) => page("refunds.list", "refunds", ["refunds", "list"], t, undefined, false),
   "detail.membership": (t) => record("memberships.get", "memberships", ["memberships", "get", "mem_kfT4Jl8Pb8DlWE"], t),
   "detail.product": (t) => record("products.get", "products", ["products", "get", "prod_iQ2Zub6GFQS5Q"], t),
-  "confirm.payout": (t) =>
-    confirmView(
-      { group: "payouts", verb: "create", argv: ["payouts", "create", "--amount", "250", "--currency", "usd", "--payout_method_id", "potk_x1", "--speed", "standard"], hints: hintsFor("payouts"), accountTitle: "Hypermotion", accountId: "biz_VraUMckluH8dzV" },
-      t,
-    ),
+  "confirm.payout": (t) => confirmView({ ...PAYOUT, destination: "Chase checking ••4242  potk_x1", balance: { available: 418.56, currency: "usd" }, cap: 500, timeoutSeconds: 120 }, t),
+  "confirm.payout.unknown_method": (t) => confirmView({ ...PAYOUT, balance: { available: 418.56, currency: "usd" }, cap: null, timeoutSeconds: 120 }, t),
+  "confirm.payout.sandbox": (t) => confirmView({ ...PAYOUT, mode: "sandbox", destination: "Chase checking ••4242  potk_x1", balance: { available: 418.56, currency: "usd" } }, t),
+  "confirm.payout.over_cap": (t) => refusedView({ ...PAYOUT, argv: ["payouts", "create", "--amount", "2000", "--currency", "usd", "--payout_method_id", "potk_x1"], reason: "cap", destination: "Chase checking ••4242  potk_x1", balance: { available: 2418.56, currency: "usd" }, cap: 500 }, t),
+  "confirm.payout.over_balance": (t) => refusedView({ ...PAYOUT, reason: "balance", destination: "Chase checking ••4242  potk_x1", balance: { available: 18.56, currency: "usd" }, cap: 500 }, t),
+  "confirm.update.quoted": (t) => confirmView({ group: "products", verb: "update", argv: ["products", "update", "prod_DQf7IZAtveRoK", "--title", "Frame Pro's \"beta\"", "--headline", "one; two && three"], hints: hintsFor("products") }, t),
   "confirm.delete": (t) => confirmView({ group: "products", verb: "delete", argv: ["products", "delete", "prod_DQf7IZAtveRoK"], hints: hintsFor("products"), accountTitle: "Hypermotion", accountId: "biz_VraUMckluH8dzV" }, t),
   "confirm.update": (t) => confirmView({ group: "products", verb: "update", argv: ["products", "update", "prod_DQf7IZAtveRoK", "--title", "Frame Pro", "--visibility", "hidden"], hints: hintsFor("products") }, t),
   "error.typo": (t) => error("error.typo", t),
@@ -87,7 +97,11 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
         revenue: envelope("stats.net_revenue"),
         from: "2026-09-12",
         to: "2026-09-18",
-        commands: ["auth status", "ledgers report --report_type balance_summary", "stats get net_revenue --from 2026-09-12 --to 2026-09-18 --interval day"],
+        commands: [
+          ["auth", "status"],
+          ["ledgers", "report", "--report_type", "balance_summary"],
+          ["stats", "get", "net_revenue", "--from", "2026-09-12", "--to", "2026-09-18", "--interval", "day"],
+        ],
         api: parseHelp(fixture("help.txt")).api,
       },
       t,

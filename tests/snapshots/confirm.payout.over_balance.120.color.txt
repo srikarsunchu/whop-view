@@ -1,4 +1,4 @@
- [31m▌[39m [1mCreate a payout[22m                                                                                  [31mwrites to production[39m
+ [31m▌[39m [1mOver the available balance[22m                                                                                    [31mnot run[39m
 
    [2mwhop payouts create --amount 250 --currency usd --payout_method_id potk_x1 --speed standard[22m
 
@@ -6,10 +6,10 @@
    [2mto     [22m  Chase checking ••4242  potk_x1
    [2mspeed  [22m  standard
    [2mfrom   [22m  Hypermotion  biz_VraUMckluH8dzV
-   [2mbalance[22m  [32m$418.56 available · $168.56 after[39m
+   [2mbalance[22m  [31m$18.56 available · -$231.44 after[39m
    [2mcap    [22m  [2m$500.00 per payout[22m
 
-   [2mThis runs against production. The Whop CLI has no dry-run. This moves real money. The prompt expires in 2 minutes.[22m
+   [2m$250.00 is more than the $18.56 available in this currency.[22m
 
  [2mtry first[22m  [2mwv --sandbox payouts create --amount 250 --currency usd --payout_method_id potk_x1 --speed standard[22m
 
