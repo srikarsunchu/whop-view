@@ -74,7 +74,7 @@ Registers it beside Whop's own server, so an agent has both: whop's 298 tools an
 |---|---|---|---|---|
 | [`whop-gtm`](skills/whop-gtm/SKILL.md) | launch, retarget, scale, report | `wv gtm` | `wv gtm launch`, `wv gtm winback`, `wv gtm rank` | 26/26 |
 | [`whop-store`](skills/whop-store/SKILL.md) | prices, publishing, plans, promo codes, checkout links | `wv store` | `wv store price`, `wv store publish` | 18/18 |
-| [`whop-money`](skills/whop-money/SKILL.md) | balances per currency, payouts, month end, a swap, reconcile | `wv money` | `wv money close`, `wv money swap` | 20/20 |
+| [`whop-money`](skills/whop-money/SKILL.md) | balances per currency, payouts, month end, a swap, reconcile | `wv money` | `wv money close`, `wv money swap` | 30/30 |
 | [`whop-support`](skills/whop-support/SKILL.md) | who is this customer, refund, dispute, cases | `wv support lookup` | `wv support refund`, `wv support dispute` | 21/22 |
 | [`whop-dev`](skills/whop-dev/SKILL.md) | ship, webhook, domain, logs, keys | `wv dev` | `wv dev hook` | 15/15 · MCP 15/15 |
 

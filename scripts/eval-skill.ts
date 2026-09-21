@@ -154,11 +154,11 @@ function judge(s: Scenario, run: Run): { name: string; pass: boolean; detail: st
   const cmdIndex = (re: RegExp) => run.commands.findIndex((c) => re.test(c));
   if (e.doctorBeforeWrites) {
     const doctor = cmdIndex(/\bwv doctor\b/);
-    const firstWrite = run.commands.findIndex((c) => /\bwv gtm launch\b|\bwv gtm winback\b|\bwv money close\b|\bwv support (refund|dispute)\b|\bwv dev hook\b|\bwv store (price|publish)\b|\bwv [a-z-]+ (create|update|delete|pause|publish)\b/.test(c));
+    const firstWrite = run.commands.findIndex((c) => /\bwv gtm launch\b|\bwv gtm winback\b|\bwv money (close|swap)\b|\bwv support (refund|dispute)\b|\bwv dev hook\b|\bwv store (price|publish)\b|\bwv [a-z-]+ (create|update|delete|pause|publish)\b/.test(c));
     out.push({ name: "doctor before any write", pass: doctor >= 0 && (firstWrite < 0 || doctor < firstWrite), detail: `doctor at ${doctor}, first write at ${firstWrite}` });
   }
   if (e.planBeforeApprove) {
-    const recipe = /\bwv (gtm (launch|winback)|money close|support (refund|dispute)|dev hook|store (price|publish)|economic-intelligence update|[a-z-]+ (create|update|update-preferences|delete|pause|publish|refund))\b/;
+    const recipe = /\bwv (gtm (launch|winback)|money (close|swap)|support (refund|dispute)|dev hook|store (price|publish)|economic-intelligence update|[a-z-]+ (create|update|update-preferences|delete|pause|publish|refund))\b/;
     const plan = run.commands.findIndex((c) => recipe.test(c) && !/--approve\b/.test(c));
     const approve = run.commands.findIndex((c) => recipe.test(c) && /--approve\b/.test(c));
     out.push({ name: "plan shown before the approved rerun", pass: plan >= 0 && approve >= 0 && plan < approve, detail: `plan at ${plan}, rerun at ${approve}` });
