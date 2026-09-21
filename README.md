@@ -408,6 +408,8 @@ Manifest: `wv agent <group>` prints one Markdown page per command group from `--
 
 ![agent manifest](demo/agent-manifest.gif)
 
+![agent index and json](demo/agent-index.gif)
+
 ![agent gate](demo/agent-gate.gif)
 
 ![agent gate refusing a payout](demo/agent-plan.gif)
@@ -417,6 +419,8 @@ For a write against one record, `wv` reads the record first and the plan says wh
 `rerun` carries an `--idempotency-key` wv minted at the plan step when the verb takes one, so the approved retry cannot write twice; the terminal card shows the same key. Which verbs count as writes comes from whop's own manifest, fetched once a day, with wv's list underneath, so a verb that ships tomorrow is gated tomorrow.
 
 `rerun` carries `--approve <token>`, not `--yes`. The token is a signature over that exact command and host with a ten minute expiry, minted with a secret only this machine holds, so the write that runs is the one the person saw: an edited command, a stale approval, or a token from another machine is refused with `APPROVAL_INVALID` or `APPROVAL_EXPIRED` and nothing runs. `--yes` still works for a person at a keyboard, or for a script that chooses the honor system on purpose.
+
+![approval bound to the plan](demo/approve.gif)
 
 The agent shows the plan to the person and runs `rerun`. `--plan` returns `{ ok: true, plan }` and runs nothing, for every write. Refusals use the same shape with no `rerun`: `WHOP_LIMIT` in Whop's words, `WV_CAP`, `INSUFFICIENT_BALANCE`, `WV_AD_CAP`. For ads the plan is the campaign tree, the reach estimate, and the committed spend. `--format json` on a write does not lift the gate; `--schema` and `--help` do, since they run nothing. `WV_RAW=1` turns all of it off. A bad `--last` preset or a missing `@file` is the same envelope with `BAD_PRESET`, `EVENTS_RANGE`, or `JSON_FLAGS`.
 
@@ -575,4 +579,4 @@ Re-records the fixtures from your own account. Read-only commands only. `pnpm fi
 pnpm demo
 ```
 
-Re-records every GIF above. The five agent tapes (`agent-gate`, `agent-plan`, `doctor-json`, `agent-manifest`, `exit-codes`) run against production reads only; the gate never sends the write. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them. The `sandbox-status` and `logs-follow` tapes start `scripts/mock-api.ts` on port 8931 themselves, a stand-in for the sandbox host that answers `accounts get me` and grows an app's log by one line every couple of seconds; `pnpm demo:mock` runs it on its own. The `sandbox-ads` tape expects a richer mock on the same port that was never committed, so it records against whatever answers there.
+Re-records every GIF above. The seven agent tapes (`agent-gate`, `agent-plan`, `doctor-json`, `agent-manifest`, `agent-index`, `approve`, `exit-codes`) run against production reads only; the gate never sends the write, and the `approve` tape reruns a plan with a token minted for a different product so the refusal is what gets recorded. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them. The `sandbox-status` and `logs-follow` tapes start `scripts/mock-api.ts` on port 8931 themselves, a stand-in for the sandbox host that answers `accounts get me` and grows an app's log by one line every couple of seconds; `pnpm demo:mock` runs it on its own. The `sandbox-ads` tape expects a richer mock on the same port that was never committed, so it records against whatever answers there.
