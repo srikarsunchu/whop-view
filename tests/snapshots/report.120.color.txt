@@ -22,10 +22,7 @@
    [2mads payment [22m  [33mNo ads payment method on the account, so ads will not deliver.[39m
    [2mintelligence[22m  [33mEconomic Intelligence is off, so `whop economic-intelligence` returns 403.[39m
    [2mwebhooks    [22m  [33mWebhooks refuse an oauth login. Sign in with an API key to list, create, or test them.[39m
-   [2mgap         [22m  [33mNo visit carries a source: the pixel is not installed on your pages, so nothing is attributed.[39m
-   [2mgap         [22m  [33mNo Meta page is connected, so every ad command will refuse.[39m
    [2mgap         [22m  [33mNo ads payment method on the account, so ads will not deliver.[39m
-   [2mgap         [22m  [33mEconomic Intelligence is off, so `whop economic-intelligence` returns 403.[39m
 
  [1mCampaigns[22m
    [2mLaunch · Hypermotion[22m  [31m4 groups · 1 scale · 1 pause · 1 wait · 1 not delivering · pause: lal 3%[39m
@@ -34,11 +31,11 @@
    [2mreca_x1[22m  Launch a 20% winback code for visitors who did not buy · promo code
 
  [2mfix identity[22m  [2mwhop verifications create --account_id biz_VraUMckluH8dzV[22m
- [2mgap[22m  [2mwhop events validate_pixel[22m
- [2mgap[22m  [2mwhop social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>[22m
- [2mgap[22m  [2mwhop accounts update-preferences --economic_intelligence true[22m
+ [2mfix api key[22m  [2mwv auth switch sandbox[22m
+ [2mfix pixel[22m  [2mwhop events validate_pixel[22m
+ [2mfix meta page[22m  [2mwhop social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>[22m
+ [2mfix intelligence[22m  [2mwhop accounts update-preferences --economic_intelligence true[22m
  [2mpause[22m  [2mwv ad-groups pause adgrp_c1[22m
  [2mapprove[22m  [2mwv economic-intelligence update reca_x1 --status executed[22m
- [2munblock payouts[22m  [2mwhop verifications create --account_id biz_VraUMckluH8dzV[22m
  [2mmarkdown[22m  [2mwv report --md[22m
 

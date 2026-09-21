@@ -25,10 +25,7 @@ Sep 14 to Sep 20 vs Sep 7 to Sep 13 · generated 2026-09-21 12:00 UTC
 - **payment** (warn): No ads payment method on the account, so ads will not deliver.
 - **ei** (warn): Economic Intelligence is off, so `whop economic-intelligence` returns 403. · `whop accounts update-preferences --economic_intelligence true`
 - **webhooks** (warn): Webhooks refuse an oauth login. Sign in with an API key to list, create, or test them. · `wv auth switch sandbox`
-- No visit carries a source: the pixel is not installed on your pages, so nothing is attributed. · `whop events validate_pixel`
-- No Meta page is connected, so every ad command will refuse. · `whop social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>`
 - No ads payment method on the account, so ads will not deliver.
-- Economic Intelligence is off, so `whop economic-intelligence` returns 403. · `whop accounts update-preferences --economic_intelligence true`
 
 ## Campaigns
 
@@ -45,10 +42,10 @@ Sep 14 to Sep 20 vs Sep 7 to Sep 13 · generated 2026-09-21 12:00 UTC
 ## Next
 
 - Payouts are blocked: Please complete identity verification before requesting a withdrawal.: `whop verifications create --account_id biz_VraUMckluH8dzV`
+- This oauth login lacks developer:manage_webhook. The api-key profile sandbox is saved; switch to it for those.: `wv auth switch sandbox`
 - No visit carries a source: the pixel is not installed on your pages, so nothing is attributed.: `whop events validate_pixel`
 - No Meta page is connected, so every ad command will refuse.: `whop social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>`
 - Economic Intelligence is off, so `whop economic-intelligence` returns 403.: `whop accounts update-preferences --economic_intelligence true`
 - Launch · Hypermotion: pause lal 3%: `wv ad-groups pause adgrp_c1`
 - approve: Launch a 20% winback code for visitors who did not buy: `wv economic-intelligence update reca_x1 --status executed`
-- unblock payouts: `whop verifications create --account_id biz_VraUMckluH8dzV`
 

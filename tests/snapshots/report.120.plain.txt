@@ -22,10 +22,7 @@
    ads payment   No ads payment method on the account, so ads will not deliver.
    intelligence  Economic Intelligence is off, so `whop economic-intelligence` returns 403.
    webhooks      Webhooks refuse an oauth login. Sign in with an API key to list, create, or test them.
-   gap           No visit carries a source: the pixel is not installed on your pages, so nothing is attributed.
-   gap           No Meta page is connected, so every ad command will refuse.
    gap           No ads payment method on the account, so ads will not deliver.
-   gap           Economic Intelligence is off, so `whop economic-intelligence` returns 403.
 
  Campaigns
    Launch · Hypermotion  4 groups · 1 scale · 1 pause · 1 wait · 1 not delivering · pause: lal 3%
@@ -34,11 +31,11 @@
    reca_x1  Launch a 20% winback code for visitors who did not buy · promo code
 
  fix identity  whop verifications create --account_id biz_VraUMckluH8dzV
- gap  whop events validate_pixel
- gap  whop social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>
- gap  whop accounts update-preferences --economic_intelligence true
+ fix api key  wv auth switch sandbox
+ fix pixel  whop events validate_pixel
+ fix meta page  whop social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>
+ fix intelligence  whop accounts update-preferences --economic_intelligence true
  pause  wv ad-groups pause adgrp_c1
  approve  wv economic-intelligence update reca_x1 --status executed
- unblock payouts  whop verifications create --account_id biz_VraUMckluH8dzV
  markdown  wv report --md
 

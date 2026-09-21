@@ -102,18 +102,31 @@ export function rankSummary(r: RankInput): { title: string; id: string; groups: 
 }
 
 /** The things the brief asks the person to do, as wv commands, from everything it read. */
+/** The launch gaps that the doctor did not already say: a gap whose fix a doctor check also carries is the same fact twice. */
+export function gapsNotInDoctor(input: ReportInput): Gap[] {
+  const fixes = new Set(checks(input.doctor).filter((ch) => ch.level !== "ok" && ch.fix).map((ch) => ch.fix!.join(" ")));
+  return gaps(input.gtm, peopleSummary(input.gtm.people)).filter((g) => !g.fix || !fixes.has(g.fix.join(" ")));
+}
+
 export function nextActions(input: ReportInput): { label: string; what: string; argv: string[] }[] {
   const c = copy.report;
   const out: { label: string; what: string; argv: string[] }[] = [];
-  for (const ch of checks(input.doctor)) if (ch.level === "fail" && ch.fix) out.push({ label: `${c.fix} ${ch.label}`, what: ch.detail, argv: ch.fix });
-  for (const g of gaps(input.gtm, peopleSummary(input.gtm.people))) if (g.fix) out.push({ label: c.gap, what: g.what, argv: g.fix });
+  const seen = new Set<string>();
+  const push = (a: { label: string; what: string; argv: string[] }) => {
+    const key = a.argv.join(" ");
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(a);
+  };
+  for (const ch of checks(input.doctor)) if (ch.level !== "ok" && ch.fix) push({ label: `${c.fix} ${ch.label}`, what: ch.detail, argv: ch.fix });
+  for (const g of gapsNotInDoctor(input)) if (g.fix) push({ label: c.gap, what: g.what, argv: g.fix });
   for (const r of input.ranks) {
     const s = rankSummary(r);
-    if (s.action?.action) out.push({ label: copy.rank.verdicts[s.action.verdict], what: `${s.title}: ${copy.rank.verdicts[s.action.verdict]} ${s.action.title}`, argv: s.action.action });
+    if (s.action?.action) push({ label: copy.rank.verdicts[s.action.verdict], what: `${s.title}: ${copy.rank.verdicts[s.action.verdict]} ${s.action.title}`, argv: s.action.action });
   }
-  for (const rec of rows(input.recommendations) ?? []) out.push({ label: c.approveShort, what: c.approve(str(rec.title) ?? String(rec.id)), argv: ["wv", "economic-intelligence", "update", String(rec.id), "--status", "executed"] });
+  for (const rec of rows(input.recommendations) ?? []) push({ label: c.approveShort, what: c.approve(str(rec.title) ?? String(rec.id)), argv: ["wv", "economic-intelligence", "update", String(rec.id), "--status", "executed"] });
   const limits = limitsOf(input.money.methods);
-  if (limits.standard?.code) out.push({ label: c.unblockPayouts, what: c.unblockPayouts, argv: ["whop", "verifications", "create", "--account_id", input.accountId ?? "<biz_id>"] });
+  if (limits.standard?.code) push({ label: c.unblockPayouts, what: c.unblockPayouts, argv: ["whop", "verifications", "create", "--account_id", input.accountId ?? "<biz_id>"] });
   return out;
 }
 
@@ -130,7 +143,7 @@ export function reportData(input: ReportInput): Rec {
     window: input.window,
     kpis: kpis(input.metrics),
     doctor: { ok: !doctorChecks.some((c) => c.blocking && c.level === "fail"), failing: doctorChecks.filter((c) => c.level !== "ok").map((c) => ({ key: c.key, level: c.level, detail: c.detail, fix: c.fix })) },
-    gaps: gaps(input.gtm, people),
+    gaps: gapsNotInDoctor(input),
     people: { seen: people.seen, attributed: people.attributed },
     money: { balances: input.money.balances, payoutsBlocked: limitsOf(input.money.methods).standard?.code ?? null },
     store: { products: products.length, forSale: products.filter((p) => forSale(p, plansOf(storePlans, String(p.id))).ok).length, activeCodes: (rows(input.store.promoCodes) ?? []).length },
@@ -175,7 +188,7 @@ export function reportView(input: ReportInput, theme: Theme): string[] {
   out.push(...kpiTable(input, theme), "");
 
   const doctorChecks = checks(input.doctor).filter((ch) => ch.level !== "ok");
-  const gapList = gaps(input.gtm, peopleSummary(input.gtm.people));
+  const gapList = gapsNotInDoctor(input);
   const blockers: KvRow[] = [
     ...doctorChecks.map((ch) => ({ key: ch.label, value: ch.detail, role: CHECK_ROLE[ch.level] })),
     ...gapList.map((g: Gap) => ({ key: c.gap, value: g.what, role: "warn" as Role })),
