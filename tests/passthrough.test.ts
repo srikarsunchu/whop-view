@@ -23,6 +23,11 @@ function fakeWhop(): string {
 echo "ARGS: $*" >&2
 echo "BASE: \${WHOP_API_BASE_URL:-unset} KEY: \${WHOP_API_KEY:-unset}" >&2
 fx() { cat "${FIXTURES}/$1"; exit 0; }
+if [ "$1" = "--llms-full" ]; then
+  printf '# whop\n\n## whop products\n\n### whop products frobnicate\n\nFrobnicate Product\n\n> Confirm with the user before executing this destructive command.\n\n### whop products list\n\nList Products\n'
+  exit 0
+fi
+case "$*" in *--schema*) [ -f "${FIXTURES}/schema.$1.$2.json" ] && fx "schema.$1.$2.json"; echo '{"code":"COMMAND_NOT_FOUND","message":"no schema"}'; exit 1 ;; esac
 case "$1 $2" in
   "products list")
     case "$*" in
@@ -35,7 +40,7 @@ case "$1 $2" in
   "accounts preferences") fx accounts.preferences.json ;;
   "social-accounts list") fx social-accounts.list.json ;;
   "ad-groups estimate_reach") echo '{"ok":false,"error":{"code":"HTTP_400","message":"no estimate"},"meta":{"command":"ad-groups estimate_reach","duration":"1ms"}}'; exit 1 ;;
-  "payouts create"|"products update"|"ads create") echo '{"ok":true,"data":{"id":"fake_1"},"meta":{"command":"'"$1 $2"'","duration":"1ms"}}'; exit 0 ;;
+  "payouts create"|"products update"|"products frobnicate"|"ads create") echo '{"ok":true,"data":{"id":"fake_1"},"meta":{"command":"'"$1 $2"'","duration":"1ms"}}'; exit 0 ;;
 esac
 echo '{"code":"COMMAND_NOT_FOUND","message":"nope"}'
 exit 1
@@ -45,9 +50,10 @@ exit 1
   return script;
 }
 
-// Hermetic: no real wv config, no real sandbox variables from the developer's shell.
+// Hermetic: no real wv config, a fresh cache dir (so the fake whop answers --schema and --llms-full and the
+// developer's cache is never read or written), no real sandbox variables from the developer's shell.
 const wv = (args: string[], env: NodeJS.ProcessEnv = {}) =>
-  spawnSync(node, ["--experimental-strip-types", "--no-warnings", bin, ...args], { encoding: "utf8", env: { ...process.env, WV_CONFIG: "/nonexistent/wv.json", WV_SANDBOX_KEY: "", WV_SANDBOX_URL: "", WV_SANDBOX: "", ...env } });
+  spawnSync(node, ["--experimental-strip-types", "--no-warnings", bin, ...args], { encoding: "utf8", env: { ...process.env, WV_CONFIG: "/nonexistent/wv.json", XDG_CACHE_HOME: mkdtempSync(join(tmpdir(), "wv-cache-")), WV_SANDBOX_KEY: "", WV_SANDBOX_URL: "", WV_SANDBOX: "", ...env } });
 
 test("piped stdout: wv emits whop's bytes untouched and keeps its exit code", () => {
   const fake = fakeWhop();
@@ -181,7 +187,8 @@ test("agent gate: the wv cap and the balance refuse when Whop does not", () => {
   assert.equal(envelopeOf(bal).error?.code, "INSUFFICIENT_BALANCE");
   const ok = wv(["payouts", "create", "--amount", "10", "--payout_method_id", "potk_1"], gateEnv({ WV_FAKE_METHODS: "payouts.methods.json" }));
   assert.equal(envelopeOf(ok).error?.code, "CONFIRMATION_REQUIRED");
-  assert.deepEqual(envelopeOf(ok).rerun, ["wv", "payouts", "create", "--amount", "10", "--payout_method_id", "potk_1", "--yes"]);
+  assert.deepEqual(envelopeOf(ok).rerun?.slice(0, 7), ["wv", "payouts", "create", "--amount", "10", "--payout_method_id", "potk_1"]);
+  assert.equal(envelopeOf(ok).rerun?.at(-1), "--yes");
 });
 
 test("agent gate: sandbox skips the cap, the limit, and the balance, and says so in meta", () => {
@@ -240,4 +247,30 @@ test("agent: a screen that only draws is NEEDS_TERMINAL on stdout, exit 2", () =
   assert.equal(r.status, 2);
   assert.equal(envelopeOf(r).error?.code, "NEEDS_TERMINAL");
   assert.equal(r.stderr.includes("ARGS:"), false);
+});
+
+test("agent gate: the plan step mints the idempotency key, and the rerun carries it", () => {
+  const r = wv(["payouts", "create", "--amount", "10", "--payout_method_id", "potk_1"], gateEnv({ WV_FAKE_METHODS: "payouts.methods.json" }));
+  const e = envelopeOf(r);
+  assert.equal(e.error?.code, "CONFIRMATION_REQUIRED");
+  const i = e.rerun!.indexOf("--idempotency-key");
+  assert.ok(i > 0, "rerun carries the key");
+  assert.match(e.rerun![i + 1], /^[0-9a-f-]{36}$/);
+  assert.equal(e.rerun!.at(-1), "--yes");
+  assert.match(String(e.plan?.command), /--idempotency-key [0-9a-f-]{36}$/, "the plan shows the command that will run");
+  // A key the caller chose is kept; a verb whose schema has none gets none.
+  const own = envelopeOf(wv(["payouts", "create", "--amount", "10", "--payout_method_id", "potk_1", "--idempotency-key", "mine"], gateEnv({ WV_FAKE_METHODS: "payouts.methods.json" })));
+  assert.equal(own.rerun!.filter((a) => a === "--idempotency-key").length, 1);
+  assert.ok(own.rerun!.includes("mine"));
+  const none = envelopeOf(wv(["products", "update", "prod_1", "--title", "x"], gateEnv()));
+  assert.equal(none.rerun!.includes("--idempotency-key"), false, "no schema fixture for products update, so no key");
+});
+
+test("agent gate: a verb only whop's manifest calls a write is gated too", () => {
+  const r = wv(["products", "frobnicate", "prod_1"], gateEnv());
+  assert.equal(r.status, 2);
+  assert.equal(envelopeOf(r).error?.code, "CONFIRMATION_REQUIRED");
+  assert.equal(wroteTo(r, "products frobnicate"), false);
+  const list = wv(["products", "list"], gateEnv());
+  assert.equal(list.status, 0, "a read the manifest lists without the tag still passes through");
 });

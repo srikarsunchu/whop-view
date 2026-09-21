@@ -10,6 +10,7 @@ import { flagsToRecord, moneyOf, type ConfirmInput, type RefusedInput } from "./
 import { commitment, type AdPlanInput } from "./views/adplan.ts";
 import { isWrite } from "./status.ts";
 import { isAdPlan } from "./views/adplan.ts";
+import { randomUUID } from "node:crypto";
 
 /** Codes wv itself emits. Everything else on stdout is whop's. */
 export type AgentCode = "CONFIRMATION_REQUIRED" | "WHOP_LIMIT" | "WV_CAP" | "INSUFFICIENT_BALANCE" | "WV_AD_CAP" | "BAD_PRESET" | "EVENTS_RANGE" | "JSON_FLAGS" | "NEEDS_TERMINAL";
@@ -162,4 +163,21 @@ export function agentExitCode(whopStatus: number, stdout: string, env: NodeJS.Pr
   if (whopStatus === 0 || env.WV_EXIT === "whop") return whopStatus;
   const code = errorCodeIn(stdout);
   return (code && EXIT_CODES[code]) || whopStatus;
+}
+
+/** Whether a verb's schema lists `--idempotency-key`. Every write in the API does; the schema is the check. */
+export function takesIdempotency(schema: unknown): boolean {
+  const opts = schema && typeof schema === "object" && "options" in schema ? (schema as { options?: { properties?: Record<string, unknown> } }).options : undefined;
+  return !!opts?.properties && "idempotency-key" in opts.properties;
+}
+
+export const hasIdempotencyKey = (argv: string[]) => argv.some((a) => a === "--idempotency-key" || a.startsWith("--idempotency-key="));
+
+/**
+ * The gate is the plan step, so it mints the key the skill tells agents to mint: one per plan, carried into the
+ * card, the envelope, and `rerun`, so the approved retry can never write twice. Argv that already has one is kept.
+ */
+export function withIdempotencyKey(argv: string[], schema: unknown, key: string = randomUUID()): string[] {
+  if (!takesIdempotency(schema) || hasIdempotencyKey(argv)) return argv;
+  return [...argv, "--idempotency-key", key];
 }

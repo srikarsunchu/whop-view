@@ -55,10 +55,44 @@ export const MONEY_READ_VERBS = new Set(["list", "get", "methods", "transactions
 
 export const DESTRUCTIVE_VERBS = new Set(["delete", "cancel", "transfer_ownership"]);
 
+/**
+ * Tagged by whop as needing confirmation, but they only compute: an estimate, a check, a tax figure, a quote,
+ * a challenge, a test event. Gating them would break the ads plan, which runs `estimate_reach` itself.
+ */
+export const COMPUTE_ONLY = new Set(["ad-groups estimate_reach", "events validate_pixel", "plans calculate_tax", "payouts quotes", "swaps quote", "users passkey-challenge", "webhooks test", "apps builds"]);
+
+/** `whop --llms-full` marks every command that is not a plain read with this line. */
+const CONFIRM_TAG = "Confirm with the user before executing this destructive command";
+
+/**
+ * The commands `whop --llms-full` tags for confirmation, as `group verb`. This is whop's own write list,
+ * so a verb that ships tomorrow is gated tomorrow. Pure: the runner fetches and caches the text.
+ */
+export function taggedWrites(llmsFull: string): Set<string> {
+  const out = new Set<string>();
+  for (const section of llmsFull.split(/^### whop /m).slice(1)) {
+    const [group, verb] = section.split("\n", 1)[0].trim().split(/\s+/);
+    if (group && verb && section.includes(CONFIRM_TAG)) out.add(`${group} ${verb}`);
+  }
+  return out;
+}
+
+let whopWrites: Set<string> | null = null;
+
+/** Hands `isWrite` whop's list. Called once at startup with the cached manifest; an empty text changes nothing. */
+export function loadWhopWrites(llmsFull: string | null | undefined): Set<string> {
+  whopWrites = llmsFull ? taggedWrites(llmsFull) : null;
+  return whopWrites ?? new Set();
+}
+
+/** Whether a verb writes: whop's own tag when the manifest is loaded, the hand lists always, compute-only never. */
 export function isWrite(group: string, verb: string | undefined): boolean {
   if (!verb) return false;
+  const key = `${group} ${verb}`;
+  if (COMPUTE_ONLY.has(key)) return false;
   if (MONEY_GROUPS.has(group) && !MONEY_READ_VERBS.has(verb)) return true;
-  return WRITE_VERBS.has(verb);
+  if (WRITE_VERBS.has(verb)) return true;
+  return whopWrites?.has(key) ?? false;
 }
 
 /**

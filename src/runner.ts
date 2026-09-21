@@ -184,3 +184,27 @@ export function cachedHelpText(argv: string[]): string {
   }
   return text;
 }
+
+/**
+ * `whop --llms-full`, 338 KB, with the same one-day cache as help. It is whop's own list of which commands
+ * write, read by `status.ts`. Best effort: without it the hand list still gates.
+ */
+export function cachedLlmsFull(): string {
+  const file = join(cacheDir, "llms-full.md");
+  try {
+    if (existsSync(file) && Date.now() - statSync(file).mtimeMs < HELP_TTL_MS) return readFileSync(file, "utf8");
+  } catch {
+    /* refetch */
+  }
+  const r = spawnSync(WHOP, ["--llms-full"], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+  const text = r.status === 0 && r.stdout.startsWith("# whop") ? r.stdout : "";
+  if (text) {
+    try {
+      mkdirSync(cacheDir, { recursive: true });
+      writeFileSync(file, text);
+    } catch {
+      /* cache is best effort */
+    }
+  }
+  return text;
+}

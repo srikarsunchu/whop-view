@@ -2,7 +2,7 @@
 // wv: human view layer for the Whop CLI. Renders when a person is looking, execs `whop` otherwise.
 import { realpathSync } from "node:fs";
 import { makeTheme, type Theme } from "./tokens.ts";
-import { cachedHelpText, helpText, modeFrom, schema, passthrough, passthroughPiped, run, sandboxKey, sandboxUrl, shouldPassthrough, whopEnv, type Mode } from "./runner.ts";
+import { cachedHelpText, cachedLlmsFull, helpText, modeFrom, schema, passthrough, passthroughPiped, run, sandboxKey, sandboxUrl, shouldPassthrough, whopEnv, type Mode } from "./runner.ts";
 import { configPath, maskKey, saveSandboxKey } from "./config.ts";
 import { sandboxMissingKeyView, sandboxSavedView, sandboxStatusView } from "./views/sandbox.ts";
 import { ask } from "./primitives/prompt.ts";
@@ -12,8 +12,8 @@ import { webhookTestView } from "./views/webhook.ts";
 import { exitCodeFor, licenseView, verdict } from "./views/license.ts";
 import { followHeader, followIntervalMs, followStopped, logLines, logsView, newEntries, newest, pollArgv } from "./views/logs.ts";
 import { hintsFor } from "./hints.ts";
-import { isWrite, MONEY_GROUPS } from "./status.ts";
-import { adPlan, adRefusedEnvelope, agentExitCode, agentGated, confirmationEnvelope, moneyPlan, planEnvelope, refusedEnvelope, serialize, wvErrorEnvelope, type AgentEnvelope } from "./agent.ts";
+import { isWrite, loadWhopWrites, MONEY_GROUPS } from "./status.ts";
+import { adPlan, adRefusedEnvelope, agentExitCode, agentGated, confirmationEnvelope, moneyPlan, planEnvelope, refusedEnvelope, serialize, withIdempotencyKey, wvErrorEnvelope, type AgentEnvelope } from "./agent.ts";
 import { teach } from "./argv.ts";
 import { daysAgo, isoDay } from "./format.ts";
 import { copy } from "./copy.ts";
@@ -109,6 +109,8 @@ async function main(argvIn: string[]) {
   const dates = resolveDates(own.argv);
   const mode = modeFrom(sandbox);
   const env = whopEnv(mode);
+  // whop's own write list, so the gate knows a verb the hand list has never heard of. Cached a day; empty is fine.
+  if (own.argv.length >= 2 && !own.argv[1].startsWith("--")) loadWhopWrites(cachedLlmsFull());
   // No terminal: an agent or a script. Errors and the gate come back as JSON on stdout; everything else execs `whop`.
   if (!process.stdout.isTTY) return agentMain(own.argv, dates, mode, env, plan);
   const json = assembleFor(dates.argv);
@@ -158,8 +160,10 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
   // `whop` rejects `--yes` as an unknown flag. It is wv's, and it never reaches the child.
   const yes = argv.includes("--yes");
   const args = argv.filter((a) => a !== "--yes");
-  if (!process.env.WV_RAW && agentGated(args) && (!yes || plan)) {
-    const [group, verb] = args;
+  if (!process.env.WV_RAW && agentGated(argv) && (!yes || plan)) {
+    const [group, verb] = argv;
+    // The plan step mints the idempotency key, so the approved rerun cannot write twice.
+    const args = withIdempotencyKey(argv.filter((a) => a !== "--yes"), schema(group, verb));
     const live = mode !== "sandbox";
     if (isAdPlan(group, verb)) {
       const input = await adPlanFor(group, verb, args, env, mode, plan);
@@ -269,7 +273,9 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
   if (group === "apps" && verb === "logs" && opts.follow) return followLogs(argv, theme, env);
 
   const yes = argv.includes("--yes");
-  const args = argv.filter((a) => a !== "--yes");
+  const gated = (isAdPlan(group, verb) || isWrite(group, verb)) && !yes;
+  // The plan step mints the idempotency key and the card shows it, so a second approval of the same plan cannot write twice.
+  const args = gated ? withIdempotencyKey(argv.filter((a) => a !== "--yes"), schema(group, verb)) : argv.filter((a) => a !== "--yes");
 
   if (isAdPlan(group, verb) && (!yes || opts.plan)) {
     // Ads gate. The CLI has no dry-run, so the plan is the sandbox: the tree, a real reach estimate,

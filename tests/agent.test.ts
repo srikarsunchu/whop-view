@@ -1,9 +1,10 @@
 // The agent face's pure parts: what is gated, the rerun, the plan shapes, and the exit code map.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { agentExitCode, agentGated, errorCodeIn, EXIT_CODES, moneyPlan, rerunFor } from "../src/agent.ts";
+import { agentExitCode, agentGated, errorCodeIn, EXIT_CODES, hasIdempotencyKey, moneyPlan, rerunFor, takesIdempotency, withIdempotencyKey } from "../src/agent.ts";
 import { hintsFor } from "../src/hints.ts";
-import { isWrite } from "../src/status.ts";
+import { COMPUTE_ONLY, isWrite, loadWhopWrites, taggedWrites, WRITE_VERBS } from "../src/status.ts";
+import { spawnSync } from "node:child_process";
 import { fixture } from "./render.ts";
 
 test("agent: a write or an ad verb is gated; a read, a --schema, and a --help are not", () => {
@@ -62,4 +63,78 @@ test("status: the verbs whop itself tags for confirmation are writes; compute-on
     assert.equal(isWrite(g, v), true, `${g} ${v}`);
   for (const [g, v] of [["ad-groups", "estimate_reach"], ["events", "validate_pixel"], ["plans", "calculate_tax"], ["payouts", "quotes"], ["webhooks", "test"], ["people", "list"]])
     assert.equal(isWrite(g, v), false, `${g} ${v}`);
+});
+
+const LLMS = `# whop
+
+## whop products
+
+### whop products frobnicate
+
+Frobnicate Product
+
+#### Options
+
+| Flag | Type |
+|---|---|
+
+> Confirm with the user before executing this destructive command.
+
+### whop products list
+
+List Products
+
+## whop ad-groups
+
+### whop ad-groups estimate_reach
+
+> Confirm with the user before executing this destructive command.
+`;
+
+test("status: whop's tag is parsed per command, and loading it widens isWrite without narrowing it", () => {
+  assert.deepEqual([...taggedWrites(LLMS)].sort(), ["ad-groups estimate_reach", "products frobnicate"]);
+  assert.equal(isWrite("products", "frobnicate"), false, "unknown to the hand list");
+  loadWhopWrites(LLMS);
+  try {
+    assert.equal(isWrite("products", "frobnicate"), true, "whop's tag gates it");
+    assert.equal(isWrite("products", "list"), false);
+    assert.equal(isWrite("products", "update"), true, "the hand list still applies");
+    assert.equal(isWrite("ad-groups", "estimate_reach"), false, "compute-only wins over the tag");
+  } finally {
+    loadWhopWrites(null);
+  }
+  assert.equal(isWrite("products", "frobnicate"), false);
+  assert.equal(taggedWrites("").size, 0);
+});
+
+test("idempotency: minted once from the schema, never twice, never where the schema has none", () => {
+  const schema = JSON.parse(fixture("schema.payouts.create.json"));
+  assert.equal(takesIdempotency(schema), true);
+  assert.equal(takesIdempotency(JSON.parse(fixture("schema.payouts.list.json"))), false);
+  assert.equal(takesIdempotency(null), false);
+  const argv = ["payouts", "create", "--amount", "5"];
+  assert.deepEqual(withIdempotencyKey(argv, schema, "k1"), [...argv, "--idempotency-key", "k1"]);
+  assert.deepEqual(withIdempotencyKey([...argv, "--idempotency-key", "mine"], schema, "k1"), [...argv, "--idempotency-key", "mine"]);
+  assert.deepEqual(withIdempotencyKey([...argv, "--idempotency-key=mine"], schema, "k1"), [...argv, "--idempotency-key=mine"]);
+  assert.deepEqual(withIdempotencyKey(argv, null, "k1"), argv);
+  assert.match(withIdempotencyKey(argv, schema).at(-1) ?? "", /^[0-9a-f-]{36}$/, "a real key is a uuid");
+  assert.equal(hasIdempotencyKey(argv), false);
+});
+
+test("live: every command whop tags for confirmation is a write here, or is named compute-only", { skip: !process.env.WV_LIVE }, () => {
+  const text = spawnSync("whop", ["--llms-full"], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 }).stdout;
+  const tagged = taggedWrites(text);
+  assert.ok(tagged.size > 100, `parsed ${tagged.size} tagged commands`);
+  loadWhopWrites(text);
+  try {
+    for (const key of tagged) {
+      const [g, v] = key.split(" ");
+      assert.equal(isWrite(g, v) || COMPUTE_ONLY.has(key), true, `${key} is tagged by whop and gated by neither list`);
+    }
+    // The hand list is not dead weight: every entry the CLI still has is tagged, or is a wv verb (`login`, `switch`).
+    const hand = [...tagged].filter((k) => WRITE_VERBS.has(k.split(" ")[1]));
+    assert.ok(hand.length > 50);
+  } finally {
+    loadWhopWrites(null);
+  }
 });
