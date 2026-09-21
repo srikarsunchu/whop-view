@@ -3,6 +3,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { agentExitCode, agentGated, errorCodeIn, EXIT_CODES, hasIdempotencyKey, moneyPlan, rerunFor, takesIdempotency, withIdempotencyKey } from "../src/agent.ts";
 import { hintsFor } from "../src/hints.ts";
+import { changesFor, currentSummary, describeRecord } from "../src/views/confirm.ts";
+import { envelope } from "./render.ts";
 import { COMPUTE_ONLY, isWrite, loadWhopWrites, taggedWrites, WRITE_VERBS } from "../src/status.ts";
 import { spawnSync } from "node:child_process";
 import { fixture } from "./render.ts";
@@ -137,4 +139,22 @@ test("live: every command whop tags for confirmation is a write here, or is name
   } finally {
     loadWhopWrites(null);
   }
+});
+
+test("changes: flags against the record, implied statuses, a delete as one row, scope flags ignored", () => {
+  const p = envelope("products.get");
+  const rec = p.ok && "record" in p.payload ? p.payload.record : {};
+  assert.deepEqual(changesFor("update", ["products", "update", "prod_1", "--title", "New", "--account_id", "biz_1", "--idempotency-key", "k", "--metadata", '{"a":1}'], rec), [
+    { key: "title", before: "Hypermotion", after: "New", changed: true },
+    { key: "metadata", before: rec.metadata, after: { a: 1 }, changed: JSON.stringify(rec.metadata ?? null) !== '{"a":1}' },
+  ]);
+  assert.deepEqual(changesFor("publish", ["products", "publish", "prod_1"], rec), [{ key: "visibility", before: "visible", after: "visible", changed: false }]);
+  assert.deepEqual(changesFor("pause", ["memberships", "pause", "mem_1"], { id: "mem_1", status: "active" }), [{ key: "status", before: "active", after: "paused", changed: true }]);
+  assert.deepEqual(changesFor("pause", ["x", "pause", "id"], { id: "id" }), [], "no status field, nothing implied");
+  const del = changesFor("delete", ["products", "delete", "prod_1"], rec);
+  assert.equal(del.length, 1);
+  assert.equal(del[0].before, "Hypermotion  prod_iQ2Zub6GFQS5Q");
+  assert.equal(describeRecord({ id: "x_1" }), "x_1");
+  assert.equal(describeRecord({ code: "LAUNCH20", id: "promo_1" }), "LAUNCH20  promo_1");
+  assert.deepEqual(currentSummary(rec), { id: "prod_iQ2Zub6GFQS5Q", title: "Hypermotion", visibility: "visible" });
 });

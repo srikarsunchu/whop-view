@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // wv: human view layer for the Whop CLI. Renders when a person is looking, execs `whop` otherwise.
 import { realpathSync } from "node:fs";
-import { makeTheme, type Theme } from "./tokens.ts";
+import { makeTheme, paint, type Theme } from "./tokens.ts";
 import { cachedHelpText, cachedLlmsFull, helpText, modeFrom, schema, passthrough, passthroughPiped, run, sandboxKey, sandboxUrl, shouldPassthrough, whopEnv, type Mode } from "./runner.ts";
 import { configPath, maskKey, saveSandboxKey } from "./config.ts";
 import { sandboxMissingKeyView, sandboxSavedView, sandboxStatusView } from "./views/sandbox.ts";
@@ -19,7 +19,7 @@ import { daysAgo, isoDay } from "./format.ts";
 import { copy } from "./copy.ts";
 import { listViewWithMeta, withAfter, type ListRender } from "./views/list.ts";
 import { detailView } from "./views/detail.ts";
-import { amountMatcher, confirmView, describeMethod, flagsToRecord, limitFor, moneyOf, refusedView, speedOf, type Balance, type ConfirmInput, type RefusedInput, type WhopLimit } from "./views/confirm.ts";
+import { amountMatcher, changesFor, confirmView, currentSummary, describeMethod, flagsToRecord, limitFor, moneyOf, refusedView, speedOf, type Balance, type ConfirmInput, type RefusedInput, type WhopLimit } from "./views/confirm.ts";
 import { money } from "./format.ts";
 import { adPlanView, adRefusedView, budgetOf, commitment, isAdPlan, jsonFlags, reachArgv, treeFromArgv, type AdPlanInput, type AdTree, type Reach } from "./views/adplan.ts";
 import { errorView } from "./views/error.ts";
@@ -54,11 +54,12 @@ export interface Outcome {
 }
 
 /** Splits wv's own flags out of argv. */
-export function ownFlags(argvIn: string[]): { argv: string[]; width?: number; sandbox: boolean; plan: boolean; follow: boolean } {
+export function ownFlags(argvIn: string[]): { argv: string[]; width?: number; sandbox: boolean; plan: boolean; follow: boolean; all: boolean } {
   let width: number | undefined;
   let sandbox = false;
   let plan = false;
   let follow = false;
+  let all = false;
   const argv: string[] = [];
   for (let i = 0; i < argvIn.length; i++) {
     const a = argvIn[i];
@@ -67,9 +68,10 @@ export function ownFlags(argvIn: string[]): { argv: string[]; width?: number; sa
     else if (a === "--sandbox") sandbox = true;
     else if (a === "--plan") plan = true;
     else if (a === "--follow" || a === "-f") follow = true;
+    else if (a === "--all") all = true;
     else argv.push(a);
   }
-  return { argv, width: width !== undefined && Number.isFinite(width) && width > 0 ? Math.floor(width) : undefined, sandbox, plan, follow };
+  return { argv, width: width !== undefined && Number.isFinite(width) && width > 0 ? Math.floor(width) : undefined, sandbox, plan, follow, all };
 }
 
 /** Per-payout cap from `WV_PAYOUT_CAP`, in whole currency units. `none` turns it off. Default $500, like Link. */
@@ -103,7 +105,7 @@ export function timeoutFrom(env: NodeJS.ProcessEnv = process.env): number | unde
 
 async function main(argvIn: string[]) {
   const own = ownFlags(argvIn);
-  const { width, sandbox, plan, follow } = own;
+  const { width, sandbox, plan, follow, all } = own;
   const theme = makeTheme({ width });
   // Date presets are wv's flags too: resolve them before a pipe execs `whop`, and refuse a range Whop would.
   const dates = resolveDates(own.argv);
@@ -112,7 +114,7 @@ async function main(argvIn: string[]) {
   // whop's own write list, so the gate knows a verb the hand list has never heard of. Cached a day; empty is fine.
   if (own.argv.length >= 2 && !own.argv[1].startsWith("--")) loadWhopWrites(cachedLlmsFull());
   // No terminal: an agent or a script. Errors and the gate come back as JSON on stdout; everything else execs `whop`.
-  if (!process.stdout.isTTY) return agentMain(own.argv, dates, mode, env, plan);
+  if (!process.stdout.isTTY) return agentMain(own.argv, dates, mode, env, plan, all);
   const json = assembleFor(dates.argv);
   const argv = json.argv;
 
@@ -129,7 +131,7 @@ async function main(argvIn: string[]) {
     const acct = await identity(env);
     process.exit(await session({ theme, execute: (a, t) => execute(a, t, { numbered: true, mode }), account: acct, mode }));
   }
-  process.exit((await execute(argv, theme, { mode, plan, follow })).code);
+  process.exit((await execute(argv, theme, { mode, plan, follow, all })).code);
 }
 
 const emit = (e: AgentEnvelope, code: number): never => {
@@ -142,7 +144,7 @@ const emit = (e: AgentEnvelope, code: number): never => {
  * gated exactly as in a terminal, but the card is data and the prompt is exit 2 with `rerun`; `--plan` is
  * the data alone, exit 0. `--yes`, `WV_RAW`, and every read exec `whop` with the argv it expects.
  */
-async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates>, mode: Mode, env: NodeJS.ProcessEnv, plan: boolean): Promise<never> {
+async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates>, mode: Mode, env: NodeJS.ProcessEnv, plan: boolean, all = false): Promise<never> {
   if (dates.error) emit(wvErrorEnvelope(argvIn, mode, dates.error), 2);
   const json = assembleFor(dates.argv);
   if (json.error) emit(wvErrorEnvelope(argvIn, mode, json.error), 2);
@@ -176,6 +178,8 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
     if (gate.refusal) emit(refusedEnvelope({ ...gate.input, reason: gate.refusal }), 2);
     emit(confirmationEnvelope(args, mode, moneyPlan(gate.input)), 2);
   }
+  // `--all`: follow the cursor and stream every row, one JSON object per line, or one array with `--format json`.
+  if (all && argv.length >= 2) process.exit(await allPagesPiped(args, env));
   // Bytes go through untouched; only the exit status is mapped, from the code in the bytes.
   return passthroughPiped(argv0IsCheck(args) ? ["memberships", "get", ...args.slice(2)] : args, env, agentExitCode);
 }
@@ -214,9 +218,56 @@ async function screenJson(screen: string, mode: Mode, env: NodeJS.ProcessEnv): P
   return failed ? 1 : 0;
 }
 
+/** Pages `--all` will follow before stopping. A cursor that never ends is a bug in the API, not a reason to loop. */
+export const ALL_MAX_PAGES = 1000;
+
+/**
+ * Every page of a list: `withAfter` on the cursor until `has_next_page` is false. Rows accumulate; the last
+ * envelope is kept so a failure mid-way is reported as whop reported it. `onPage` is for the spinner.
+ */
+async function fetchAll(argv: string[], env: NodeJS.ProcessEnv, onPage?: (n: number) => void): Promise<{ rows: Rec[]; pages: number; last: Parsed; code: number; extra?: Rec }> {
+  const rows: Rec[] = [];
+  let cursor: string | undefined;
+  let pages = 0;
+  let extra: Rec | undefined;
+  for (;;) {
+    onPage?.(pages + 1);
+    const { parsed, code } = await run(cursor ? withAfter(argv, cursor) : argv, env);
+    pages++;
+    if (!parsed.ok || parsed.payload.kind !== "page") return { rows, pages, last: parsed, code: parsed.ok ? 0 : code || 1, extra };
+    rows.push(...parsed.payload.rows);
+    extra ??= parsed.payload.extra;
+    const page = parsed.payload.page;
+    if (!page.has_next_page || !page.end_cursor || pages >= ALL_MAX_PAGES) return { rows, pages, last: parsed, code: 0, extra };
+    cursor = page.end_cursor;
+  }
+}
+
+const wantsJsonArray = (argv: string[]) => argv.some((a, i) => a === "--format=json" || (a === "--format" && argv[i + 1] === "json"));
+
+/**
+ * `wv <group> list --all | …`: jsonl by default, each row on its own line as it arrives, so a long list streams;
+ * `--format json` buffers into whop's own list shape with `page_info` closed. A failing page ends the stream
+ * with whop's error envelope and its exit code, so a consumer sees where it stopped.
+ */
+async function allPagesPiped(argv: string[], env: NodeJS.ProcessEnv): Promise<number> {
+  const asArray = wantsJsonArray(argv);
+  const clean = argv.filter((a, i) => !(a === "--format" || a.startsWith("--format=") || (argv[i - 1] === "--format")));
+  const r = await fetchAll(clean, env);
+  if (asArray) {
+    process.stdout.write(JSON.stringify({ data: r.rows, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false }, pages: r.pages, ...(r.extra ?? {}), ...(r.last.ok ? {} : { error: r.last.error }) }, null, 2) + "\n");
+  } else {
+    for (const row of r.rows) process.stdout.write(JSON.stringify(row) + "\n");
+    if (!r.last.ok) process.stdout.write(JSON.stringify({ ok: false, error: r.last.error, pages: r.pages }) + "\n");
+  }
+  return r.last.ok ? 0 : agentExitCode(r.code, JSON.stringify(r.last.error));
+}
+
 export interface ExecuteOptions {
   /** Inside a session: lists get a row-number gutter for the `N opens a row` shortcut. */
   numbered?: boolean;
+  /** `--all`: follow the cursor and render every row as one list. */
+  all?: boolean;
   /** Which host the child `whop` talks to. Default production. */
   mode?: Mode;
   /** `--plan`: for an ad write, print the plan card and run nothing. */
@@ -329,6 +380,14 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
   if (argv0IsCheck(args)) return licenseCheck(args, theme, env);
 
   const spin = spinner(copy.spinner.running(args), theme);
+  if (opts.all) {
+    const r = await fetchAll(args, env, (n) => spin.update(copy.spinner.allPages(n)));
+    spin.stop();
+    // One list of every row, the pager closed, so the footer says how many pages it took.
+    const parsed: Parsed = r.last.ok && r.last.payload.kind === "page" ? { ok: true, payload: { kind: "page", rows: r.rows, page: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false }, extra: r.extra } } : r.last;
+    if (r.pages > 1 && parsed.ok) print([" " + paint(theme, "muted", copy.list.allPages(r.pages))]);
+    return { code: r.code, group, ...render(parsed, group, args, theme, opts) };
+  }
   const { parsed, code } = await run(args, env);
   spin.stop();
   return { code, group, ...render(parsed, group, args, theme, opts) };
@@ -388,6 +447,15 @@ interface MoneyGate {
   refusal?: RefusedInput["reason"];
 }
 
+/** The id a write targets: the first positional after the verb. */
+const targetId = (args: string[]) => (args[2] && !args[2].startsWith("--") ? args[2] : undefined);
+
+/** `<group> get <id>`, or undefined when the group has no get or the id is unknown. Never fails the gate. */
+async function currentRecord(group: string, id: string, env: NodeJS.ProcessEnv): Promise<Rec | undefined> {
+  const { parsed } = await run([group, "get", id], env);
+  return parsed.ok && "record" in parsed.payload ? parsed.payload.record : undefined;
+}
+
 /**
  * Everything the money gate shows and decides, shared by the terminal card and the agent envelope: identity,
  * the balance in the payout's currency, the saved method behind `--payout_method_id`, and Whop's live limit.
@@ -395,16 +463,23 @@ interface MoneyGate {
 async function moneyGateFor(group: string, verb: string, args: string[], env: NodeJS.ProcessEnv, mode: Mode): Promise<MoneyGate> {
   const m = MONEY_GROUPS.has(group) ? moneyOf(args) : null;
   const methodId = flagsToRecord(args).payout_method_id;
-  const [acct, balance, methods] = await Promise.all([
+  // A write against one record: read it first, so the card can say what changes. `create` has nothing to read.
+  const target = !MONEY_GROUPS.has(group) && verb !== "create" ? targetId(args) : undefined;
+  const [acct, balance, methods, current] = await Promise.all([
     identity(env),
     m ? balanceFor(m.currency, env) : undefined,
     m || typeof methodId === "string" ? methodsFor(typeof methodId === "string" ? methodId : undefined, m?.currency ?? "usd", speedOf(args), env) : undefined,
+    target ? currentRecord(group, target, env) : undefined,
   ]);
   const live = !!m && mode !== "sandbox";
   const cap = live ? capFrom() : undefined;
   const limit = live ? methods?.limit : undefined;
   const timeoutSeconds = live ? timeoutFrom() : undefined;
   const input: ConfirmInput = { group, verb, argv: args, hints: hintsFor(group, verb), accountTitle: acct?.title, accountId: acct?.id, mode, destination: methods?.destination, balance, cap, limit, timeoutSeconds };
+  if (current) {
+    input.current = currentSummary(current);
+    input.changes = changesFor(verb, args, current);
+  }
   let refusal: MoneyGate["refusal"];
   if (live && m) {
     if (limit && m.amount > limit.max) refusal = "whop";

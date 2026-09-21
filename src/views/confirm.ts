@@ -2,7 +2,7 @@ import { infer } from "../infer.ts";
 import type { Hints } from "../hints.ts";
 import { callout } from "../primitives/callout.ts";
 import { footer } from "../primitives/footer.ts";
-import { kv, type KvRow } from "../primitives/kv.ts";
+import { kv, type KvRow, type KvSection } from "../primitives/kv.ts";
 import { paint, type Role, type Theme } from "../tokens.ts";
 import { copy, type Mode } from "../copy.ts";
 import { DESTRUCTIVE_VERBS, MONEY_GROUPS } from "../status.ts";
@@ -75,7 +75,80 @@ export interface ConfirmInput {
   limit?: WhopLimit;
   /** How long the prompt stays open, in seconds. Absent means it waits. */
   timeoutSeconds?: number;
+  /** The record the write targets, as `currentSummary`, when wv could read it. */
+  current?: Rec;
+  /** What the write changes on it. Absent when there is no record to compare with. */
+  changes?: Change[];
 }
+
+/** One field a write changes: what the record holds now and what the command sets. */
+export interface Change {
+  key: string;
+  before?: unknown;
+  after: unknown;
+  changed: boolean;
+}
+
+/** What a status verb does to the record, when the record carries the field. */
+export const IMPLIED_STATUS: Record<string, { field: string; value: string }> = {
+  pause: { field: "status", value: "paused" },
+  unpause: { field: "status", value: "active" },
+  resume: { field: "status", value: "active" },
+  cancel: { field: "status", value: "canceled" },
+  suspend: { field: "status", value: "suspended" },
+  activate: { field: "status", value: "active" },
+  deactivate: { field: "status", value: "inactive" },
+  publish: { field: "visibility", value: "visible" },
+  unpublish: { field: "visibility", value: "hidden" },
+};
+
+/** Flags that scope or protect the call and change nothing on the record. */
+const NOT_A_FIELD = new Set(["yes", "idempotency-key", "account_id", "user_id"]);
+
+const parseJsonish = (v: unknown): unknown => {
+  if (typeof v !== "string" || !/^[[{]/.test(v)) return v;
+  try {
+    return JSON.parse(v);
+  } catch {
+    return v;
+  }
+};
+const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
+/**
+ * The before-and-after of a write against the record it targets: every flag as `current[key] → value`, plus
+ * the status a verb like `pause` or `publish` implies. `delete` is one row: the record, then gone.
+ */
+export function changesFor(verb: string, argv: string[], current: Rec): Change[] {
+  const out: Change[] = [];
+  if (verb === "delete") return [{ key: copy.confirm.record, before: describeRecord(current), after: copy.confirm.deleted, changed: true }];
+  const flags = flagsToRecord(argv);
+  for (const [k, raw] of Object.entries(flags)) {
+    if (NOT_A_FIELD.has(k)) continue;
+    const after = parseJsonish(raw);
+    const before = current[k];
+    out.push({ key: k, before, after, changed: !same(before, after) });
+  }
+  const implied = IMPLIED_STATUS[verb];
+  if (implied && implied.field in current) out.push({ key: implied.field, before: current[implied.field], after: implied.value, changed: current[implied.field] !== implied.value });
+  return out;
+}
+
+/** `Title  id`, or `code  id`, or the id, for the record a write targets. */
+export function describeRecord(rec: Rec): string {
+  const name = [rec.title, rec.name, rec.code, rec.email, rec.username].find((v) => typeof v === "string" && v) as string | undefined;
+  const id = typeof rec.id === "string" ? rec.id : "";
+  return [name, id].filter(Boolean).join("  ");
+}
+
+/** The record as the plan carries it: id, a name, and the status fields, never the whole thing. */
+export function currentSummary(rec: Rec): Rec {
+  const out: Rec = {};
+  for (const k of ["id", "title", "name", "code", "status", "visibility"]) if (rec[k] !== undefined) out[k] = rec[k];
+  return out;
+}
+
+const fmt = (v: unknown): string => (v === undefined || v === null || v === "" ? copy.confirm.unset : typeof v === "object" ? JSON.stringify(v) : String(v));
 
 /** Turns `--flag value` pairs into a record. Bare flags become true. */
 export function flagsToRecord(argv: string[]): Record<string, unknown> {
@@ -129,9 +202,11 @@ function summaryRows(input: ConfirmInput): KvRow[] {
   const rows: KvRow[] = [];
   if (positional) rows.push({ key: "target", value: positional, role: "muted" });
   const currency = typeof flags.currency === "string" ? flags.currency : "usd";
+  const shownAsChange = new Set((input.changes ?? []).map((c) => c.key));
   for (const [k, v] of Object.entries(flags)) {
     if (k === "yes" || k === "idempotency-key") continue;
     if (k === "currency" && "amount" in flags) continue;
+    if (shownAsChange.has(k)) continue;
     const cell = infer(k, v, flags, hints);
     let value = cell.kind === "hidden" ? String(v) : cell.long || cell.short;
     let role = cell.role;
@@ -161,6 +236,17 @@ function summaryRows(input: ConfirmInput): KvRow[] {
   return rows;
 }
 
+/** `key  before → after`; a field the write leaves as it is stays muted, the record a delete removes is `bad`. */
+function changeRows(input: ConfirmInput): KvRow[] {
+  const rows: KvRow[] = [];
+  if (input.current && input.verb !== "delete") rows.push({ key: copy.confirm.record, value: describeRecord(input.current), role: "muted" });
+  for (const c of input.changes ?? []) {
+    const value = c.after === copy.confirm.deleted ? `${fmt(c.before)} → ${c.after}` : `${fmt(c.before)} → ${fmt(c.after)}`;
+    rows.push({ key: c.key.replace(/_/g, " "), value, role: !c.changed ? "muted" : input.verb === "delete" ? "bad" : "warn" });
+  }
+  return rows;
+}
+
 const commandLine = (argv: string[]) => shellJoin(["whop", ...argv.filter((a) => a !== "--yes")]);
 
 export function confirmView(input: ConfirmInput, theme: Theme): string[] {
@@ -171,7 +257,9 @@ export function confirmView(input: ConfirmInput, theme: Theme): string[] {
 
   const out = callout(role, copy.confirm.title(group, verb), [paint(theme, "mono", commandLine(argv))], theme, copy.confirm.badge(mode));
   out.push("");
-  out.push(...kv([{ rows: summaryRows(input) }], theme));
+  const sections: KvSection[] = [{ rows: summaryRows(input) }];
+  if (input.changes?.length) sections.push({ title: copy.confirm.changes, rows: changeRows(input) });
+  out.push(...kv(sections, theme));
   out.push("");
   const notes = [mode === "sandbox" ? copy.confirm.sandboxWarning : copy.confirm.warning];
   if (isMoney && mode !== "sandbox") notes.push(copy.confirm.money);

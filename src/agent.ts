@@ -66,6 +66,8 @@ export function moneyPlan(input: ConfirmInput): Rec {
     balance: input.balance,
     cap: input.cap === undefined ? undefined : input.cap,
     limit: input.limit,
+    current: input.current,
+    changes: input.changes,
   };
 }
 

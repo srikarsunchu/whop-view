@@ -1,0 +1,13 @@
+ [33m▌[39m [1mUnpublish a product[22m                                                                              [33mwrites to production[39m
+
+   [2mwhop products unpublish prod_iQ2Zub6GFQS5Q[22m
+
+   [2mtarget[22m  [2mprod_iQ2Zub6GFQS5Q[22m
+   [2mfrom  [22m  Hypermotion  biz_VraUMckluH8dzV
+
+ [2m── [22m[1mChanges[22m[2m ────────────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2mrecord    [22m  [2mHypermotion  prod_iQ2Zub6GFQS5Q[22m
+   [2mvisibility[22m  [33mvisible → hidden[39m
+
+   [2mThis runs against production. The Whop CLI has no dry-run.[22m
+

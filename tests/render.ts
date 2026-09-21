@@ -7,7 +7,7 @@ import { makeTheme, type Theme } from "../src/tokens.ts";
 import { setNow } from "../src/format.ts";
 import { listView } from "../src/views/list.ts";
 import { detailView } from "../src/views/detail.ts";
-import { confirmView, refusedView } from "../src/views/confirm.ts";
+import { changesFor, confirmView, currentSummary, refusedView } from "../src/views/confirm.ts";
 import { errorView } from "../src/views/error.ts";
 import { helpView, parseHelp } from "../src/views/help.ts";
 import { homeView } from "../src/views/home.ts";
@@ -118,6 +118,12 @@ export const GTM: GtmInput = {
 };
 
 /** An envelope built in the test, for shapes this account cannot record (webhooks need an API-key login). */
+/** The record inside a recorded `get`. */
+const record0 = (name: string): Rec => {
+  const p = envelope(name);
+  return p.ok && "record" in p.payload ? p.payload.record : {};
+};
+
 export const synth = (data: unknown) => parseEnvelope(JSON.stringify({ ok: true, data, meta: { command: "synthetic", duration: "1ms" } }));
 const synthPage = (rows: unknown[]) => synth({ data: rows, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } });
 
@@ -285,6 +291,21 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "confirm.payout.sandbox": (t) => confirmView({ ...PAYOUT, mode: "sandbox", destination: "Chase checking ••••4242  potk_x1", balance: { available: 418.56, currency: "usd" } }, t),
   "confirm.payout.over_cap": (t) => refusedView({ ...PAYOUT, argv: ["payouts", "create", "--amount", "2000", "--currency", "usd", "--payout_method_id", "potk_x1"], reason: "cap", destination: "Chase checking ••••4242  potk_x1", balance: { available: 2418.56, currency: "usd" }, cap: 500 }, t),
   "confirm.payout.over_balance": (t) => refusedView({ ...PAYOUT, reason: "balance", destination: "Chase checking ••••4242  potk_x1", balance: { available: 18.56, currency: "usd" }, cap: 500 }, t),
+  "confirm.update.diff": (t) => {
+    const rec = record0("products.get");
+    const argv = ["products", "update", "prod_iQ2Zub6GFQS5Q", "--title", "Hypermotion Pro", "--headline", "Words, into motion.", "--idempotency-key", "5b2c1d6e-0000-4000-8000-000000000001"];
+    return confirmView({ group: "products", verb: "update", argv, hints: hintsFor("products", "update"), accountTitle: "Hypermotion", accountId: "biz_VraUMckluH8dzV", current: currentSummary(rec), changes: changesFor("update", argv, rec) }, t);
+  },
+  "confirm.unpublish": (t) => {
+    const rec = record0("products.get");
+    const argv = ["products", "unpublish", "prod_iQ2Zub6GFQS5Q"];
+    return confirmView({ group: "products", verb: "unpublish", argv, hints: hintsFor("products", "unpublish"), accountTitle: "Hypermotion", accountId: "biz_VraUMckluH8dzV", current: currentSummary(rec), changes: changesFor("unpublish", argv, rec) }, t);
+  },
+  "confirm.delete.diff": (t) => {
+    const rec = record0("products.get");
+    const argv = ["products", "delete", "prod_iQ2Zub6GFQS5Q"];
+    return confirmView({ group: "products", verb: "delete", argv, hints: hintsFor("products", "delete"), accountTitle: "Hypermotion", accountId: "biz_VraUMckluH8dzV", current: currentSummary(rec), changes: changesFor("delete", argv, rec) }, t);
+  },
   "confirm.assembled": (t) =>
     confirmView(
       {

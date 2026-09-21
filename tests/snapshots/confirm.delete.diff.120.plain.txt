@@ -1,0 +1,12 @@
+ ▌ Delete a product                                                                                 writes to production
+
+   whop products delete prod_iQ2Zub6GFQS5Q
+
+   target  prod_iQ2Zub6GFQS5Q
+   from    Hypermotion  biz_VraUMckluH8dzV
+
+ ── Changes ────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   record  Hypermotion  prod_iQ2Zub6GFQS5Q → deleted
+
+   This runs against production. The Whop CLI has no dry-run.
+

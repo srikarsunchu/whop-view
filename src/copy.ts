@@ -15,6 +15,7 @@ export const copy = {
     empty: (noun: string) => `No ${noun.replace(/[-_]/g, " ")} yet.`,
     emptyHint: (group: string) => ["whop", group, "create", "--help"],
     json: "json",
+    allPages: (pages: number) => `${pages} pages · every row`,
   },
   summary: {
     total: (n: number) => `${n} total`,
@@ -51,6 +52,11 @@ export const copy = {
     amountNo: (amount: string) => `[${amount}/N]`,
     aborted: "Not run.",
     expired: (seconds: number) => `Not run. The prompt sat for ${duration(seconds)}.`,
+    /** The before-and-after section of a write against a record wv could read. */
+    changes: "Changes",
+    record: "record",
+    unset: "—",
+    deleted: "deleted",
     /** Row labels the money gate adds on top of the flags. */
     to: "to",
     from: "from",
@@ -360,6 +366,8 @@ export const copy = {
     home: "Running auth status, ledgers report, stats get…",
     gtm: "Running stats get, people list, audiences list, ad-campaigns list, promo-codes list…",
     doctor: "Checking who you are…",
+    current: "Reading the record as it is…",
+    allPages: (n: number) => `Fetching page ${n}…`,
     sandbox: "Pinging the sandbox host…",
     doctorReads: "Running auth list, permissions check, verifications list, payouts methods, people list, products list, webhooks list…",
     doctorDeliveries: "Running webhooks deliveries…",

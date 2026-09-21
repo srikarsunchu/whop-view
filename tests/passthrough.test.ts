@@ -31,9 +31,11 @@ case "$*" in *--schema*) [ -f "${FIXTURES}/schema.$1.$2.json" ] && fx "schema.$1
 case "$1 $2" in
   "products list")
     case "$*" in
-      *--format*json*--full-output*) fx products.list.json ;;
+      *--after*c2*) fx products.list.json ;;
+      *--format*json*--full-output*) [ -n "$WV_FAKE_PAGED" ] && fx products.list.page1.json; fx products.list.json ;;
       *) fx products.list.plain.txt ;;
     esac ;;
+  "products get") fx products.get.json ;;
   "auth status") fx auth.status.json ;;
   "ledgers report") fx ledgers.report.json ;;
   "payouts methods") fx "\${WV_FAKE_METHODS:-payouts.methods.limits.json}" ;;
@@ -273,4 +275,36 @@ test("agent gate: a verb only whop's manifest calls a write is gated too", () =>
   assert.equal(wroteTo(r, "products frobnicate"), false);
   const list = wv(["products", "list"], gateEnv());
   assert.equal(list.status, 0, "a read the manifest lists without the tag still passes through");
+});
+
+test("agent gate: a write against one record carries what it changes, read from the record first", () => {
+  const r = wv(["products", "update", "prod_iQ2Zub6GFQS5Q", "--title", "Hypermotion Pro", "--visibility", "visible"], gateEnv());
+  const e = envelopeOf(r);
+  assert.equal(e.error?.code, "CONFIRMATION_REQUIRED");
+  assert.ok(wroteTo(r, "products get prod_iQ2Zub6GFQS5Q"), "the record is read");
+  assert.deepEqual(e.plan?.current, { id: "prod_iQ2Zub6GFQS5Q", title: "Hypermotion", visibility: "visible" });
+  assert.deepEqual(e.plan?.changes, [
+    { key: "title", before: "Hypermotion", after: "Hypermotion Pro", changed: true },
+    { key: "visibility", before: "visible", after: "visible", changed: false },
+  ]);
+  const pub = envelopeOf(wv(["products", "unpublish", "prod_iQ2Zub6GFQS5Q"], gateEnv()));
+  assert.deepEqual(pub.plan?.changes, [{ key: "visibility", before: "visible", after: "hidden", changed: true }]);
+});
+
+test("--all in a pipe: every page, one row per line, then the same as one array with --format json", () => {
+  const env = gateEnv({ WV_FAKE_PAGED: "1" });
+  const r = wv(["products", "list", "--all"], env);
+  assert.equal(r.status, 0);
+  const lines = r.stdout.trim().split("\n").map((l) => JSON.parse(l) as { id: string });
+  assert.equal(lines.length, 4, "two pages of two rows");
+  assert.equal(lines[0].id, lines[2].id, "the fake serves the same rows twice; the cursor was followed");
+  assert.match(r.stderr, /^ARGS: products list --after c2 --format json --full-output$/m);
+  const arr = wv(["products", "list", "--all", "--format", "json"], env);
+  const body = JSON.parse(arr.stdout) as { data: unknown[]; pages: number; page_info: { has_next_page: boolean } };
+  assert.equal(body.data.length, 4);
+  assert.equal(body.pages, 2);
+  assert.equal(body.page_info.has_next_page, false);
+  const one = wv(["products", "list", "--all"], gateEnv());
+  assert.equal(one.stdout.trim().split("\n").length, 2, "a single page is just its rows");
+  assert.equal(one.stderr.includes("--after"), false);
 });

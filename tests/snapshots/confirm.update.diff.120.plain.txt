@@ -1,0 +1,15 @@
+ ▌ Update a product                                                                                 writes to production
+
+   whop products update prod_iQ2Zub6GFQS5Q --title 'Hypermotion Pro' --headline 'Words, into motion.' --idempotency-key
+   5b2c1d6e-0000-4000-8000-000000000001
+
+   target  prod_iQ2Zub6GFQS5Q
+   from    Hypermotion  biz_VraUMckluH8dzV
+
+ ── Changes ────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   record    Hypermotion  prod_iQ2Zub6GFQS5Q
+   title     Hypermotion → Hypermotion Pro
+   headline  Words, into motion. → Words, into motion.
+
+   This runs against production. The Whop CLI has no dry-run.
+
