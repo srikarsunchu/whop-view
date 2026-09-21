@@ -30,11 +30,21 @@ export function statusRole(status: string): Role {
 
 export const statusLabel = (status: string) => status.replace(/_/g, " ");
 
-/** Write verbs from whop-desktop src/views/Terminal.tsx, plus the CLI's own extra verbs. */
+/**
+ * Write verbs from whop-desktop src/views/Terminal.tsx, plus the CLI's own extra verbs, plus every verb
+ * `whop --llms-full` tags "Confirm with the user before executing this destructive command" that changes
+ * state (checked 2026-09-21 against 0.18.2: 149 tagged commands, 40 of them missing here before). Left out on
+ * purpose, tagged by whop but compute-only: `estimate_reach`, `validate_pixel`, `calculate_tax`, `quotes`,
+ * `quote`, `passkey-challenge`, and `webhooks test`, which the webhook round-trip view runs unprompted.
+ */
 export const WRITE_VERBS = new Set([
   "create", "delete", "update", "cancel", "pause", "unpause", "resume", "transfer", "deploy", "publish", "unpublish",
   "replay", "extend", "invite", "logout", "switch", "mark_read", "form_company", "transfer_ownership", "duplicate",
   "retry_payment", "return_url", "update-preferences", "promote", "init", "pull", "send",
+  "suspend", "permissions", "add_people", "submit", "upload_evidence", "activate", "deactivate", "end", "complete",
+  "resync_access", "verify", "replace", "capture", "refund", "retry", "void", "accept", "appeal", "deny", "reply",
+  "request_info", "withdraw", "connect", "authorize-app", "delete-passkey", "register-passkey",
+  "set-notification-preferences", "deliveries-replay", "generate",
 ]);
 
 /** Every verb under these groups moves money. */

@@ -3,6 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { agentExitCode, agentGated, errorCodeIn, EXIT_CODES, moneyPlan, rerunFor } from "../src/agent.ts";
 import { hintsFor } from "../src/hints.ts";
+import { isWrite } from "../src/status.ts";
 import { fixture } from "./render.ts";
 
 test("agent: a write or an ad verb is gated; a read, a --schema, and a --help are not", () => {
@@ -54,4 +55,11 @@ test("agent: exit codes map, success and WV_EXIT=whop keep whop's status", () =>
   assert.equal(agentExitCode(1, fixture("error.gated.json"), { WV_EXIT: "whop" }), 1);
   assert.equal(agentExitCode(127, "", {}), 127);
   assert.deepEqual(Object.values(EXIT_CODES).filter((c) => c < 3 || c > 5), [], "wv's codes stay in 3..5; 2 is the gate");
+});
+
+test("status: the verbs whop itself tags for confirmation are writes; compute-only POSTs are not", () => {
+  for (const [g, v] of [["payments", "refund"], ["payments", "capture"], ["payments", "void"], ["audiences", "add_people"], ["social-accounts", "connect"], ["promo-codes", "deactivate"], ["disputes", "upload_evidence"], ["resolution-center-cases", "accept"], ["webhooks", "deliveries-replay"], ["media", "generate"], ["accounts", "suspend"], ["apps", "permissions"]])
+    assert.equal(isWrite(g, v), true, `${g} ${v}`);
+  for (const [g, v] of [["ad-groups", "estimate_reach"], ["events", "validate_pixel"], ["plans", "calculate_tax"], ["payouts", "quotes"], ["webhooks", "test"], ["people", "list"]])
+    assert.equal(isWrite(g, v), false, `${g} ${v}`);
 });

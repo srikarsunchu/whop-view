@@ -8,7 +8,7 @@ The design is in [VIEWS.md](./VIEWS.md). This README shows it.
 
 ## Why
 
-The CLI shipped agent-first and it shows. Every command prints every field as TOON. In a terminal that TOON is syntax-colored and empty fields are folded away, which helps, but two products are still 69 lines with no columns, no alignment, and ISO timestamps. `--format md` prints `[object Object]` for nested fields. Errors are two lines. `payouts create` moves real money with no confirmation and no dry-run flag. A sandbox API host exists, but the CLI only reaches it through `WHOP_API_BASE_URL` with a separate sandbox key, and Whop's own CLI docs say there is no sandbox mode. Agents are fine with all of that. People are not. `wv` adds the people layer without touching the agent layer: one rendering system that every command group gets for free, driven by inference plus small hint files.
+The CLI shipped agent-first and it shows. Every command prints every field as TOON. In a terminal that TOON is syntax-colored and empty fields are folded away, which helps, but two products are still 69 lines with no columns, no alignment, and ISO timestamps. `--format md` prints `[object Object]` for nested fields. Errors are two lines. `payouts create` moves real money with no confirmation and no dry-run flag. A sandbox API host exists, but the CLI only reaches it through `WHOP_API_BASE_URL` with a separate sandbox key, and Whop's own CLI docs say there is no sandbox mode. People are not fine with that, and agents are less fine than they look: every failure exits 1, the "confirm before executing" tag on 149 commands is a comment nothing enforces, and the documented `--filter-output` syntax returns nothing on a list. `wv` adds the people layer, one rendering system every command group gets for free from inference plus small hint files, and an agent layer that leaves every read untouched: writes in a pipe come back as a plan to approve, screens come back as JSON, exit codes mean something, and `wv agent <group>` is the manifest `--llms` should have been.
 
 ## Install
 
@@ -18,7 +18,7 @@ git clone https://github.com/srikarsunchu/whop-view && cd whop-view && pnpm inst
 
 Needs Node 22 or newer and a working `whop` on your PATH. Then use `wv` anywhere you would type `whop`.
 
-`pnpm skill` copies the [`whop-gtm`](skills/whop-gtm/SKILL.md) skill into `~/.claude/skills`, so an agent that runs the Whop CLI learns the go-to-market loop and routes every ad write through `wv`. Whop's own `whop skills add` ships one generic skill with nothing about ads, audiences, bounties, or stats.
+`pnpm skill` regenerates the command reference inside the [`whop-gtm`](skills/whop-gtm/SKILL.md) skill from the live `whop` (every GTM verb, whether it reads, writes, or moves money, and its required flags) and copies the skill into `~/.claude/skills`. An agent that runs the Whop CLI then learns the go-to-market loop, runs `wv doctor --format json` before it starts, reads `wv agent <group>` for flags, and routes every write through `wv`. Whop's own `whop skills add` ships one generic skill with nothing about ads, audiences, bounties, or stats.
 
 ## Before and after
 

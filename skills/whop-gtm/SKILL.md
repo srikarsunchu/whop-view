@@ -32,6 +32,12 @@ The Whop CLI (`whop`, 0.18+) exposes every go-to-market stage as a command group
 ## Preflight (read-only, run all of it first)
 
 ```bash
+wv doctor --format json    # one call: signed in, identity, api key, pixel, meta page, ads payment, intelligence, products, webhooks; a `fix` per failing check
+```
+
+Without `wv`, the same reads by hand:
+
+```bash
 whop auth status --format json                                   # who, which biz_
 whop accounts preferences --format json --filter-output ads_payment_methods,ads_reporting_currency,economic_intelligence
 whop social-accounts list --format json                          # empty → no page connected, ads will refuse
@@ -49,19 +55,19 @@ Fixes, each once:
 
 ## Playbooks
 
-Ids are placeholders. Lines marked `# $` commit money.
+Ids are placeholders. Lines marked `# $` commit money. Every write is `wv …`: in a pipe it answers with the plan and exits 2 until the person approves and the agent reruns it with `--yes`; reads stay `whop …`.
 
 ### 1 · Launch day
 
 ```bash
-whop promo-codes create --account_id $BIZ --code LAUNCH20 --promo_type percentage --amount_off 20 \
+wv promo-codes create --account_id $BIZ --code LAUNCH20 --promo_type percentage --amount_off 20 \
   --base_currency usd --new_users_only true --promo_duration_months 1 --product_id $PROD \
   --stock 200 --expires_at 2026-09-28T07:00:00Z --format json
-whop checkout-configurations create --account_id $BIZ --plan_id $PLAN \
+wv checkout-configurations create --account_id $BIZ --plan_id $PLAN \
   --metadata '{"campaign":"launch-sep26"}' --format json --filter-output id,purchase_url
-whop media generate --type image --prompt "9:16 product still, dark studio, single key light" \
+wv media generate --type image --prompt "9:16 product still, dark studio, single key light" \
   --wait --timeout 300 --format json --filter-output file.id                                   # $ balance
-whop ad-campaigns create --title "Launch" --platform meta --objective sales --budget_optimization ad_group --format json --filter-output id
+wv ad-campaigns create --title "Launch" --platform meta --objective sales --budget_optimization ad_group --format json --filter-output id
 wv ads create --title "Launch · v1" --url "$PURCHASE_URL" --call_to_action shop_now \
   --ad_group '{"ad_campaign_id":"adcamp_x","title":"US 25-44 · purchase","budget_amount":40,"budget_type":"daily","optimization_goal":"conversions","conversion_event":"purchase","conversion_location":"website","placements":"automatic","demographics":{"minimum_age":25,"maximum_age":44,"gender":"all"},"regions":{"include":{"countries":["US"]}}}' \
   --creatives '[{"id":"file_a","format":"vertical"}]' --headlines '["It is live"]' \
@@ -73,10 +79,10 @@ Do not set `utm_source`, `utm_medium`, `utm_content`, `wacid`, `waid`, `wasid`: 
 ### 2 · Winback
 
 ```bash
-whop audiences create --account_id $BIZ --name "visited 30d, no purchase" --source_type people_filter \
+wv audiences create --account_id $BIZ --name "visited 30d, no purchase" --source_type people_filter \
   --filters '{"has_purchased":false,"last_seen_within_days":30,"contactable":true}' --auto_refresh true
-whop audiences create --account_id $BIZ --name "customers" --source_type people_filter --filters '{"has_purchased":true}'
-whop promo-codes create --account_id $BIZ --code COMEBACK --promo_type flat_amount --amount_off 5 --base_currency usd \
+wv audiences create --account_id $BIZ --name "customers" --source_type people_filter --filters '{"has_purchased":true}'
+wv promo-codes create --account_id $BIZ --code COMEBACK --promo_type flat_amount --amount_off 5 --base_currency usd \
   --new_users_only false --churned_users_only true --promo_duration_months 1 --one_per_customer true
 wv ad-groups create --ad_campaign_id adcamp_x --title "winback 30d" --budget_amount 15 --budget_type daily \
   --optimization_goal conversions --conversion_event purchase \
@@ -88,12 +94,12 @@ Filters must be rolling windows (`last_seen_within_days`), never fixed dates, or
 ### 3 · Lookalike scale
 
 ```bash
-whop audiences create --account_id $BIZ --audience_type lookalike --source_audience_id adaud_customers --count 3 --percentage 6
+wv audiences create --account_id $BIZ --audience_type lookalike --source_audience_id adaud_customers --count 3 --percentage 6
 whop ad-groups estimate_reach --platform meta --audiences '{"include":["adaud_lal_1"]}' --regions '{"include":{"countries":["US"]}}' --format json
 # one ad group per band, then after three days:
 whop stats get ad_delivery --account_id $BIZ --from 2026-09-22 --to 2026-09-25 --source "whop:adcamp_x:*" --group_by source --metric cost_per_result --format json
-whop ad-groups pause adgrp_worst
-whop ads duplicate ad_best
+wv ad-groups pause adgrp_worst
+wv ads duplicate ad_best
 ```
 
 The source audience needs at least 100 matched people. `percentage` must divide evenly by `count`.
@@ -101,8 +107,8 @@ The source audience needs at least 100 matched people. `percentage` must divide 
 ### 4 · Creators do the distribution
 
 ```bash
-whop products update $PROD --global_affiliate_status enabled --global_affiliate_percentage 30
-whop bounties create --account_id $BIZ --title "Clip a 30s vertical from the launch stream" \
+wv products update $PROD --global_affiliate_status enabled --global_affiliate_percentage 30
+wv bounties create --account_id $BIZ --title "Clip a 30s vertical from the launch stream" \
   --description "Cut a 30s vertical. Link the post. Paid per approved clip." --business_goal_type clipping \
   --gross_reward_amount 25 --accepted_submissions_limit 20 \
   --publish_at 2026-09-29T16:00:00Z --publish_at_timezone America/Los_Angeles --frequency weekly     # $ escrows 25 × 20 every week
@@ -119,10 +125,10 @@ Approve or deny is dashboard only. Poll submissions about once a minute while a 
 for m in page_visits new_users trial_conversion_rate gross_revenue ad_spend churn_rate; do
   whop stats get $m --account_id $BIZ --from $(date -v-7d +%F) --to $(date +%F) --format json --filter-output totals
 done
-whop economic-intelligence create --account_id $BIZ --input "<one paragraph: what you sell, the six numbers, what you want, what you can spend>"
+wv economic-intelligence create --account_id $BIZ --input "<one paragraph: what you sell, the six numbers, what you want, what you can spend>"
 whop economic-intelligence list --account_id $BIZ --status ready --format json
-whop economic-intelligence update reca_x --status executed          # approve
-whop economic-intelligence update reca_x --status superseded --reason "wrong audience"   # reject
+wv economic-intelligence update reca_x --status executed          # approve
+wv economic-intelligence update reca_x --status superseded --reason "wrong audience"   # reject
 ```
 
 ## Command reference
@@ -153,7 +159,7 @@ Conversion and engagement events tracked for attribution. · `wv agent events`
 
 Reusable targeting lists for ad groups. · `wv agent audiences`
 
-- `whop audiences add_people` · read · required: `--file_id`
+- `whop audiences add_people` · write · required: `--file_id`
 - `whop audiences create` · write · required: `--account_id`
 - `whop audiences delete` · write, destructive
 - `whop audiences list` · read
@@ -163,14 +169,14 @@ Reusable targeting lists for ad groups. · `wv agent audiences`
 
 AI-generated assets, billed from a balance, attachable wherever files are accepted. · `wv agent media`
 
-- `whop media generate` · read · required: `--prompt`, `--type`, `--timeout`
+- `whop media generate` · write · required: `--prompt`, `--type`, `--timeout`
 - `whop media get` · read
 
 ### files
 
 Upload files and attach them wherever Whop accepts documents. · `wv agent files`
 
-- `whop files complete` · read · required: `--multipart_parts`, `--multipart_upload_id`
+- `whop files complete` · write · required: `--multipart_parts`, `--multipart_upload_id`
 - `whop files create` · write · required: `--filename`
 - `whop files get` · read
 - `whop files list` · read · required: `--file_ids`
@@ -179,7 +185,7 @@ Upload files and attach them wherever Whop accepts documents. · `wv agent files
 
 Connected Facebook and Instagram accounts that run ads. · `wv agent social-accounts`
 
-- `whop social-accounts connect` · read · required: `--platform`, `--redirect_url`
+- `whop social-accounts connect` · write · required: `--platform`, `--redirect_url`
 - `whop social-accounts create` · write · required: `--platform`
 - `whop social-accounts delete` · write, destructive
 - `whop social-accounts lead_forms` · read
@@ -232,9 +238,9 @@ The creative: copy, assets, and destination URL. · `wv agent ads`
 
 Discounts that creators configure for checkout. · `wv agent promo-codes`
 
-- `whop promo-codes activate` · read
+- `whop promo-codes activate` · write
 - `whop promo-codes create` · write · required: `--account_id`, `--amount_off`, `--base_currency`, `--code`, `--new_users_only`, `--promo_duration_months`, `--promo_type`
-- `whop promo-codes deactivate` · read
+- `whop promo-codes deactivate` · write
 - `whop promo-codes delete` · write, destructive
 - `whop promo-codes get` · read
 - `whop promo-codes list` · read
@@ -304,7 +310,7 @@ Work submitted to a bounty, from attempt to payout. · `wv agent bounty-submissi
 - `whop bounty-submissions delete` · write, destructive
 - `whop bounty-submissions get` · read
 - `whop bounty-submissions list` · read
-- `whop bounty-submissions submit` · read
+- `whop bounty-submissions submit` · write
 
 ### memberships
 
@@ -317,7 +323,7 @@ A customer's purchase of a plan, from checkout through cancellation. · `wv agen
 - `whop memberships list` · read
 - `whop memberships pause` · write
 - `whop memberships resume` · write
-- `whop memberships resync_access` · read
+- `whop memberships resync_access` · write
 - `whop memberships transfer` · write
 - `whop memberships update` · write
 
@@ -351,7 +357,7 @@ Event notifications pushed to your server as things happen. · `wv agent webhook
 - `whop webhooks create` · write · required: `--url`
 - `whop webhooks delete` · write, destructive
 - `whop webhooks deliveries` · read
-- `whop webhooks deliveries-replay` · read
+- `whop webhooks deliveries-replay` · write
 - `whop webhooks get` · read
 - `whop webhooks list` · read
 - `whop webhooks replay` · write · required: `--sent_after`
@@ -374,5 +380,5 @@ Semantics the schema does not say (verified 0.18.2):
 `payment.succeeded`, `membership.activated`, `membership.trial_ending_soon`, `membership.cancel_at_period_end_changed`, `ad_campaign.payment_failed`, `ad.updated` (review status), `payment.affiliate_reward_created`, `export.completed`.
 
 ```bash
-whop webhooks create --url https://example.com/hooks --events '["payment.succeeded","ad.updated","ad_campaign.payment_failed"]'
+wv webhooks create --url https://example.com/hooks --events '["payment.succeeded","ad.updated","ad_campaign.payment_failed"]'
 ```
