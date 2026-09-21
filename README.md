@@ -407,6 +407,15 @@ A write verb inside the session gets the same confirmation, then hands the termi
 - `wv help` renders the 51 groups the way `whop --help` orders them, two columns at 120 and one at 80.
 - `wv <group>` renders that group's verbs.
 - `wv doctor` is the setup checklist above; it exits 1 when signing in, identity, or a sellable product is missing.
+- JSON flags for humans. `whop` takes objects and arrays as JSON on the command line. `wv` accepts three spellings and assembles the JSON before `whop` sees it: dotted paths (`--ad_group.budget_amount 40 --ad_group.regions.include.countries US`), a repeated flag for an array (`--events payment.succeeded --events membership.activated`), and `@file.json` for a whole value or a path inside one (`--ad_group @group.json`, `--ad_group.regions @regions.json`). Numbers, `true`, `false`, and `null` coerce; an index in a path makes an array (`--creatives.0.id file_a`); when the command's schema says a flag is an array, a lone value is wrapped, so `--headlines "It is live"` works. The assembled command is what the confirm card and every teaching footer show, so the real syntax is on screen each time. A plain agent command with JSON already in it is never touched.
+
+```
+ ▌ Create a webhook                                          writes to production
+
+   whop webhooks create --url https://hypermotion.art/hooks --events
+   '["payment.succeeded","membership.activated"]' --api_version_date 2026-09-15
+```
+
 - `wv memberships check <license_key>` says whether a software license key is good. The CLI has no license verb, but `memberships get` accepts a license key in place of the membership id, so the check is that call plus a verdict: `valid` in green when the membership is active, trialing, completed (a paid one-time purchase), or canceling (paid up to period end); `invalid` in red for expired, canceled, past due, paused, or a key nobody issued. Exit 0, 1, or 2 when Whop could not answer, so a build script or a license server can gate on it. The card shows status, product, plan, when it expires (or `never` for a one-time purchase), the user, and the membership id. In a pipe it is `whop memberships get <key>`.
 
 ```

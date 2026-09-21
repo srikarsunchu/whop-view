@@ -1,0 +1,12 @@
+ ▌ Create a webhook                                                                                 writes to production
+
+   whop webhooks create --url https://hypermotion.art/hooks --events '["payment.succeeded","membership.activated"]'
+   --api_version_date 2026-09-15
+
+   url               https://hypermotion.art/hooks
+   events            ["payment.succeeded","membership.activated"]
+   api version date  Sep 15, 2026 00:00 UTC · 5d ago
+   from              Hypermotion  biz_VraUMckluH8dzV
+
+   This runs against production. The Whop CLI has no dry-run.
+

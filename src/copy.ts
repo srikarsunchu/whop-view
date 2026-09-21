@@ -157,6 +157,7 @@ export const copy = {
       ENOENT: "Whop CLI not found",
       NO_TTY: "Needs a terminal",
       SANDBOX_AUTH: "The sandbox refused this login",
+      JSON_FLAGS: "Could not assemble the JSON flag",
     } as Record<string, string>,
     fixes: {
       HTTP_401: "whop login",
@@ -275,6 +276,12 @@ export const copy = {
     notAKey: "That does not look like a Whop key (they start with whop_). Nothing saved.",
     keyRejected: (masked: string) => `The sandbox host answered 401 to the key ${masked}. It is not a sandbox key, or it was revoked.`,
     unknownVerb: (verb: string) => `wv sandbox has no '${verb}'. Try wv sandbox status.`,
+  },
+  jsonFlags: {
+    title: "Could not assemble the JSON flag",
+    noFile: (path: string) => `@${path}: no such file. A value that starts with @ and names a path is read as JSON.`,
+    badFile: (path: string, why: string) => `@${path} is not JSON: ${why}`,
+    mixed: (path: string) => `--${path} mixes an array index with an object key on the same node.`,
   },
   license: {
     title: "license",

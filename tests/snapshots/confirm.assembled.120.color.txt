@@ -1,0 +1,12 @@
+ [33m▌[39m [1mCreate a webhook[22m                                                                                 [33mwrites to production[39m
+
+   [2mwhop webhooks create --url https://hypermotion.art/hooks --events '["payment.succeeded","membership.activated"]'
+   --api_version_date 2026-09-15[22m
+
+   [2murl             [22m  https://hypermotion.art/hooks
+   [2mevents          [22m  ["payment.succeeded","membership.activated"]
+   [2mapi version date[22m  Sep 15, 2026 00:00 UTC · 5d ago
+   [2mfrom            [22m  Hypermotion  biz_VraUMckluH8dzV
+
+   [2mThis runs against production. The Whop CLI has no dry-run.[22m
+

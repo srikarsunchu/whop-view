@@ -20,6 +20,7 @@ import { sandboxMissingKeyView, sandboxStatusView } from "../src/views/sandbox.t
 import { followHeader, followStopped, logLines, logsView } from "../src/views/logs.ts";
 import { webhookTestView } from "../src/views/webhook.ts";
 import { licenseView } from "../src/views/license.ts";
+import { assembleJson } from "../src/jsonflags.ts";
 import type { Rec } from "../src/envelope.ts";
 
 export const FIXTURES = join(import.meta.dirname, "fixtures");
@@ -285,6 +286,18 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "confirm.payout.sandbox": (t) => confirmView({ ...PAYOUT, mode: "sandbox", destination: "Chase checking ••••4242  potk_x1", balance: { available: 418.56, currency: "usd" } }, t),
   "confirm.payout.over_cap": (t) => refusedView({ ...PAYOUT, argv: ["payouts", "create", "--amount", "2000", "--currency", "usd", "--payout_method_id", "potk_x1"], reason: "cap", destination: "Chase checking ••••4242  potk_x1", balance: { available: 2418.56, currency: "usd" }, cap: 500 }, t),
   "confirm.payout.over_balance": (t) => refusedView({ ...PAYOUT, reason: "balance", destination: "Chase checking ••••4242  potk_x1", balance: { available: 18.56, currency: "usd" }, cap: 500 }, t),
+  "confirm.assembled": (t) =>
+    confirmView(
+      {
+        group: "webhooks",
+        verb: "create",
+        argv: assembleJson(["webhooks", "create", "--url", "https://hypermotion.art/hooks", "--events", "payment.succeeded", "--events", "membership.activated", "--api_version_date", "2026-09-15"]).argv,
+        hints: hintsFor("webhooks"),
+        accountTitle: "Hypermotion",
+        accountId: "biz_VraUMckluH8dzV",
+      },
+      t,
+    ),
   "confirm.update.quoted": (t) => confirmView({ group: "products", verb: "update", argv: ["products", "update", "prod_DQf7IZAtveRoK", "--title", "Frame Pro's \"beta\"", "--headline", "one; two && three"], hints: hintsFor("products") }, t),
   "confirm.delete": (t) => confirmView({ group: "products", verb: "delete", argv: ["products", "delete", "prod_DQf7IZAtveRoK"], hints: hintsFor("products"), accountTitle: "Hypermotion", accountId: "biz_VraUMckluH8dzV" }, t),
   "confirm.update": (t) => confirmView({ group: "products", verb: "update", argv: ["products", "update", "prod_DQf7IZAtveRoK", "--title", "Frame Pro", "--visibility", "hidden"], hints: hintsFor("products") }, t),

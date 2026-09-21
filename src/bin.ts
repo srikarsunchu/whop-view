@@ -2,11 +2,12 @@
 // wv: human view layer for the Whop CLI. Renders when a person is looking, execs `whop` otherwise.
 import { realpathSync } from "node:fs";
 import { makeTheme, type Theme } from "./tokens.ts";
-import { helpText, modeFrom, passthrough, run, sandboxKey, sandboxUrl, shouldPassthrough, whopEnv, type Mode } from "./runner.ts";
+import { helpText, modeFrom, schema, passthrough, run, sandboxKey, sandboxUrl, shouldPassthrough, whopEnv, type Mode } from "./runner.ts";
 import { configPath, maskKey, saveSandboxKey } from "./config.ts";
 import { sandboxMissingKeyView, sandboxSavedView, sandboxStatusView } from "./views/sandbox.ts";
 import { ask } from "./primitives/prompt.ts";
 import { resolveDates } from "./dates.ts";
+import { assembleJson, needsAssembly } from "./jsonflags.ts";
 import { webhookTestView } from "./views/webhook.ts";
 import { exitCodeFor, licenseView, verdict } from "./views/license.ts";
 import { followHeader, followIntervalMs, followStopped, logLines, logsView, newEntries, newest, pollArgv } from "./views/logs.ts";
@@ -108,7 +109,12 @@ async function main(argvIn: string[]) {
     process.stderr.write(`wv: ${dates.error.message}${dates.error.hint ? " " + dates.error.hint : ""}\n`);
     process.exit(2);
   }
-  const argv = dates.argv;
+  const json = assembleFor(dates.argv);
+  if (json.error && !process.stdout.isTTY) {
+    process.stderr.write(`wv: ${json.error.message}\n`);
+    process.exit(2);
+  }
+  const argv = json.argv;
   const mode = modeFrom(sandbox);
   const env = whopEnv(mode);
 
@@ -148,7 +154,12 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
     print(errorView({ code: dates.error.code, message: dates.error.message + (dates.error.hint ? "\n" + dates.error.hint : "") }, theme));
     return { code: 2 };
   }
-  const argv = dates.argv;
+  const json = assembleFor(dates.argv);
+  if (json.error) {
+    print(errorView({ code: json.error.code, message: json.error.message }, theme));
+    return { code: 2 };
+  }
+  const argv = json.argv;
   const [group, verb] = argv;
   if (!group || group === "help") {
     const target = group === "help" ? argv[1] : undefined;
@@ -253,6 +264,19 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
 }
 
 const argv0IsCheck = (argv: string[]) => argv[0] === "memberships" && argv[1] === "check";
+
+/**
+ * JSON flags for humans, only when the argv uses a wv spelling (dotted path, repeated flag, `@file`). The
+ * command's schema, cached by the runner, says which flags are arrays, so a lone value gets wrapped.
+ * A plain agent command is never touched, and never costs a `--schema` call.
+ */
+function assembleFor(argv: string[]): ReturnType<typeof assembleJson> {
+  if (!needsAssembly(argv)) return { argv, assembled: [] };
+  const [group, verb] = argv;
+  const raw = group && verb && !verb.startsWith("--") ? schema(group, verb) : null;
+  const options = raw && typeof raw === "object" && "options" in raw && (raw as { options?: { properties?: unknown } }).options?.properties;
+  return assembleJson(argv, options && typeof options === "object" ? (options as Parameters<typeof assembleJson>[1]) : undefined);
+}
 
 /** `memberships check <license_key>`: `memberships get` with the key, and a verdict. Exit 0 valid, 1 invalid, 2 unknown. */
 async function licenseCheck(args: string[], theme: Theme, env: NodeJS.ProcessEnv): Promise<Outcome> {
