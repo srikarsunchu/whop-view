@@ -71,6 +71,14 @@ The Monday brief as one read. `wv report` shows six numbers this week against la
 
 The recording is live on the demo account: the identity block and the missing pixel are real, and the recommendations section shows the Economic Intelligence 403 with its fix in `next`.
 
+### `setup`
+
+The first hour as a numbered list. `wv setup` turns the doctor's checks into steps with who does each: wv runs it as a plan, the person does it in a browser at the URL shown, or an interactive `whop` command runs in a terminal. Blocking checks come first, and `wv setup` again says what is left.
+
+![setup](demo/setup.gif)
+
+Live on the demo account: identity leads because it blocks payouts, and most of the rest are browser steps only the person can finish.
+
 ## What agents see
 
 Reads: the bytes are whop's. `wv products list | cat` is byte-identical to `whop products list`, and there is a test for it, so a script or a skill written against `whop` works unchanged with `wv` in its place. What changes is around the bytes:

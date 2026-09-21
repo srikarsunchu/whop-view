@@ -34,6 +34,7 @@ import { buildDispute, buildRefund, classifyKey, disputesFor, lookupData, lookup
 import { buildHook, devData, devView, parseHookArgs, WEBHOOK_ACTION, type DevInput } from "./views/dev.ts";
 import { buildPrice, buildPublish, parsePriceArgs, parsePublishArgs, storeData, storeView, type StoreInput } from "./views/store.ts";
 import { REPORT_METRICS, reportData, reportMarkdown, reportView, type ReportInput } from "./views/report.ts";
+import { setupData, setupView } from "./views/setup.ts";
 import { recipeData, recipeDoneView, recipeView, substitute, type RecipePlan } from "./views/recipe.ts";
 import { randomUUID } from "node:crypto";
 import { homeView } from "./views/home.ts";
@@ -49,7 +50,7 @@ import type { Parsed, Rec } from "./envelope.ts";
 const print = (lines: string[]) => process.stdout.write(lines.join("\n") + "\n");
 
 /** Words that are wv's, not whop's. */
-const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox", "agent", "money", "support", "dev", "store", "report"]);
+const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox", "agent", "money", "support", "dev", "store", "report", "setup"]);
 
 export interface Outcome {
   code: number;
@@ -639,12 +640,18 @@ async function devScreen(argv: string[], theme: Theme, mode: Mode): Promise<Outc
 }
 
 /** wv screens that have a JSON face: `--format json`, or any pipe. */
-const DATA_SCREENS = new Set(["doctor", "gtm", "money", "dev", "store"]);
+const DATA_SCREENS = new Set(["doctor", "gtm", "money", "dev", "store", "setup"]);
 const wantsJson = (argv: string[]) => argv.some((a, i) => a === "--format=json" || (a === "--format" && argv[i + 1] === "json"));
 
 /** Prints a screen's data as JSON and returns the exit code the screen would have used. */
 async function screenJson(screen: string, mode: Mode, env: NodeJS.ProcessEnv, argv: string[] = []): Promise<number> {
   const theme = makeTheme({});
+  if (screen === "setup") {
+    const input = await gatherDoctor(theme, env, mode);
+    const data = setupData(input);
+    process.stdout.write(JSON.stringify({ ...data, meta: { command: "setup", wrapper: "wv", mode } }, null, 2) + "\n");
+    return data.ok ? 0 : 1;
+  }
   if (screen === "store") {
     const input = await gatherStore(theme, env, mode);
     const data = storeData(input);
@@ -795,6 +802,11 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
   if (group === "dev") return devScreen(argv, theme, mode);
   if (group === "store") return storeScreen(theme, mode);
   if (group === "report") return { code: await reportRun(theme, whopEnv(mode), mode, "tty") };
+  if (group === "setup") {
+    const input = await gatherDoctor(theme, whopEnv(mode), mode);
+    print(setupView(input, theme));
+    return { code: setupData(input).ok ? 0 : 1, group: "setup" };
+  }
   if (group === "support") return lookup(argv, theme, mode, env);
   if (group === "money") return moneyScreen(theme, mode);
   if (group === "gtm" && verb === "rank") return rank(argv, theme, mode, env);

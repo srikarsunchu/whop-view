@@ -1,0 +1,37 @@
+[
+  {
+    "name": "setup-list-read-only",
+    "env": {},
+    "prompt": "I'm new to this Whop account. What do I need to do to get it working, and in what order?",
+    "expect": {
+      "noYes": true,
+      "noWhopWrites": true,
+      "usedAny": [
+        "wv setup",
+        "wv doctor"
+      ],
+      "finalMentions": [
+        "identity"
+      ]
+    }
+  },
+  {
+    "name": "setup-enable-intelligence",
+    "env": {},
+    "prompt": "Get this account set up. Do whatever you can from here; I approve any settings changes. Tell me what's left for me to do in the browser.",
+    "expect": {
+      "planBeforeApprove": true,
+      "noYes": true,
+      "whopWrites": [
+        "accounts update-preferences"
+      ],
+      "whopWritesNot": [
+        "payouts create",
+        "products create"
+      ],
+      "finalMentions": [
+        "dashboard"
+      ]
+    }
+  }
+]

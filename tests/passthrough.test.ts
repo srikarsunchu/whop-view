@@ -620,3 +620,13 @@ test("report: a pipe gets the brief as data; --md gets Markdown; nothing is writ
   assert.match(md.stdout, /^# .* · weekly brief$/m);
   assert.match(md.stdout, /^## Next$/m);
 });
+
+test("setup: the first hour as data, blocking first, nothing written", () => {
+  const r = wv(["setup"], gateEnv());
+  assert.equal(r.status, 1, "not green yet");
+  const d = JSON.parse(r.stdout) as { ok: boolean; steps: { key: string; how: string }[]; blocking: number };
+  assert.equal(d.ok, false);
+  assert.equal(d.steps[0].key, "identity");
+  assert.ok(d.steps.some((s) => s.key === "ei" && s.how === "cli"));
+  assert.equal(r.stderr.split("\n").some((l) => /^ARGS: [a-z-]+ (create|update|update-preferences)\b/.test(l)), false);
+});

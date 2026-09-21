@@ -1,0 +1,7 @@
+ [1mFrame[22m[2m › [22m[2mbiz_VraUMckluH8dzV[22m[2m › [22m[33mproduction[39m[2m › [22m[1msetup[22m[2m › [22m[32m9 of 9 green[39m
+
+ [32mEvery check is green. This business is set up to sell, run ads, pay out, and receive webhooks.[39m
+
+ [2mreport[22m  [2mwv report[22m
+ [2mgtm[22m  [2mwv gtm[22m
+

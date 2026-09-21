@@ -1,0 +1,45 @@
+ [1mFrame[22m[2m › [22m[2mbiz_VraUMckluH8dzV[22m[2m › [22m[33mproduction[39m[2m › [22m[1msetup[22m[2m › [22m[2m2 of 9 green[22m
+
+   [2m1  identity    [22m  [31mblocks selling · wv starts it, you finish in a browser[39m
+                    [2mwhy [22m  Payouts are blocked: Please complete identity verification before requesting a withdrawal.
+                    [2mthen[22m  The command starts identity verification; Whop finishes it in the dashboard with your
+                          documents. Payouts stay blocked until it clears.
+                    [2mrun [22m  wv verifications create --account_id biz_VraUMckluH8dzV
+                    [2mopen[22m  https://whop.com/dashboard/biz_VraUMckluH8dzV/
+   [2m2  api key     [22m  [32mwv runs it, you approve[39m
+                    [2mwhy [22m  This oauth login lacks developer:manage_webhook. The api-key profile sandbox is saved; switch
+                          to it for those.
+                    [2mthen[22m  Switch to the saved API-key profile; webhooks and a few developer reads need it. Switch back
+                          after if you prefer the OAuth login day to day.
+                    [2mrun [22m  wv auth switch sandbox
+   [2m3  pixel       [22m  [33mwv starts it, you finish in a browser[39m
+                    [2mwhy [22m  No visit carries a source: the pixel is not installed on your pages, so nothing is attributed.
+                    [2mthen[22m  Add the Whop pixel to the head of every page people land on, then validate; until then nothing
+                          is attributed and audiences stay empty.
+                    [2mrun [22m  whop events validate_pixel
+                    [2mopen[22m  https://docs.whop.com/developer/ads/pixel
+   [2m4  meta page   [22m  [33mwv starts it, you finish in a browser[39m
+                    [2mwhy [22m  No Meta page is connected, so every ad command will refuse.
+                    [2mthen[22m  The command returns a URL; open it and connect the Facebook page ads will run under. Whop owns
+                          the ad account; you connect the page.
+                    [2mrun [22m  wv social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>
+   [2m5  ads payment [22m  [33myou, in the dashboard[39m
+                    [2mwhy [22m  No ads payment method on the account, so ads will not deliver.
+                    [2mthen[22m  Add an ads payment method under settings, or fund the balance with wv deposits create; ads
+                          will not deliver without one.
+                    [2mopen[22m  https://whop.com/dashboard/biz_VraUMckluH8dzV/
+   [2m6  intelligence[22m  [32mwv runs it, you approve[39m
+                    [2mwhy [22m  Economic Intelligence is off, so `whop economic-intelligence` returns 403.
+                    [2mthen[22m  Turn on Economic Intelligence so whop economic-intelligence answers instead of 403.
+                    [2mrun [22m  wv accounts update-preferences --economic_intelligence true
+   [2m7  webhooks    [22m  [32mwv runs it, you approve[39m
+                    [2mwhy [22m  Webhooks refuse an oauth login. Sign in with an API key to list, create, or test them.
+                    [2mthen[22m  Create and test a webhook to your server; needs the API-key profile from the step above.
+                    [2mrun [22m  wv dev hook https://<your host>/hooks --plan
+
+   [2mDo the steps in order, blocking ones first. Every run line is a write that shows its plan before it runs; every open[22m
+   [2mline is a page only you can complete. Then wv setup again until it is green.[22m
+
+ [2magain[22m  [2mwv setup[22m
+ [2mdoctor[22m  [2mwv doctor --format json[22m
+

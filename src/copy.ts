@@ -439,6 +439,32 @@ export const copy = {
     blockedMessage: (name: string) => `The ${name} cannot run as planned. Every blocker is listed in plan.blockers; fix them, then plan again.`,
     typeAmount: (amount: string, name: string) => `Type ${amount} to run the ${name}`,
   },
+  /** `wv setup`: the first hour as a numbered list. */
+  setup: {
+    title: "setup",
+    progress: (green: number, total: number) => `${green} of ${total} green`,
+    allGreen: "Every check is green. This business is set up to sell, run ads, pay out, and receive webhooks.",
+    blocking: "blocks selling",
+    how: { cli: "wv runs it, you approve", terminal: "whop in a terminal, interactive", browser: "you, in the dashboard", both: "wv starts it, you finish in a browser" } as Record<string, string>,
+    why: "why",
+    then: "then",
+    run: "run",
+    open: "open",
+    loop: "Do the steps in order, blocking ones first. Every run line is a write that shows its plan before it runs; every open line is a page only you can complete. Then wv setup again until it is green.",
+    again: "again",
+    steps: {
+      auth: "Sign in with the account that owns the business; whop login opens a browser and comes back.",
+      identity: "The command starts identity verification; Whop finishes it in the dashboard with your documents. Payouts stay blocked until it clears.",
+      apikeySwitch: "Switch to the saved API-key profile; webhooks and a few developer reads need it. Switch back after if you prefer the OAuth login day to day.",
+      apikeyNew: "Make an API key in the dashboard with the scopes wv doctor names, then add it as a profile.",
+      pixel: "Add the Whop pixel to the head of every page people land on, then validate; until then nothing is attributed and audiences stay empty.",
+      page: "The command returns a URL; open it and connect the Facebook page ads will run under. Whop owns the ad account; you connect the page.",
+      payment: "Add an ads payment method under settings, or fund the balance with wv deposits create; ads will not deliver without one.",
+      ei: "Turn on Economic Intelligence so whop economic-intelligence answers instead of 403.",
+      products: "Create a product, then a plan under it; the store has nothing to sell until both exist.",
+      webhooks: "Create and test a webhook to your server; needs the API-key profile from the step above.",
+    },
+  },
   /** `wv report`: the Monday brief. */
   report: {
     title: "report",

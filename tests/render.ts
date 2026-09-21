@@ -17,6 +17,7 @@ import { buildDispute, buildRefund, lookupView, parseDisputeArgs, parseRefundArg
 import { buildHook, devView, parseHookArgs } from "../src/views/dev.ts";
 import { buildPrice, buildPublish, parsePriceArgs, parsePublishArgs, storeView } from "../src/views/store.ts";
 import { reportView, type ReportInput } from "../src/views/report.ts";
+import { setupView } from "../src/views/setup.ts";
 import { errorView } from "../src/views/error.ts";
 import { helpView, parseHelp } from "../src/views/help.ts";
 import { homeView } from "../src/views/home.ts";
@@ -378,6 +379,8 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "confirm.payout.sandbox": (t) => confirmView({ ...PAYOUT, mode: "sandbox", destination: "Chase checking ••••4242  potk_x1", balance: { available: 418.56, currency: "usd" } }, t),
   "confirm.payout.over_cap": (t) => refusedView({ ...PAYOUT, argv: ["payouts", "create", "--amount", "2000", "--currency", "usd", "--payout_method_id", "potk_x1"], reason: "cap", destination: "Chase checking ••••4242  potk_x1", balance: { available: 2418.56, currency: "usd" }, cap: 500 }, t),
   "confirm.payout.over_balance": (t) => refusedView({ ...PAYOUT, reason: "balance", destination: "Chase checking ••••4242  potk_x1", balance: { available: 18.56, currency: "usd" }, cap: 500 }, t),
+  setup: (t) => setupView(DOCTOR, t),
+  "setup.green": (t) => setupView(DOCTOR_READY, t),
   report: (t) => reportView(REPORT, t),
   store: (t) => storeView(STORE, t),
   "price.ready": (t) => recipeView(PRICE_READY, t),
