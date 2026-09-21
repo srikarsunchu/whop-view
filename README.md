@@ -351,27 +351,6 @@ A 403 that says "You don't have access to X yet" is not a permission problem, an
 
 Three gates are mapped from the CLI's own words: Economic Intelligence (a preference, with the command), experiments (Whop-internal, so one line says no plan or preference unlocks it), and cards (a Rain account that Whop opens after identity verification, with `whop verifications create` as the first step). A gate nobody has mapped says so and points at the dashboard. "Authenticate with an account-scoped credential", which `cashback-rules` answers to an OAuth login, is a login problem and renders as one, with the API-key login as the fix.
 
-## Gaps this round
-
-Eight gaps a developer or software seller hits in the Whop CLI, and where each landed:
-
-1. **Doctor**: shipped. `wv doctor`, nine checks, exit 1 on a blocking failure.
-2. **Sandbox**: shipped, with one honest hole. The key lives in `wv`'s config file, `wv sandbox status` pings the host, keys never cross sides. Where a sandbox key is issued is not written anywhere the CLI or the API reference reaches, so the screen says "get one from Whop" and links the getting-started page, nothing more specific.
-3. **Date presets**: shipped. `--last Nd`, `--this month`, `--last month` on `stats get` and `events list`; an events range over 30 days is refused in Whop's words.
-4. **Log following**: shipped. `wv apps logs <id> --follow`, polling on `--created_after`, level colored, Ctrl-C stops.
-5. **Webhook loop**: shipped, partial on one word. `wv webhooks test` shows the round trip and `webhooks deliveries` is a table, but the API has no attempt counter, so the column is `replay of` rather than attempts.
-6. **License check**: shipped. `memberships get` accepts a license key, so `wv memberships check <key>` is that call plus a verdict and an exit code.
-7. **JSON flags for humans**: shipped. Dotted paths, repeated flags, and `@file` assemble to the JSON flag; the round trip is tested.
-8. **Feature gate errors**: shipped. Three gates mapped, an unknown gate says so.
-
-Then five for the agent, since the CLI shipped agent-first and its agent layer still had holes:
-
-9. **A footer that works**: shipped. The list footer taught a `--filter-output` that returns `{}` on the real CLI; it now teaches the slice form that works.
-10. **The gate without a terminal**: shipped. A write in a pipe was passed straight to `whop`, so an agent had less protection than a person. It now gets the same gate as JSON: `CONFIRMATION_REQUIRED` with the plan and a `rerun`, refusals with no `rerun`, `--plan` for the plan alone.
-11. **Screens as data**: shipped. `wv doctor --format json` and `wv gtm --format json`, or either in a pipe.
-12. **A manifest between `--llms` and `--llms-full`**: shipped. `wv agent <group>`, one Markdown page per group from `--schema`, and the whop-gtm skill's command reference is generated from it.
-13. **Exit codes**: shipped. `whop` exits 1 for every failure; in a pipe `wv` maps the code in the body to 3, 4, or 5 and leaves the bytes alone. `WV_EXIT=whop` keeps whop's.
-
 ## What agents see
 
 Reads: nothing new. `wv` execs `whop` with the original argv whenever any of these hold:
