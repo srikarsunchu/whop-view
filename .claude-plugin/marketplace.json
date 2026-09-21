@@ -1,0 +1,15 @@
+{
+  "name": "whop-view",
+  "metadata": { "description": "wv: the Whop CLI with a gate, as an MCP server and seven skills for Claude Code." },
+  "owner": { "name": "srikarsunchu" },
+  "plugins": [
+    {
+      "name": "whop-view",
+      "description": "The wv MCP server (writes plan first and ask the person) and the whop-gtm, whop-store, whop-money, whop-support, whop-dev, whop-report, and whop-setup skills.",
+      "author": { "name": "srikarsunchu" },
+      "source": "./",
+      "category": "productivity",
+      "homepage": "https://github.com/srikarsunchu/whop-view"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "wv": {
+      "command": "sh",
+      "args": ["-c", "cd \"${CLAUDE_PLUGIN_ROOT:-$PWD}\" && exec node --experimental-strip-types --no-warnings src/bin.ts --mcp"]
+    }
+  }
+}
