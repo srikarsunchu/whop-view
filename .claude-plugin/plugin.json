@@ -2,9 +2,30 @@
   "name": "whop-view",
   "version": "0.1.0",
   "description": "Run a Whop business from Claude with a gate: the wv MCP server (reads, screens, and writes that plan first and ask the person) plus seven skills: gtm, store, money, support, dev, report, setup.",
-  "author": { "name": "srikarsunchu" },
+  "author": {
+    "name": "srikarsunchu"
+  },
   "homepage": "https://github.com/srikarsunchu/whop-view",
   "repository": "https://github.com/srikarsunchu/whop-view",
   "license": "MIT",
-  "keywords": ["whop", "mcp", "payouts", "ads", "webhooks", "storefront", "support"]
+  "keywords": [
+    "whop",
+    "mcp",
+    "payouts",
+    "ads",
+    "webhooks",
+    "storefront",
+    "support"
+  ],
+  "mcpServers": {
+    "wv": {
+      "command": "node",
+      "args": [
+        "--experimental-strip-types",
+        "--no-warnings",
+        "${CLAUDE_PLUGIN_ROOT}/src/bin.ts",
+        "--mcp"
+      ]
+    }
+  }
 }
