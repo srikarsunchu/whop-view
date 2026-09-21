@@ -47,7 +47,9 @@ export function parseEnvelope(text: string): Parsed {
   try {
     raw = JSON.parse(text);
   } catch {
-    return { ok: false, error: { code: "UNKNOWN", message: text.trim().split("\n")[0] || "Empty response" } };
+    const first = text.trim().split("\n")[0] || "";
+    if (/^\s*<(!doctype|html)/i.test(text)) return { ok: false, error: { code: "NOT_JSON", message: "Whop answered with a web page instead of JSON. The resource may not exist or the endpoint may be down." } };
+    return { ok: false, error: { code: "UNKNOWN", message: first || "Empty response" } };
   }
   if (!isObj(raw)) return { ok: true, payload: { kind: "other", record: { value: raw } } };
   if (raw.ok === false && isObj(raw.error)) {

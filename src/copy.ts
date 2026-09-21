@@ -43,6 +43,7 @@ export const copy = {
       HTTP_429: "Rate limited",
       VALIDATION_ERROR: "Missing or invalid flags",
       UNKNOWN: "Whop returned an error",
+      NOT_JSON: "Not a JSON response",
       ENOENT: "Whop CLI not found",
       NO_TTY: "Needs a terminal",
     } as Record<string, string>,

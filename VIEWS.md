@@ -118,7 +118,7 @@ Column drop order under width pressure: 7, 5, 4, 3, 2. The primary label and id 
 
 ## Hints schema
 
-`src/hints/<resource>.json`. Every key optional. Eighteen shipped; every other resource renders from inference alone.
+`src/hints/<resource>.json`. Every key optional. Twenty-four shipped, eight of them from `--schema` alone because the account has no data there yet; every other resource renders from inference alone.
 
 ```json
 {
@@ -271,6 +271,10 @@ Three calls run in parallel: `auth status`, `ledgers report --report_type balanc
 - Feature-gated errors (`HTTP_403` with "You don't have access to X yet") are not permission problems. They render muted with no fix command, matching whop-desktop's `unavailable` branch.
 - The empty-state hint `whop <group> create --help` only appears when the group's help lists a `create` verb. Refunds and dispute alerts have none.
 - Phone numbers, IP addresses, and user agents are hidden everywhere. Emails render in detail only. People and api-logs carry all three.
+- Keys ending in `token`, `secret`, `password`, or `private_key` never render. `apps get` returns a live preview JWT.
+- Payments carry a full billing address. It is hidden by hint. Emails and card display names stay, since a merchant looking at one payment needs them.
+- Nested objects without a name flatten two levels in detail, so `verification` shows `individual status  verified` instead of `2 fields`.
+- The API occasionally answers a valid `get` with an HTML page. That renders as "Not a JSON response" rather than a raw doctype.
 
 - `payments list` does not exist. Payments hints target `payments status <id>`. The payments feed is `ledgers list`.
 - `stats get` requires `--from` and `--to`. Home supplies a 7-day UTC window.

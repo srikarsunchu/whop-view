@@ -1,0 +1,40 @@
+{
+  "primary": "title",
+  "status": "status",
+  "money": [
+    "budget_amount",
+    "spend",
+    "desired_cost_per_result",
+    "minimum_daily_spend"
+  ],
+  "date": "starts_at",
+  "relation": "ad_campaign",
+  "columns": [
+    "title",
+    "status",
+    "budget_amount",
+    "budget_type",
+    "optimization_goal",
+    "starts_at",
+    "ends_at",
+    "id"
+  ],
+  "hidden": [
+    "demographics",
+    "detailed_targeting",
+    "devices",
+    "regions",
+    "placements",
+    "frequency_cap",
+    "dynamic_creative",
+    "message_apps"
+  ],
+  "labels": {
+    "budget_amount": "budget",
+    "budget_type": "per",
+    "optimization_goal": "goal",
+    "starts_at": "starts",
+    "ends_at": "ends",
+    "desired_cost_per_result": "target cpr"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "primary": "title",
+  "status": "status",
+  "money": [
+    "gross_reward_amount",
+    "gross_paid_out_amount"
+  ],
+  "date": "publish_at",
+  "columns": [
+    "title",
+    "status",
+    "gross_reward_amount",
+    "gross_paid_out_amount",
+    "frequency",
+    "publish_at",
+    "id"
+  ],
+  "hidden": [
+    "capture_spec",
+    "publish_at_timezone"
+  ],
+  "labels": {
+    "gross_reward_amount": "reward",
+    "gross_paid_out_amount": "paid out",
+    "business_goal_type": "goal",
+    "accepted_submissions_limit": "max accepted",
+    "accepted_submissions_per_user_limit": "max per user",
+    "publish_at": "publishes"
+  }
+}

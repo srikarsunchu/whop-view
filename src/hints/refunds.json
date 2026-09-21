@@ -4,21 +4,17 @@
   "money": [
     "amount"
   ],
-  "date": "evidence_due_at",
-  "relation": "user",
+  "date": "created_at",
+  "relation": "payment",
   "columns": [
     "id",
     "status",
     "amount",
     "reason",
-    "evidence_due_at",
+    "payment_id",
     "created_at"
   ],
-  "hidden": [
-    "evidence"
-  ],
   "labels": {
-    "evidence_due_at": "evidence due",
-    "respond_by": "respond by"
+    "payment_id": "payment"
   }
 }

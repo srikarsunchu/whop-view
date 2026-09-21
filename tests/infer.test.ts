@@ -190,3 +190,30 @@ test("sparkline scales to the max point", () => {
   assert.equal(sparkline([0, 9.28, 0, 0, 9.28, 0, 0]), "▁█▁▁█▁▁");
   assert.equal(sparkline([0, 0]), "▁▁");
 });
+
+test("secrets never render: preview tokens, webhook secrets, passwords", () => {
+  assert.equal(infer("preview_token", "eyJ...", {}, none).kind, "hidden");
+  assert.equal(infer("secret", "whsec_x", {}, none).kind, "hidden");
+  assert.equal(infer("client_secret", "x", {}, none).kind, "hidden");
+  assert.equal(infer("hasSecret", true, {}, none).kind, "bool", "a boolean flag is not a secret");
+  assert.equal(infer("api_key_id", "apik_9g8juxWIZtgIA", {}, none).kind, "id");
+});
+
+test("nested objects flatten two levels in detail instead of saying 'N fields'", () => {
+  const c = infer("verification", { individual: { status: "verified", country: "us" }, business: null }, {}, none);
+  assert.deepEqual(c.extra, [["individual status", "verified"], ["individual country", "us"]]);
+});
+
+test("a web page instead of JSON is a named error", () => {
+  const p = parseEnvelope("<!DOCTYPE html><html><body>404</body></html>");
+  assert.equal(p.ok, false);
+  if (!p.ok) assert.equal(p.error.code, "NOT_JSON");
+});
+
+test("schema-only hints load for the groups with no data yet", () => {
+  for (const g of ["ads", "ad-groups", "bounties", "disputes", "shipments", "promo-codes", "webhooks", "refunds"]) {
+    const h = hintsFor(g);
+    assert.ok(h.primary && h.columns?.length, `${g} hints incomplete`);
+    assert.ok(h.columns!.includes("id") || h.primary === "id", `${g} must keep id in the table`);
+  }
+});

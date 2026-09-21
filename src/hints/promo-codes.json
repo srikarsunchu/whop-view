@@ -1,0 +1,27 @@
+{
+  "primary": "code",
+  "status": "status",
+  "money": [
+    "amount_off"
+  ],
+  "date": "expires_at",
+  "columns": [
+    "code",
+    "status",
+    "promo_type",
+    "amount_off",
+    "stock",
+    "expires_at",
+    "id"
+  ],
+  "labels": {
+    "promo_type": "type",
+    "amount_off": "off",
+    "expires_at": "expires",
+    "promo_duration_months": "months",
+    "one_per_customer": "one per customer",
+    "new_users_only": "new users only",
+    "churned_users_only": "churned only",
+    "existing_memberships_only": "existing members only"
+  }
+}

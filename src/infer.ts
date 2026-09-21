@@ -23,10 +23,12 @@ export interface Cell {
 export const HIDDEN = new Set([
   "object", "metadata", "recommended_action", "previous_hosted_urls", "businesses_created_logo_urls",
   "checkout_styling", "payment_method_configuration", "custom_fields", "gallery_images",
-  "last_ip", "ip_address", "user_agent", "phone", "phone_number",
+  "last_ip", "ip_address", "user_agent", "phone", "phone_number", "phones", "icons", "issuer_identification_number",
 ]);
 
 const ID_RE = /^[a-z]{2,5}_[A-Za-z0-9]{8,}$/;
+/** Credentials never render, in any view. `hasSecret` is a boolean and does not match. */
+const SECRET_RE = /(^|_)(token|secret|password|private_key|client_secret)$/;
 const ISO_RE = /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
 const MONEY_KEY = /price|amount|balance|spend|revenue|fee|budget|total|payout|earn/i;
 
@@ -48,7 +50,7 @@ export function summarize(v: Rec): string {
 /** Classify one field. */
 export function infer(key: string, value: unknown, row: Rec, hints: Hints): Cell {
   // 1 hidden
-  if (HIDDEN.has(key) || hints.hidden?.includes(key) || key.endsWith("_decimals")) return cell("hidden", "");
+  if (HIDDEN.has(key) || hints.hidden?.includes(key) || key.endsWith("_decimals") || SECRET_RE.test(key)) return cell("hidden", "");
   // 15 empty (early so nulls don't fall through)
   if (isEmpty(value)) return cell("empty", copy.detail.empty, "", "muted");
   // plan (hint) → planPrice
@@ -110,17 +112,28 @@ export function infer(key: string, value: unknown, row: Rec, hints: Hints): Cell
   // 13 array of objects
   if (Array.isArray(value)) {
     const n = value.length;
-    const extra: [string, string][] = value.slice(0, 5).map((x, i) => [String(i + 1), summarize(x as Rec)]);
-    return cell("objects", `${n} ${labelFor(key, hints)}`, `${n} ${labelFor(key, hints)}`, "text", "left", extra);
+    const extra: [string, string][] = value
+      .slice(0, 5)
+      .map((x, i): [string, string] => [String(i + 1), summarize(x as Rec)])
+      .filter(([, v]) => v.trim());
+    return cell("objects", `${n} ${labelFor(key, hints)}`, `${n} ${labelFor(key, hints)}`, "text", "left", extra.length ? extra : undefined);
   }
-  // nested object without a name: flatten to extra lines in detail
+  // nested object without a name: flatten to extra lines in detail, two levels deep
   if (isObj(value)) {
-    const extra: [string, string][] = Object.entries(value)
-      .filter(([k, v]) => !HIDDEN.has(k) && !isEmpty(v))
-      .slice(0, 8)
-      .map(([k, v]) => [labelFor(k, hints), infer(k, v, value, hints).long || String(v)]);
-    const label = typeof value.id === "string" ? value.id : `${Object.keys(value).length} fields`;
-    return cell("objects", label, label, "muted", "left", extra);
+    const extra: [string, string][] = [];
+    const walk = (obj: Rec, prefix: string) => {
+      for (const [k, v] of Object.entries(obj)) {
+        if (extra.length >= 8) return;
+        const c = infer(k, v, obj, hints);
+        if (c.kind === "hidden" || c.kind === "empty") continue;
+        if (isObj(v) && !prefix && !("id" in v) && !c.long.trim()) walk(v, labelFor(k, hints) + " ");
+        else if (isObj(v) && !prefix && c.kind === "objects") walk(v, labelFor(k, hints) + " ");
+        else extra.push([prefix + labelFor(k, hints), c.long || String(v)]);
+      }
+    };
+    walk(value, "");
+    const label = typeof value.id === "string" ? value.id : extra.length ? "" : `${Object.keys(value).length} fields`;
+    return cell("objects", label || `${Object.keys(value).length} fields`, label, "muted", "left", extra);
   }
   // 14 long text. Emails ride along: detail only, never a list column.
   if (typeof value === "string" && (value.length > 60 || /email/.test(key))) return cell("long", "", value);

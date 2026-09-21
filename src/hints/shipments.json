@@ -1,0 +1,18 @@
+{
+  "primary": "tracking_number",
+  "status": "status",
+  "date": "created_at",
+  "relation": "payment",
+  "columns": [
+    "tracking_number",
+    "status",
+    "carrier",
+    "payment_id",
+    "created_at",
+    "id"
+  ],
+  "labels": {
+    "tracking_number": "tracking",
+    "payment_id": "payment"
+  }
+}

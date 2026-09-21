@@ -1,0 +1,38 @@
+{
+  "primary": "title",
+  "status": "status",
+  "money": [
+    "spend",
+    "cost_per_click",
+    "cost_per_result",
+    "cost_per_mille"
+  ],
+  "date": "created_at",
+  "relation": "ad_group",
+  "columns": [
+    "title",
+    "status",
+    "call_to_action",
+    "spend",
+    "clicks",
+    "results",
+    "created_at",
+    "id"
+  ],
+  "hidden": [
+    "url_parameters",
+    "messaging_config",
+    "music",
+    "lead_form",
+    "multi_advertiser_ads",
+    "existing_post_id"
+  ],
+  "labels": {
+    "call_to_action": "cta",
+    "cost_per_click": "cpc",
+    "cost_per_result": "cpr",
+    "cost_per_mille": "cpm",
+    "click_through_rate": "ctr",
+    "return_on_ad_spend": "roas"
+  }
+}

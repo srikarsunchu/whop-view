@@ -24,7 +24,10 @@
     "voidable",
     "tax_behavior",
     "tax_refunded_amount",
-    "line_items"
+    "line_items",
+    "billing_address",
+    "presentment_total",
+    "usd_total"
   ],
   "labels": {
     "billing_reason": "reason",

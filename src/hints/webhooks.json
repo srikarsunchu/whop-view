@@ -1,0 +1,20 @@
+{
+  "primary": "url",
+  "date": "created_at",
+  "columns": [
+    "url",
+    "enabled",
+    "events",
+    "api_version_date",
+    "created_at",
+    "id"
+  ],
+  "hidden": [
+    "secret",
+    "signing_secret"
+  ],
+  "labels": {
+    "api_version_date": "api version",
+    "child_resource_events": "child events"
+  }
+}
