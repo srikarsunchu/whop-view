@@ -375,6 +375,8 @@ $ wv payouts create --amount 5 --payout_method_id potk_x | cat
 }
 ```
 
+Every row: `wv <group> list --all | …` follows the cursor and streams one JSON object per line; `--all --format json` returns one array in whop's list shape. whop has `--format jsonl` and `has_next_page` but nothing that follows the cursor. In a terminal `--all` renders one list of every row.
+
 Exit codes: `whop` exits 1 for every failure, so a script cannot branch without parsing the body. In a pipe `wv` reads the error code out of the bytes it already forwarded and maps it; stdout stays byte-identical. `WV_EXIT=whop` keeps whop's status.
 
 | exit | meaning | whop codes |
@@ -400,6 +402,8 @@ Manifest: `wv agent <group>` prints one Markdown page per command group from `--
 ![agent gate](demo/agent-gate.gif)
 
 ![agent gate refusing a payout](demo/agent-plan.gif)
+
+For a write against one record, `wv` reads the record first and the plan says what changes, so `products update` shows `title  Hypermotion → Hypermotion Pro` and `products unpublish` shows `visibility  visible → hidden`; the terminal card gets the same `Changes` section.
 
 `rerun` carries an `--idempotency-key` wv minted at the plan step when the verb takes one, so the approved retry cannot write twice; the terminal card shows the same key. Which verbs count as writes comes from whop's own manifest, fetched once a day, with wv's list underneath, so a verb that ships tomorrow is gated tomorrow.
 
