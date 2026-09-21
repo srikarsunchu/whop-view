@@ -13,10 +13,10 @@
         "account_id": "biz_VraUMckluH8dzV",
         "user": {
           "id": "user_3meX572iT5dAg",
-          "username": "bossil",
-          "name": "baasil",
+          "username": "adacustomer",
+          "name": "ada",
           "profile_picture": {
-            "url": "https://ui-avatars.com/api/?name=baasil&background=535961&color=fff&format=png"
+            "url": "https://ui-avatars.com/api/?name=ada&background=535961&color=fff&format=png"
           }
         },
         "member_id": "mber_ZGAeDMkmbieVQ",
@@ -139,12 +139,12 @@
         },
         "customer_phone": null,
         "billing_address": {
-          "name": "Baasil Ali",
-          "line1": "26562 Calaroga Ave",
+          "name": "Ada Customer",
+          "line1": "redacted",
           "line2": null,
           "city": "Hayward",
           "state": "CA",
-          "postal_code": "94545",
+          "postal_code": "redacted",
           "country": "US"
         },
         "shipping_address": null,
@@ -313,11 +313,11 @@
         "customer_phone": null,
         "billing_address": {
           "name": "Srikar Sunchu",
-          "line1": "2286 Tango Pl",
+          "line1": "redacted",
           "line2": null,
           "city": "Manteca",
           "state": "CA",
-          "postal_code": "95337",
+          "postal_code": "redacted",
           "country": "US"
         },
         "shipping_address": null,
@@ -486,11 +486,11 @@
         "customer_phone": null,
         "billing_address": {
           "name": "Srikar Sunchu",
-          "line1": "2286 Tango Pl",
+          "line1": "redacted",
           "line2": null,
           "city": "Manteca",
           "state": "CA",
-          "postal_code": "95337",
+          "postal_code": "redacted",
           "country": "US"
         },
         "shipping_address": null,

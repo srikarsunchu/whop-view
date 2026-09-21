@@ -31,7 +31,7 @@
         },
         "payment_id": "pay_JFHAhioMdPL1ts",
         "user_id": "user_3meX572iT5dAg",
-        "user_name": "baasil",
+        "user_name": "ada",
         "user_email": "redacted@example.com",
         "product_id": "prod_iQ2Zub6GFQS5Q",
         "product_name": "Hypermotion",
@@ -52,7 +52,7 @@
           "card_last4": "1396",
           "user": {
             "id": "user_3meX572iT5dAg",
-            "name": "baasil",
+            "name": "ada",
             "email": "redacted@example.com"
           },
           "product": {
@@ -95,7 +95,7 @@
         },
         "payment_id": "pay_JFHAhioMdPL1ts",
         "user_id": "user_3meX572iT5dAg",
-        "user_name": "baasil",
+        "user_name": "ada",
         "user_email": "redacted@example.com",
         "product_id": "prod_iQ2Zub6GFQS5Q",
         "product_name": "Hypermotion",
@@ -116,7 +116,7 @@
           "card_last4": "1396",
           "user": {
             "id": "user_3meX572iT5dAg",
-            "name": "baasil",
+            "name": "ada",
             "email": "redacted@example.com"
           },
           "product": {
@@ -145,9 +145,9 @@
         "resource": {
           "object": "user",
           "id": "user_3meX572iT5dAg",
-          "name": "baasil",
-          "username": "bossil",
-          "profile_picture_url": "https://ui-avatars.com/api/?name=baasil&background=535961&color=fff&format=png"
+          "name": "ada",
+          "username": "adacustomer",
+          "profile_picture_url": "https://ui-avatars.com/api/?name=ada&background=535961&color=fff&format=png"
         },
         "source": {
           "object": "payment",
@@ -165,7 +165,7 @@
         },
         "payment_id": "pay_JFHAhioMdPL1ts",
         "user_id": "user_3meX572iT5dAg",
-        "user_name": "baasil",
+        "user_name": "ada",
         "user_email": "redacted@example.com",
         "product_id": "prod_iQ2Zub6GFQS5Q",
         "product_name": "Hypermotion",
@@ -186,7 +186,7 @@
           "card_last4": "1396",
           "user": {
             "id": "user_3meX572iT5dAg",
-            "name": "baasil",
+            "name": "ada",
             "email": "redacted@example.com"
           },
           "product": {
@@ -229,7 +229,7 @@
         },
         "payment_id": "pay_JFHAhioMdPL1ts",
         "user_id": "user_3meX572iT5dAg",
-        "user_name": "baasil",
+        "user_name": "ada",
         "user_email": "redacted@example.com",
         "product_id": "prod_iQ2Zub6GFQS5Q",
         "product_name": "Hypermotion",
@@ -250,7 +250,7 @@
           "card_last4": "1396",
           "user": {
             "id": "user_3meX572iT5dAg",
-            "name": "baasil",
+            "name": "ada",
             "email": "redacted@example.com"
           },
           "product": {
@@ -293,7 +293,7 @@
         },
         "payment_id": "pay_JFHAhioMdPL1ts",
         "user_id": "user_3meX572iT5dAg",
-        "user_name": "baasil",
+        "user_name": "ada",
         "user_email": "redacted@example.com",
         "product_id": "prod_iQ2Zub6GFQS5Q",
         "product_name": "Hypermotion",
@@ -314,7 +314,7 @@
           "card_last4": "1396",
           "user": {
             "id": "user_3meX572iT5dAg",
-            "name": "baasil",
+            "name": "ada",
             "email": "redacted@example.com"
           },
           "product": {

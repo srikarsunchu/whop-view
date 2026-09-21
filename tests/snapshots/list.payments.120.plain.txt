@@ -1,7 +1,7 @@
  payments · 3
 
  id                  status  amount  user                reason    created
- pay_JFHAhioMdPL1ts  paid    $10.00  baasil @bossil      one_time  4d ago
+ pay_JFHAhioMdPL1ts  paid    $10.00  ada @adacustomer    one_time  4d ago
  pay_Ggv9MYVQ9AHppk  paid    $10.00  sri @designedbysri  one_time  6d ago
  pay_WJnNwQAY2wewOl  open    $10.00  sri @designedbysri  one_time  6d ago
 

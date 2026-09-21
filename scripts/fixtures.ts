@@ -35,8 +35,20 @@ const CASES: [string, string[]][] = [
   ["error.unknown_flag", ["ledgers", "list", "--first", "2"]],
 ];
 
-// Fixtures are committed. Email addresses are the one field no view renders and the one that must not leak.
-const redact = (text: string) => text.replace(/("[a-z_]*email[a-z_]*":\s*")[^"@]+@[^"]+(")/g, "$1redacted@example.com$2");
+// Fixtures are committed. Nothing a real person could be identified by survives recording:
+// emails, street lines and postal codes, and the real customers named below.
+const PEOPLE: [string, string][] = [
+  ["Baasil Ali", "Ada Customer"],
+  ["baasil", "ada"],
+  ["bossil", "adacustomer"],
+];
+const redact = (text: string) => {
+  let out = text
+    .replace(/("[a-z_]*email[a-z_]*":\s*")[^"@]+@[^"]+(")/g, "$1redacted@example.com$2")
+    .replace(/("(?:line1|line2|postal_code)":\s*")[^"]+(")/g, "$1redacted$2");
+  for (const [real, fake] of PEOPLE) out = out.split(real).join(fake);
+  return out;
+};
 
 const dir = join(import.meta.dirname, "..", "tests", "fixtures");
 mkdirSync(dir, { recursive: true });
