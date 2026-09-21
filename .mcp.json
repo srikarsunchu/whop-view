@@ -2,7 +2,12 @@
   "mcpServers": {
     "wv": {
       "command": "node",
-      "args": ["--experimental-strip-types", "--no-warnings", "${CLAUDE_PLUGIN_ROOT}/src/bin.ts", "--mcp"]
+      "args": [
+        "--experimental-strip-types",
+        "--no-warnings",
+        "${CLAUDE_PLUGIN_ROOT:-.}/src/bin.ts",
+        "--mcp"
+      ]
     }
   }
 }
