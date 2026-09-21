@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { manifest, manifestIndex, markers, PREREQS, takesJson, typeOf, type VerbSchema } from "../src/views/manifest.ts";
+import { manifest, manifestData, manifestIndex, manifestIndexData, markers, PREREQS, takesJson, typeOf, type VerbSchema } from "../src/views/manifest.ts";
 import { parseHelp } from "../src/views/help.ts";
 import { FIXTURES, fixture } from "./render.ts";
 
@@ -60,4 +60,39 @@ test("manifest: stats get carries the date presets, and the index lists every gr
   assert.match(index, /^- `wv agent payouts` · Send money/m);
   assert.match(index, /## Writes go through wv/);
   for (const g of Object.keys(PREREQS)) assert.ok(index.includes(`wv agent ${g}\``), `${g} is a real group`);
+});
+
+test("manifest: the index lists verbs under their group with a kind, in Markdown and as data", () => {
+  const root = parseHelp(fixture("help.txt"));
+  const verbs = { payouts: parseHelp(fixture("help.payouts.txt")).groups.flatMap((g) => g.entries) };
+  const md = manifestIndex(root, "whop@0.18.2", verbs).join("\n");
+  assert.match(md, /^  - `whop payouts create` · write, money · Create Payout$/m);
+  assert.match(md, /^  - `whop payouts list` · read · List Payouts$/m);
+  assert.match(md, /^- `wv agent products` · The things you sell/m, "a group without verbs loaded is still listed");
+  const data = manifestIndexData(root, "whop@0.18.2", verbs) as { groups: { group: string; section: string; prerequisites: string[]; verbs: { verb: string; kind: string[]; gated: boolean }[] }[] };
+  const payouts = data.groups.find((g) => g.group === "payouts")!;
+  assert.equal(payouts.section, "money");
+  assert.deepEqual(payouts.prerequisites, ["identity"]);
+  assert.deepEqual(payouts.verbs.find((v) => v.verb === "cancel"), { verb: "cancel", description: "Cancel Payout", kind: ["write", "money", "destructive"], gated: true } as unknown);
+  assert.equal(data.groups.find((g) => g.group === "products")!.verbs.length, 0);
+});
+
+test("manifest: a group's data carries each verb's kind, required flags, arguments, flags, and the schema itself", () => {
+  const help = parseHelp(fixture("help.payouts.txt"));
+  const withSchema = new Set(["cancel", "create", "list", "methods"]);
+  const verbs: VerbSchema[] = help.groups.flatMap((g) => g.entries).map((e) => ({ verb: e.name, desc: e.desc, schema: withSchema.has(e.name) ? schemaOf("payouts", e.name) : null }));
+  const d = manifestData({ group: "payouts", verbs, version: "whop@0.18.2", api: "2026-09-15" }) as { prerequisites: string[]; protocol: { rerun: string }; verbs: { verb: string; kind: string[]; required: string[]; args: { name: string; required: boolean }[]; flags?: Record<string, { type: string; required: boolean }>; schema?: unknown }[] };
+  assert.deepEqual(d.prerequisites, ["identity"]);
+  assert.equal(d.protocol.rerun, "--approve <token>");
+  const create = d.verbs.find((v) => v.verb === "create")!;
+  assert.deepEqual(create.required, ["amount", "payout_method_id"]);
+  assert.equal(create.flags!.amount.type, "number");
+  assert.equal(create.flags!.amount.required, true);
+  assert.equal(create.flags!.notes.type, "string | null");
+  assert.ok(create.schema, "the raw schema rides along for a client that wants it all");
+  const cancel = d.verbs.find((v) => v.verb === "cancel")!;
+  assert.deepEqual(cancel.args, [{ name: "id", required: true, description: cancel.args[0].description }]);
+  const get = d.verbs.find((v) => v.verb === "get")!;
+  assert.equal(get.flags, undefined, "no schema fixture, no flags");
+  assert.doesNotThrow(() => JSON.parse(JSON.stringify(d)));
 });

@@ -379,7 +379,7 @@ $ wv payouts create --amount 5 --payout_method_id potk_x | cat
   "ok": false,
   "error": { "code": "CONFIRMATION_REQUIRED", "message": "whop payouts create --amount 5 --payout_method_id potk_x writes to production. wv did not run it.", "hint": "Show the plan to the person. Rerun the command in `rerun` to run it, or add --plan to see the plan and run nothing." },
   "plan": { "kind": "write", "command": "whop payouts create --amount 5 --payout_method_id potk_x", "account": { "id": "biz_…", "title": "Frame" }, "money": { "amount": 5, "currency": "usd" }, "balance": { "available": 18.56, "currency": "usd" }, "cap": 500, "limit": { "speed": "standard", "max": 0, "code": "kyc_completed", "message": "Please complete identity verification before requesting a withdrawal." } },
-  "rerun": ["wv", "payouts", "create", "--amount", "5", "--payout_method_id", "potk_x", "--yes"],
+  "rerun": ["wv", "payouts", "create", "--amount", "5", "--payout_method_id", "potk_x", "--idempotency-key", "…", "--approve", "1789994037.25358a43…"],
   "meta": { "command": "payouts create", "wrapper": "wv", "mode": "production" }
 }
 ```
@@ -404,7 +404,7 @@ Screens: `wv doctor --format json` and `wv gtm --format json` return the data be
 
 ![doctor as json](demo/doctor-json.gif)
 
-Manifest: `wv agent <group>` prints one Markdown page per command group from `--schema`: every verb's flags with types and required marks, which verbs write, move money, or destroy, the gate protocol, and the doctor checks the group needs before its first write. `wv agent` alone lists the groups. It sits between `whop --llms` (16 KB, no flags) and `whop --llms-full` (338 KB). `pnpm skill` regenerates the command reference in the whop-gtm skill from it.
+Manifest: `wv agent <group>` prints one Markdown page per command group from `--schema`: every verb's flags with types and required marks, which verbs write, move money, or destroy, the gate protocol, and the doctor checks the group needs before its first write. `wv agent` alone lists every group and every verb with its kind, the whole write map in one page, and `--format json` on either page returns the same as data, schemas included for a group. It sits between `whop --llms` (16 KB, no flags) and `whop --llms-full` (338 KB). `pnpm skill` regenerates the command reference in the whop-gtm skill from it.
 
 ![agent manifest](demo/agent-manifest.gif)
 
@@ -415,6 +415,8 @@ Manifest: `wv agent <group>` prints one Markdown page per command group from `--
 For a write against one record, `wv` reads the record first and the plan says what changes, so `products update` shows `title  Hypermotion → Hypermotion Pro` and `products unpublish` shows `visibility  visible → hidden`; the terminal card gets the same `Changes` section.
 
 `rerun` carries an `--idempotency-key` wv minted at the plan step when the verb takes one, so the approved retry cannot write twice; the terminal card shows the same key. Which verbs count as writes comes from whop's own manifest, fetched once a day, with wv's list underneath, so a verb that ships tomorrow is gated tomorrow.
+
+`rerun` carries `--approve <token>`, not `--yes`. The token is a signature over that exact command and host with a ten minute expiry, minted with a secret only this machine holds, so the write that runs is the one the person saw: an edited command, a stale approval, or a token from another machine is refused with `APPROVAL_INVALID` or `APPROVAL_EXPIRED` and nothing runs. `--yes` still works for a person at a keyboard, or for a script that chooses the honor system on purpose.
 
 The agent shows the plan to the person and runs `rerun`. `--plan` returns `{ ok: true, plan }` and runs nothing, for every write. Refusals use the same shape with no `rerun`: `WHOP_LIMIT` in Whop's words, `WV_CAP`, `INSUFFICIENT_BALANCE`, `WV_AD_CAP`. For ads the plan is the campaign tree, the reach estimate, and the committed spend. `--format json` on a write does not lift the gate; `--schema` and `--help` do, since they run nothing. `WV_RAW=1` turns all of it off. A bad `--last` preset or a missing `@file` is the same envelope with `BAD_PRESET`, `EVENTS_RANGE`, or `JSON_FLAGS`.
 

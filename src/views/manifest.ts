@@ -7,6 +7,7 @@ import type { Rec } from "../envelope.ts";
 import type { ParsedHelp } from "./help.ts";
 import { copy } from "../copy.ts";
 import { DESTRUCTIVE_VERBS, isWrite, MONEY_GROUPS, MONEY_READ_VERBS } from "../status.ts";
+import type { HelpGroup } from "./help.ts";
 import { takesDates } from "../dates.ts";
 
 export interface VerbSchema {
@@ -162,16 +163,74 @@ export function manifest(input: ManifestInput): string[] {
   return out;
 }
 
-/** `wv agent` with no group: every group by section, with the protocol once. */
-export function manifestIndex(root: ParsedHelp, version?: string): string[] {
+/** A group's verbs from its help, for the index. */
+export type VerbsByGroup = Record<string, HelpGroup["entries"]>;
+
+/**
+ * `wv agent` with no group: every group by section, with the protocol once. With `verbs`, every verb and its
+ * kind under each group, so one page carries the whole write map in a few KB and a skill can preload it.
+ */
+export function manifestIndex(root: ParsedHelp, version?: string, verbs?: VerbsByGroup): string[] {
   const c = copy.manifest;
   const out: string[] = ["# wv agent", ""];
   out.push(c.indexIntro([version, root.api ? `API ${root.api}` : ""].filter(Boolean).join(" · ")), "");
   out.push(...c.protocol(), "");
   for (const g of root.groups) {
     out.push(`## ${g.title.toLowerCase()}`, "");
-    for (const e of g.entries) out.push(`- \`wv agent ${e.name}\` · ${cell(e.desc)}`);
+    for (const e of g.entries) {
+      out.push(`- \`wv agent ${e.name}\` · ${cell(e.desc)}`);
+      for (const v of verbs?.[e.name] ?? []) out.push(`  - \`whop ${e.name} ${v.name}\` · ${markers(e.name, v.name).join(", ")} · ${cell(v.desc)}`);
+    }
     out.push("");
   }
   return out;
+}
+
+/** One verb as data: kind, required flags, arguments, and the schema's flags as whop wrote them. */
+function verbData(group: string, v: VerbSchema): Rec {
+  const opts = part(v.schema, "options");
+  const args = part(v.schema, "args");
+  return {
+    verb: v.verb,
+    description: v.desc,
+    kind: markers(group, v.verb),
+    gated: isWrite(group, v.verb),
+    required: opts?.required ?? [],
+    args: args?.properties ? Object.entries(args.properties).map(([name, p]) => ({ name, required: (args.required ?? []).includes(name), description: p.description })) : [],
+    flags: opts?.properties ? Object.fromEntries(Object.entries(opts.properties).map(([name, p]) => [name, { type: typeOf(p), required: (opts.required ?? []).includes(name), description: p.description, enum: p.enum, default: p.default, example: p.example }])) : v.schema === null ? undefined : {},
+    takesJson: takesJson(v.schema),
+    datePresets: !!takesDates([group, v.verb]),
+    schema: v.schema === null ? undefined : v.schema,
+  };
+}
+
+/** `wv agent <group> --format json`: the page as data, schema included. */
+export function manifestData(input: ManifestInput): Rec {
+  const { group } = input;
+  return {
+    group,
+    description: input.desc,
+    version: input.version,
+    api: input.api,
+    prerequisites: PREREQS[group] ?? [],
+    protocol: { plan: `wv ${group} <verb> … --plan`, confirm: "CONFIRMATION_REQUIRED", rerun: "--approve <token>", refusals: ["WHOP_LIMIT", "WV_CAP", "INSUFFICIENT_BALANCE", "WV_AD_CAP"] },
+    verbs: input.verbs.map((v) => verbData(group, v)),
+  };
+}
+
+/** `wv agent --format json`: every group, its section, and its verbs with their kind. No schemas: that is one group's page. */
+export function manifestIndexData(root: ParsedHelp, version?: string, verbs?: VerbsByGroup): Rec {
+  return {
+    version,
+    api: root.api,
+    groups: root.groups.flatMap((g) =>
+      g.entries.map((e) => ({
+        group: e.name,
+        section: g.title.toLowerCase(),
+        description: e.desc,
+        prerequisites: PREREQS[e.name] ?? [],
+        verbs: (verbs?.[e.name] ?? []).map((v) => ({ verb: v.name, description: v.desc, kind: markers(e.name, v.name), gated: isWrite(e.name, v.name) })),
+      })),
+    ),
+  };
 }

@@ -10,9 +10,9 @@ The Whop CLI (`whop`, 0.18+) exposes every go-to-market stage as a command group
 ## Rules before any command
 
 1. **Production only.** The CLI has no sandbox, test, or dry-run mode for ads. Every write runs against the real account. Ad budgets, bounties, and media generation move real money.
-2. **Gate the money lines.** Run every write through `wv` (whop-view) instead of `whop`. Without `--yes`, `wv` does not run it: in a terminal it shows the plan and asks the person to type the amount back; in a pipe it exits 2 with a JSON envelope (`error.code` `CONFIRMATION_REQUIRED`, `plan`, `rerun`). Show the plan to the person, then run `rerun`. `--plan` returns the plan and runs nothing. Refusals (`WHOP_LIMIT`, `WV_CAP`, `INSUFFICIENT_BALANCE`, `WV_AD_CAP`) have no `rerun`. Without `wv`, stop and show the person the exact command and what it commits before running it.
+2. **Gate the money lines.** Run every write through `wv` (whop-view) instead of `whop`. Without `--yes`, `wv` does not run it: in a terminal it shows the plan and asks the person to type the amount back; in a pipe it exits 2 with a JSON envelope (`error.code` `CONFIRMATION_REQUIRED`, `plan`, `rerun`). Show the plan to the person, then run `rerun` exactly as given: its `--approve` token is bound to that command and expires in ten minutes, so an edited or stale rerun is refused. Never add `--yes` yourself. `--plan` returns the plan and runs nothing. Refusals (`WHOP_LIMIT`, `WV_CAP`, `INSUFFICIENT_BALANCE`, `WV_AD_CAP`) have no `rerun`. Without `wv`, stop and show the person the exact command and what it commits before running it.
 3. **Every write takes `--idempotency-key`.** Generate it from the plan step, not the call, so a retry never creates a second campaign or a second bounty.
-4. **Read the schema, not your memory.** `wv agent <group>` prints every verb's flags from `--schema`, marks writes and money, and names the setup checks the group needs. `wv agent` alone lists the groups. Field names in the playbooks were verified against 0.18.2 / API 2026-09-15 and will drift.
+4. **Read the schema, not your memory.** `wv agent <group>` prints every verb's flags from `--schema`, marks writes and money, and names the setup checks the group needs. `wv agent` alone lists every group and verb with its kind; `--format json` on either gives the same as data. Field names in the playbooks were verified against 0.18.2 / API 2026-09-15 and will drift.
 5. **Object and array flags take JSON.** `--ad_group '{"ad_campaign_id":"adcamp_x",...}'`, `--headlines '["a","b"]'`. Through `wv`, dotted paths (`--ad_group.budget_amount 40`), repeated flags, and `@file.json` assemble to the same JSON.
 6. **Prerequisites are one-time browser actions.** Pixel on the funnel pages, a Meta Business connected with the `advertise` scope, an ads payment method, and Economic Intelligence switched on. `wv doctor --format json` checks all of them in one call and returns a `fix` per failing check; tell the person which are missing instead of failing later.
 
@@ -55,7 +55,7 @@ Fixes, each once:
 
 ## Playbooks
 
-Ids are placeholders. Lines marked `# $` commit money. Every write is `wv …`: in a pipe it answers with the plan and exits 2 until the person approves and the agent reruns it with `--yes`; reads stay `whop …`.
+Ids are placeholders. Lines marked `# $` commit money. Every write is `wv …`: in a pipe it answers with the plan and exits 2 until the person approves and the agent runs the `rerun` it was given; reads stay `whop …`.
 
 ### 1 · Launch day
 

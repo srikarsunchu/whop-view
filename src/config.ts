@@ -1,6 +1,7 @@
 // wv's own config file. Today it holds one thing: the sandbox key, so it lives in a 0600 file under
 // XDG_CONFIG_HOME instead of a shell variable a person has to know about. Never whop's own config.
 import { existsSync, mkdirSync, readFileSync, writeFileSync, chmodSync } from "node:fs";
+import { randomBytes } from "node:crypto";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
@@ -8,6 +9,10 @@ export interface Config {
   sandbox?: {
     key?: string;
     url?: string;
+  };
+  /** The secret that signs approvals. Generated on first use, never shown. */
+  approve?: {
+    secret?: string;
   };
 }
 
@@ -48,4 +53,25 @@ export function saveSandboxKey(key: string, env: NodeJS.ProcessEnv = process.env
 export function maskKey(key: string): string {
   if (key.length <= 12) return key.slice(0, 4) + "…";
   return `${key.slice(0, 8)}…${key.slice(-4)}`;
+}
+
+/**
+ * The approval secret: `WV_APPROVE_SECRET`, else the config file's, else a fresh one saved there. When the file
+ * cannot be written the secret lives for this process only, so a token minted here will not verify later; the
+ * gate still works, the approval just has to be re-planned.
+ */
+export function approveSecret(env: NodeJS.ProcessEnv = process.env): string {
+  if (env.WV_APPROVE_SECRET) return env.WV_APPROVE_SECRET;
+  const current = readConfig(env);
+  if (current.approve?.secret) return current.approve.secret;
+  const secret = randomBytes(32).toString("hex");
+  // A file that exists but does not parse is somebody's config with a typo; it is never overwritten.
+  const file = configPath(env);
+  if (existsSync(file) && Object.keys(current).length === 0 && readFileSync(file, "utf8").trim() !== "" && readFileSync(file, "utf8").trim() !== "{}") return secret;
+  try {
+    writeConfig({ ...current, approve: { ...current.approve, secret } }, env);
+  } catch {
+    /* process-local secret */
+  }
+  return secret;
 }

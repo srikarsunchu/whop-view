@@ -7,6 +7,7 @@ import { chmodSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { FIXTURES, fixture } from "./render.ts";
+import { mintApproval } from "../src/approve.ts";
 
 const bin = join(import.meta.dirname, "..", "src", "bin.ts");
 const node = process.execPath;
@@ -131,7 +132,7 @@ test("live: wv products list | cat is byte-identical to whop products list", { s
 // The agent gate: a write in a pipe is gated like a write in a terminal, but the card is JSON and the
 // prompt is exit 2 with `rerun`. Nothing below reaches the fake `whop` as a write unless the test says so.
 const GROUP = '{"ad_campaign_id":"adcamp_x1","title":"US 25-44","budget_amount":40,"budget_type":"daily","optimization_goal":"conversions","conversion_event":"purchase","placements":"automatic","demographics":{"minimum_age":25,"maximum_age":44,"gender":"all"},"regions":{"include":{"countries":["US"]}}}';
-const gateEnv = (extra: NodeJS.ProcessEnv = {}) => ({ WV_WHOP_BIN: fakeWhop(), WHOP_API_BASE_URL: "", WHOP_API_KEY: "", WV_PAYOUT_CAP: "", WV_AD_CAP: "", WV_RAW: "", ...extra });
+const gateEnv = (extra: NodeJS.ProcessEnv = {}) => ({ WV_WHOP_BIN: fakeWhop(), WHOP_API_BASE_URL: "", WHOP_API_KEY: "", WV_PAYOUT_CAP: "", WV_AD_CAP: "", WV_RAW: "", WV_APPROVE_SECRET: "test-secret", ...extra });
 const envelopeOf = (r: ReturnType<typeof wv>) => JSON.parse(r.stdout) as { ok: boolean; error?: { code: string; message: string; hint?: string }; plan?: Record<string, unknown>; rerun?: string[]; meta: { command: string; wrapper: string; mode: string } };
 const wroteTo = (r: ReturnType<typeof wv>, cmd: string) => new RegExp(`^ARGS: ${cmd}`, "m").test(r.stderr);
 
@@ -141,7 +142,9 @@ test("agent gate: a write without --yes is CONFIRMATION_REQUIRED, exit 2, and wh
   const e = envelopeOf(r);
   assert.equal(e.ok, false);
   assert.equal(e.error?.code, "CONFIRMATION_REQUIRED");
-  assert.deepEqual(e.rerun, ["wv", "products", "update", "prod_1", "--title", "Frame Pro", "--yes"]);
+  assert.deepEqual(e.rerun?.slice(0, 6), ["wv", "products", "update", "prod_1", "--title", "Frame Pro"]);
+  assert.equal(e.rerun?.at(-2), "--approve");
+  assert.match(e.rerun?.at(-1) ?? "", /^\d+\.[0-9a-f]{32}$/);
   assert.deepEqual(e.meta, { command: "products update", wrapper: "wv", mode: "production" });
   assert.equal(e.plan?.kind, "write");
   assert.equal(e.plan?.command, "whop products update prod_1 --title 'Frame Pro'");
@@ -190,7 +193,7 @@ test("agent gate: the wv cap and the balance refuse when Whop does not", () => {
   const ok = wv(["payouts", "create", "--amount", "10", "--payout_method_id", "potk_1"], gateEnv({ WV_FAKE_METHODS: "payouts.methods.json" }));
   assert.equal(envelopeOf(ok).error?.code, "CONFIRMATION_REQUIRED");
   assert.deepEqual(envelopeOf(ok).rerun?.slice(0, 7), ["wv", "payouts", "create", "--amount", "10", "--payout_method_id", "potk_1"]);
-  assert.equal(envelopeOf(ok).rerun?.at(-1), "--yes");
+  assert.equal(envelopeOf(ok).rerun?.at(-2), "--approve");
 });
 
 test("agent gate: sandbox skips the cap, the limit, and the balance, and says so in meta", () => {
@@ -214,7 +217,7 @@ test("agent gate: an ad write is the plan tree with its commitment; over the ad 
   const asked = envelopeOf(wv(args, gateEnv({ WV_AD_CAP: "none" })));
   assert.equal(asked.error?.code, "CONFIRMATION_REQUIRED");
   assert.equal((asked.plan?.reach as { error: string }).error, "no estimate");
-  assert.equal(asked.rerun?.at(-1), "--yes");
+  assert.equal(asked.rerun?.at(-2), "--approve");
   const plan = wv([...args, "--plan"], gateEnv());
   assert.equal(plan.status, 0);
   assert.equal(envelopeOf(plan).ok, true);
@@ -258,7 +261,7 @@ test("agent gate: the plan step mints the idempotency key, and the rerun carries
   const i = e.rerun!.indexOf("--idempotency-key");
   assert.ok(i > 0, "rerun carries the key");
   assert.match(e.rerun![i + 1], /^[0-9a-f-]{36}$/);
-  assert.equal(e.rerun!.at(-1), "--yes");
+  assert.equal(e.rerun!.at(-2), "--approve");
   assert.match(String(e.plan?.command), /--idempotency-key [0-9a-f-]{36}$/, "the plan shows the command that will run");
   // A key the caller chose is kept; a verb whose schema has none gets none.
   const own = envelopeOf(wv(["payouts", "create", "--amount", "10", "--payout_method_id", "potk_1", "--idempotency-key", "mine"], gateEnv({ WV_FAKE_METHODS: "payouts.methods.json" })));
@@ -307,4 +310,44 @@ test("--all in a pipe: every page, one row per line, then the same as one array 
   const one = wv(["products", "list", "--all"], gateEnv());
   assert.equal(one.stdout.trim().split("\n").length, 2, "a single page is just its rows");
   assert.equal(one.stderr.includes("--after"), false);
+});
+
+test("agent gate: the rerun runs as planned; edited, stale, or foreign approvals are refused", () => {
+  const env = gateEnv();
+  const first = envelopeOf(wv(["products", "update", "prod_1", "--title", "Frame Pro"], env));
+  const rerun = first.rerun!.slice(1);
+  const ran = wv(rerun, env);
+  assert.equal(ran.status, 0, "the approved rerun execs whop");
+  assert.match(ran.stderr, /^ARGS: products update prod_1 --title Frame Pro$/m, "neither --approve nor its token reach whop");
+  // The same token on an edited command.
+  const edited = wv(rerun.map((a) => (a === "Frame Pro" ? "Frame Ultra" : a)), env);
+  assert.equal(edited.status, 2);
+  assert.equal(envelopeOf(edited).error?.code, "APPROVAL_INVALID");
+  assert.equal(wroteTo(edited, "products update"), false);
+  // The same token against the sandbox host.
+  const other = wv(["--sandbox", ...rerun], { ...env, WV_SANDBOX_KEY: "whop_test" });
+  assert.equal(envelopeOf(other).error?.code, "APPROVAL_INVALID");
+  // A token minted with this secret an hour ago.
+  const stale = mintApproval(["products", "update", "prod_1", "--title", "Frame Pro"], "production", "test-secret", Math.floor(Date.now() / 1000) - 3600);
+  const expired = wv(["products", "update", "prod_1", "--title", "Frame Pro", "--approve", stale], env);
+  assert.equal(envelopeOf(expired).error?.code, "APPROVAL_EXPIRED");
+  // Another machine's secret.
+  const foreign = wv(rerun, { ...env, WV_APPROVE_SECRET: "someone-else" });
+  assert.equal(envelopeOf(foreign).error?.code, "APPROVAL_INVALID");
+  // --yes still works: the honor system, on purpose.
+  assert.equal(wv(["products", "update", "prod_1", "--title", "x", "--yes"], env).status, 0);
+});
+
+test("agent: the index carries every verb with its kind, and --format json is the same as data", () => {
+  const env = gateEnv();
+  const md = wv(["agent"], env);
+  assert.equal(md.status, 0);
+  assert.match(md.stdout, /^# wv agent$/m);
+  const json = wv(["agent", "--format", "json"], env);
+  assert.equal(json.status, 0);
+  const data = JSON.parse(json.stdout) as { groups: { group: string; verbs: { verb: string; kind: string[] }[] }[] };
+  assert.ok(Array.isArray(data.groups));
+  const group = wv(["agent", "nope", "--format", "json"], env);
+  assert.equal(group.status, 2);
+  assert.equal(envelopeOf(group).error?.code, "COMMAND_NOT_FOUND");
 });

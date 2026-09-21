@@ -412,7 +412,7 @@ export const copy = {
     protocol: (group?: string) => [
       "## Writes go through wv",
       "",
-      `Run reads as \`whop ${group ?? "<group>"} <verb> … --format json\`. Run every write as \`wv ${group ?? "<group>"} <verb> …\` instead of \`whop\`. Without \`--yes\` wv does not run it: it exits 2 with a JSON envelope whose \`error.code\` is \`CONFIRMATION_REQUIRED\`, whose \`plan\` is what the write commits (account, flags, amount, balance, caps, and for ads the campaign tree, reach, and committed spend), and whose \`rerun\` is the argv that runs it. Show the plan to the person, then run \`rerun\`. \`--plan\` returns \`{ ok: true, plan }\` and runs nothing. Refusals come back the same way with no \`rerun\`: \`WHOP_LIMIT\` (Whop's own limit, in its words), \`WV_CAP\` (\`WV_PAYOUT_CAP\`), \`INSUFFICIENT_BALANCE\`, \`WV_AD_CAP\` (\`WV_AD_CAP\`). \`--format json\` does not lift the gate. Every write also takes \`--idempotency-key\`; generate it from the plan step, not the call, so a retry never writes twice.`,
+      `Run reads as \`whop ${group ?? "<group>"} <verb> … --format json\`. Run every write as \`wv ${group ?? "<group>"} <verb> …\` instead of \`whop\`. Without \`--yes\` wv does not run it: it exits 2 with a JSON envelope whose \`error.code\` is \`CONFIRMATION_REQUIRED\`, whose \`plan\` is what the write commits (account, flags, amount, balance, caps, and for ads the campaign tree, reach, and committed spend), and whose \`rerun\` is the argv that runs it, carrying an \`--approve\` token bound to that exact command that expires in ten minutes. Show the plan to the person, then run \`rerun\` unchanged. \`--plan\` returns \`{ ok: true, plan }\` and runs nothing. Refusals come back the same way with no \`rerun\`: \`WHOP_LIMIT\` (Whop's own limit, in its words), \`WV_CAP\` (\`WV_PAYOUT_CAP\`), \`INSUFFICIENT_BALANCE\`, \`WV_AD_CAP\` (\`WV_AD_CAP\`). \`--format json\` does not lift the gate. Every write also takes \`--idempotency-key\`; generate it from the plan step, not the call, so a retry never writes twice.`,
     ],
     prereqs: (checks: string) => `Before the first write, run \`wv doctor --format json\` and make sure these checks are \`ok\`: ${checks}. Each failing check carries its \`fix\` command.`,
     jsonSpellings: [
@@ -441,7 +441,9 @@ export const copy = {
   /** The gate as an agent reads it: one JSON envelope on stdout, no prompt. */
   agent: {
     confirm: (cmd: string, mode: Mode) => `${cmd} writes to ${mode}. wv did not run it.`,
-    confirmHint: "Show the plan to the person. Rerun the command in `rerun` to run it, or add --plan to see the plan and run nothing.",
+    confirmHint: (minutes: number) => `Show the plan to the person. Run the command in \`rerun\` to run it; its --approve token matches this exact command and expires in ${minutes} ${minutes === 1 ? "minute" : "minutes"}. Add --plan to see the plan and run nothing.`,
+    approvalExpired: "The approval expired. Run the command without --approve for a fresh plan and a new rerun.",
+    approvalInvalid: "The approval does not match this command. It was minted for a different argv, mode, or machine. Run the command without --approve for a fresh plan.",
     needsTerminal: (what: string) => `wv ${what} draws a screen and needs a terminal. wv doctor and wv gtm answer JSON in a pipe.`,
   },
 };

@@ -13,7 +13,7 @@ import { isAdPlan } from "./views/adplan.ts";
 import { randomUUID } from "node:crypto";
 
 /** Codes wv itself emits. Everything else on stdout is whop's. */
-export type AgentCode = "CONFIRMATION_REQUIRED" | "WHOP_LIMIT" | "WV_CAP" | "INSUFFICIENT_BALANCE" | "WV_AD_CAP" | "BAD_PRESET" | "EVENTS_RANGE" | "JSON_FLAGS" | "NEEDS_TERMINAL";
+export type AgentCode = "CONFIRMATION_REQUIRED" | "APPROVAL_EXPIRED" | "APPROVAL_INVALID" | "WHOP_LIMIT" | "WV_CAP" | "INSUFFICIENT_BALANCE" | "WV_AD_CAP" | "BAD_PRESET" | "EVENTS_RANGE" | "JSON_FLAGS" | "NEEDS_TERMINAL";
 
 export interface AgentEnvelope {
   ok: boolean;
@@ -45,8 +45,11 @@ export function envelope(argv: string[], mode: Mode, body: Omit<AgentEnvelope, "
 /** Two-space JSON and a newline, like `whop --format json`. */
 export const serialize = (e: AgentEnvelope) => JSON.stringify(e, null, 2) + "\n";
 
-/** The command an agent reruns to consent: wv, the same argv, `--yes`. `whop` itself rejects `--yes`. */
-export const rerunFor = (argv: string[]) => ["wv", ...argv.filter((a) => a !== "--yes" && a !== "--plan"), "--yes"];
+/**
+ * The command an agent reruns to consent: wv, the same argv, and `--approve <token>` bound to that argv, or
+ * `--yes` when no token was minted. `whop` itself rejects both flags; they never reach it.
+ */
+export const rerunFor = (argv: string[], token?: string) => ["wv", ...argv.filter((a) => a !== "--yes" && a !== "--plan"), ...(token ? ["--approve", token] : ["--yes"])];
 
 const account = (title?: string, id?: string) => (id || title ? { id, title } : undefined);
 
@@ -98,14 +101,22 @@ export function planEnvelope(argv: string[], mode: Mode, plan: Rec): AgentEnvelo
   return envelope(argv, mode, { ok: true, plan });
 }
 
-/** The gate asking for consent: exit 2, the plan, and the rerun. */
-export function confirmationEnvelope(argv: string[], mode: Mode, plan: Rec): AgentEnvelope {
+/** The gate asking for consent: exit 2, the plan, and the rerun with its approval token. */
+export function confirmationEnvelope(argv: string[], mode: Mode, plan: Rec, approval?: { token: string; ttlSeconds: number }): AgentEnvelope {
   const cmd = shellJoin(["whop", ...argv.filter((a) => a !== "--yes")]);
   return envelope(argv, mode, {
     ok: false,
-    error: { code: "CONFIRMATION_REQUIRED", message: copy.agent.confirm(cmd, mode), hint: copy.agent.confirmHint },
+    error: { code: "CONFIRMATION_REQUIRED", message: copy.agent.confirm(cmd, mode), hint: copy.agent.confirmHint(Math.max(1, Math.round((approval?.ttlSeconds ?? 600) / 60))) },
     plan,
-    rerun: rerunFor(argv),
+    rerun: rerunFor(argv, approval?.token),
+  });
+}
+
+/** A rerun whose `--approve` token is stale or does not match the argv it came with. Nothing runs. */
+export function approvalEnvelope(argv: string[], mode: Mode, why: "expired" | "invalid"): AgentEnvelope {
+  return envelope(argv, mode, {
+    ok: false,
+    error: why === "expired" ? { code: "APPROVAL_EXPIRED", message: copy.agent.approvalExpired } : { code: "APPROVAL_INVALID", message: copy.agent.approvalInvalid },
   });
 }
 

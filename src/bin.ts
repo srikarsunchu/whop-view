@@ -3,7 +3,8 @@
 import { realpathSync } from "node:fs";
 import { makeTheme, paint, type Theme } from "./tokens.ts";
 import { cachedHelpText, cachedLlmsFull, helpText, modeFrom, schema, passthrough, passthroughPiped, run, sandboxKey, sandboxUrl, shouldPassthrough, whopEnv, type Mode } from "./runner.ts";
-import { configPath, maskKey, saveSandboxKey } from "./config.ts";
+import { approveSecret, configPath, maskKey, saveSandboxKey } from "./config.ts";
+import { approveTtlFrom, checkApproval, mintApproval, splitApprove } from "./approve.ts";
 import { sandboxMissingKeyView, sandboxSavedView, sandboxStatusView } from "./views/sandbox.ts";
 import { ask } from "./primitives/prompt.ts";
 import { resolveDates } from "./dates.ts";
@@ -13,7 +14,7 @@ import { exitCodeFor, licenseView, verdict } from "./views/license.ts";
 import { followHeader, followIntervalMs, followStopped, logLines, logsView, newEntries, newest, pollArgv } from "./views/logs.ts";
 import { hintsFor } from "./hints.ts";
 import { isWrite, loadWhopWrites, MONEY_GROUPS } from "./status.ts";
-import { adPlan, adRefusedEnvelope, agentExitCode, agentGated, confirmationEnvelope, moneyPlan, planEnvelope, refusedEnvelope, serialize, withIdempotencyKey, wvErrorEnvelope, type AgentEnvelope } from "./agent.ts";
+import { adPlan, adRefusedEnvelope, agentExitCode, agentGated, approvalEnvelope, confirmationEnvelope, moneyPlan, planEnvelope, refusedEnvelope, serialize, withIdempotencyKey, wvErrorEnvelope, type AgentEnvelope } from "./agent.ts";
 import { teach } from "./argv.ts";
 import { daysAgo, isoDay } from "./format.ts";
 import { copy } from "./copy.ts";
@@ -24,7 +25,7 @@ import { money } from "./format.ts";
 import { adPlanView, adRefusedView, budgetOf, commitment, isAdPlan, jsonFlags, reachArgv, treeFromArgv, type AdPlanInput, type AdTree, type Reach } from "./views/adplan.ts";
 import { errorView } from "./views/error.ts";
 import { helpView, parseHelp } from "./views/help.ts";
-import { manifest, manifestIndex, type VerbSchema } from "./views/manifest.ts";
+import { manifest, manifestData, manifestIndex, manifestIndexData, type VerbSchema, type VerbsByGroup } from "./views/manifest.ts";
 import { homeView } from "./views/home.ts";
 import { gtmData, gtmView, type GtmInput } from "./views/gtm.ts";
 import { blocked, checks, doctorData, doctorView, DOCTOR_ACTIONS, type DoctorInput } from "./views/doctor.ts";
@@ -120,6 +121,7 @@ async function main(argvIn: string[]) {
 
   // `wv doctor --format json` in a terminal is the agent face on purpose. `--format` would otherwise exec `whop doctor`, which is not a command.
   if (DATA_SCREENS.has(argv[0]) && wantsJson(argv)) process.exit(await screenJson(argv[0], mode, env));
+  if (argv[0] === "agent" && wantsJson(argv)) process.exit((await execute(argv, theme, { mode })).code);
   // `--plan` never writes, so it is safe without a terminal and must never fall through to a real `whop` create.
   // `memberships check <key>` is wv's verb over `memberships get <key>`; a pipe gets the get.
   if (shouldPassthrough(argv) && !plan) passthrough(argv0IsCheck(argv) ? ["memberships", "get", ...argv.slice(2)] : argv, env);
@@ -151,7 +153,7 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
   const argv = json.argv;
   // The manifest is Markdown for a program; it prints the same in a pipe and a terminal.
   if (argv[0] === "agent") {
-    const lines = await agentManifest(argv[1]);
+    const lines = await agentManifest(argv[1], wantsJson(argv));
     if (!lines) emit(wvErrorEnvelope(argv, mode, { code: "COMMAND_NOT_FOUND", message: copy.manifest.unknownGroup(argv[1] ?? "") }), 2);
     print(lines!);
     process.exit(0);
@@ -159,24 +161,34 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
   // Two screens are data as well as pictures. The rest draw and need a terminal.
   if (DATA_SCREENS.has(argv[0])) process.exit(await screenJson(argv[0], mode, env));
   if (OURS.has(argv[0])) emit(wvErrorEnvelope(argv, mode, { code: "NEEDS_TERMINAL", message: copy.agent.needsTerminal(argv[0]) }), 2);
-  // `whop` rejects `--yes` as an unknown flag. It is wv's, and it never reaches the child.
-  const yes = argv.includes("--yes");
-  const args = argv.filter((a) => a !== "--yes");
-  if (!process.env.WV_RAW && agentGated(argv) && (!yes || plan)) {
-    const [group, verb] = argv;
+  // `whop` rejects `--yes` and `--approve` as unknown flags. They are wv's, and they never reach the child.
+  const { argv: unapproved, token } = splitApprove(argv);
+  const args = unapproved.filter((a) => a !== "--yes");
+  // A rerun: the token must match this exact argv and mode, and be fresh. Then it is consent.
+  let yes = unapproved.includes("--yes");
+  if (token !== undefined && !plan) {
+    const verdict = checkApproval(token, args, mode, approveSecret());
+    if (verdict !== "ok") emit(approvalEnvelope(args, mode, verdict), 2);
+    yes = true;
+  }
+  if (!process.env.WV_RAW && agentGated(args) && (!yes || plan)) {
+    const [group, verb] = args;
     // The plan step mints the idempotency key, so the approved rerun cannot write twice.
-    const args = withIdempotencyKey(argv.filter((a) => a !== "--yes"), schema(group, verb));
+    const planned = withIdempotencyKey(args, schema(group, verb));
     const live = mode !== "sandbox";
+    // The approval signs the planned argv: the rerun must carry it unchanged, within the TTL.
+    const ttlSeconds = approveTtlFrom();
+    const approval = { token: mintApproval(planned, mode, approveSecret(), Math.floor(Date.now() / 1000) + ttlSeconds), ttlSeconds };
     if (isAdPlan(group, verb)) {
-      const input = await adPlanFor(group, verb, args, env, mode, plan);
-      if (plan) emit(planEnvelope(args, mode, adPlan(input)), 0);
+      const input = await adPlanFor(group, verb, planned, env, mode, plan);
+      if (plan) emit(planEnvelope(planned, mode, adPlan(input)), 0);
       if (live && input.budget && input.cap != null && commitment(input.budget).total > input.cap) emit(adRefusedEnvelope(input), 2);
-      emit(confirmationEnvelope(args, mode, adPlan(input)), 2);
+      emit(confirmationEnvelope(planned, mode, adPlan(input), approval), 2);
     }
-    const gate = await moneyGateFor(group, verb, args, env, mode);
-    if (plan) emit(planEnvelope(args, mode, moneyPlan(gate.input)), 0);
+    const gate = await moneyGateFor(group, verb, planned, env, mode);
+    if (plan) emit(planEnvelope(planned, mode, moneyPlan(gate.input)), 0);
     if (gate.refusal) emit(refusedEnvelope({ ...gate.input, reason: gate.refusal }), 2);
-    emit(confirmationEnvelope(args, mode, moneyPlan(gate.input)), 2);
+    emit(confirmationEnvelope(planned, mode, moneyPlan(gate.input), approval), 2);
   }
   // `--all`: follow the cursor and stream every row, one JSON object per line, or one array with `--format json`.
   if (all && argv.length >= 2) process.exit(await allPagesPiped(args, env));
@@ -188,16 +200,24 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
  * `wv agent [group]`. The root help names the groups; a group's help names its verbs; `--schema` (cached by
  * the runner) names each verb's flags. Null when the group is not one `whop --help` lists.
  */
-async function agentManifest(group?: string): Promise<string[] | null> {
+async function agentManifest(group?: string, json = false): Promise<string[] | null> {
+  loadWhopWrites(cachedLlmsFull());
   const root = parseHelp(cachedHelpText([]));
   const version = /^(whop@\S+)/.exec(cachedHelpText([]))?.[1];
-  if (!group) return manifestIndex(root, version);
+  const asJson = (data: Rec) => JSON.stringify(data, null, 2).split("\n");
+  if (!group || group.startsWith("--")) {
+    // Every group's verbs, from the cached help: ~40 `whop <group> --help` calls the first day, none after.
+    const verbs: VerbsByGroup = {};
+    for (const e of root.groups.flatMap((g) => g.entries)) verbs[e.name] = parseHelp(cachedHelpText([e.name])).groups.flatMap((g) => g.entries);
+    return json ? asJson(manifestIndexData(root, version, verbs)) : manifestIndex(root, version, verbs);
+  }
   const entry = root.groups.flatMap((g) => g.entries).find((e) => e.name === group);
   if (!entry) return null;
   const verbs: VerbSchema[] = parseHelp(cachedHelpText([group]))
     .groups.flatMap((g) => g.entries)
     .map((e) => ({ verb: e.name, desc: e.desc, schema: schema(group, e.name) }));
-  return manifest({ group, desc: entry.desc, verbs, version, api: root.api });
+  const input = { group, desc: entry.desc, verbs, version, api: root.api };
+  return json ? asJson(manifestData(input)) : manifest(input);
 }
 
 /** wv screens that have a JSON face: `--format json`, or any pipe. */
@@ -298,7 +318,7 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
   const mode = opts.mode ?? "production";
   const env = whopEnv(mode);
   if (group === "agent") {
-    const lines = await agentManifest(verb);
+    const lines = await agentManifest(verb, wantsJson(argv));
     if (!lines) {
       print(errorView({ code: "COMMAND_NOT_FOUND", message: copy.manifest.unknownGroup(verb ?? "") }, theme));
       return { code: 2 };
@@ -323,10 +343,20 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
 
   if (group === "apps" && verb === "logs" && opts.follow) return followLogs(argv, theme, env);
 
-  const yes = argv.includes("--yes");
+  const split = splitApprove(argv);
+  const stripped = split.argv.filter((a) => a !== "--yes");
+  // A valid `--approve` token from a piped plan is consent here too; a stale or mismatched one is refused.
+  if (split.token !== undefined) {
+    const verdict = checkApproval(split.token, stripped, mode, approveSecret());
+    if (verdict !== "ok") {
+      print(errorView({ code: verdict === "expired" ? "APPROVAL_EXPIRED" : "APPROVAL_INVALID", message: verdict === "expired" ? copy.agent.approvalExpired : copy.agent.approvalInvalid }, theme));
+      return { code: 2 };
+    }
+  }
+  const yes = split.argv.includes("--yes") || split.token !== undefined;
   const gated = (isAdPlan(group, verb) || isWrite(group, verb)) && !yes;
   // The plan step mints the idempotency key and the card shows it, so a second approval of the same plan cannot write twice.
-  const args = gated ? withIdempotencyKey(argv.filter((a) => a !== "--yes"), schema(group, verb)) : argv.filter((a) => a !== "--yes");
+  const args = gated ? withIdempotencyKey(stripped, schema(group, verb)) : stripped;
 
   if (isAdPlan(group, verb) && (!yes || opts.plan)) {
     // Ads gate. The CLI has no dry-run, so the plan is the sandbox: the tree, a real reach estimate,
