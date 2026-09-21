@@ -18,10 +18,11 @@
     "usage",
     "names",
     "user_ids",
-    "emails"
+    "emails",
+    "purchases"
   ],
   "labels": {
-    "purchase_count": "purchases",
+    "purchase_count": "purchase count",
     "event_count": "events",
     "first_seen_at": "first seen",
     "last_seen_at": "last seen"
