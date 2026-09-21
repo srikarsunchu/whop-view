@@ -408,6 +408,7 @@ A write verb inside the session gets the same confirmation, then hands the termi
 - `wv <group>` renders that group's verbs.
 - `wv doctor` is the setup checklist above; it exits 1 when signing in, identity, or a sellable product is missing.
 - `wv stats get <metric> --from … --to …` renders a series: total, sparkline, one money row per point.
+- `wv stats get <metric> --last 7d` (or `30d`, `90d`, any `Nd`), `--this month`, and `--last month` do the date math. Stats presets are whole UTC days, ending yesterday for `--last Nd` like `home` and `gtm`; the footer shows the resolved `--from` and `--to`, so `copy json` pastes real dates. The same presets work on `wv events list`, where they are timestamps and `--last Nd` rolls to now. Whop refuses an events range over 30 days, so `wv` refuses it first, in Whop's words, before anything runs. The presets resolve before a pipe too, so `wv stats get net_revenue --last 7d --format json` is `whop` with the dates filled in.
 - `--width N` overrides the terminal width. `NO_COLOR` strips every escape.
 - Every teaching footer is built from an argv array and shell-quoted once, so a product title with a space or a quote pastes back as the same command. `WV_PAYOUT_CAP`, `WV_CONFIRM_TIMEOUT`, `WV_SANDBOX`, `WV_SANDBOX_KEY`, `WV_SANDBOX_URL`, and `WV_CONFIG` (the config file path, default `~/.config/whop-view/config.json`) are the only knobs; each is described under [`payouts create`](#payouts-create) and [Sandbox](#sandbox).
 

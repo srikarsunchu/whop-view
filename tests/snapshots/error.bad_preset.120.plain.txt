@@ -1,0 +1,4 @@
+ ▌ Not a date preset
+
+   --last week is not a date preset.
+   Presets: --last 7d, --last 30d, --last 90d, --this month, --last month.

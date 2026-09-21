@@ -1,0 +1,5 @@
+ [31m▌[39m [1mWhop would refuse this range[22m
+
+   Time range cannot exceed 30 days
+   [2m62 days from 2026-07-01T00:00:00Z to 2026-09-01T00:00:00Z. Try --last 30d,
+   or move --from and --to closer together.[22m

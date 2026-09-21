@@ -273,6 +273,16 @@ export const copy = {
     keyRejected: (masked: string) => `The sandbox host answered 401 to the key ${masked}. It is not a sandbox key, or it was revoked.`,
     unknownVerb: (verb: string) => `wv sandbox has no '${verb}'. Try wv sandbox status.`,
   },
+  dates: {
+    presets: "Presets: --last 7d, --last 30d, --last 90d, --this month, --last month.",
+    badPreset: (what: string) => `${what} is not a date preset.`,
+    both: (preset: string) => `Give --from and --to, or --${preset}, not both.`,
+    rangeHint: (days: number, from: string, to: string) => `${days} days from ${from} to ${to}. Try --last 30d, or move --from and --to closer together.`,
+    titles: {
+      BAD_PRESET: "Not a date preset",
+      EVENTS_RANGE: "Whop would refuse this range",
+    } as Record<string, string>,
+  },
   home: {
     balance: "Balance",
     revenue: (days: number) => `Net revenue · ${days}d`,

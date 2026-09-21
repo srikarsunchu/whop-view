@@ -19,12 +19,14 @@ const UNAVAILABLE = /don't have access|not available|not enabled|internal access
 export function errorView(error: WhopError, theme: Theme): string[] {
   const gated = UNAVAILABLE.test(error.message.split("\n")[0]);
   const code = gated ? "UNAVAILABLE" : copy.error.titles[error.code] ? error.code : (PATTERNS.find((p) => p.match.test(error.message))?.code ?? error.code);
-  const title = copy.error.titles[code] ?? code;
+  const title = copy.error.titles[code] ?? copy.dates.titles[code] ?? code;
   const lines: string[] = [];
-  const first = error.message.split("\n")[0].trim();
+  const [first, ...rest] = error.message.split("\n").map((l) => l.trim());
   if (error.code === "VALIDATION_ERROR" && error.fieldErrors?.length) {
     for (const f of error.fieldErrors) lines.push(copy.error.field(f.path, f.message));
   } else if (first) lines.push(first);
+  // wv's own refusals carry a second line with the hint. Whop's messages carry a JSON dump there; that stays out.
+  if (copy.dates.titles[code]) for (const l of rest) if (l) lines.push(paint(theme, "muted", l));
 
   const scope = /permission: (\S+)/i.exec(error.message)?.[1];
   const fix = copy.error.fixes[code];

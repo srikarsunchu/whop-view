@@ -19,7 +19,11 @@ export function seriesView(input: SeriesInput, theme: Theme): string[] {
   const values = points.map((p) => p.value);
   const total = values.reduce((a, b) => a + b, 0);
   const cur = input.currency ?? "usd";
-  const title = `${metric.replace(/_/g, " ")} · ${points.length}${argv.includes("day") ? "d" : ""}`;
+  // The API's default interval is a day, so a preset with no --interval still reads `7d`.
+  const at = argv.indexOf("--interval");
+  const interval = at >= 0 ? argv[at + 1] : (argv.find((a) => a.startsWith("--interval="))?.slice(11) ?? "day");
+  const unit = interval === "day" ? "d" : interval === "week" ? "w" : interval === "month" ? "mo" : interval === "hour" ? "h" : "";
+  const title = `${metric.replace(/_/g, " ")} · ${points.length}${unit}`;
   const out: string[] = [];
   out.push(" " + paint(theme, "accent", title) + "  " + money(total, cur) + "  " + paint(theme, "good", sparkline(values)));
   out.push("");

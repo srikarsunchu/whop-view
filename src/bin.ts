@@ -6,6 +6,7 @@ import { helpText, modeFrom, passthrough, run, sandboxKey, sandboxUrl, shouldPas
 import { configPath, maskKey, saveSandboxKey } from "./config.ts";
 import { sandboxMissingKeyView, sandboxSavedView, sandboxStatusView } from "./views/sandbox.ts";
 import { ask } from "./primitives/prompt.ts";
+import { resolveDates } from "./dates.ts";
 import { hintsFor } from "./hints.ts";
 import { isWrite, MONEY_GROUPS } from "./status.ts";
 import { teach } from "./argv.ts";
@@ -93,8 +94,16 @@ export function timeoutFrom(env: NodeJS.ProcessEnv = process.env): number | unde
 }
 
 async function main(argvIn: string[]) {
-  const { argv, width, sandbox, plan } = ownFlags(argvIn);
+  const own = ownFlags(argvIn);
+  const { width, sandbox, plan } = own;
   const theme = makeTheme({ width });
+  // Date presets are wv's flags too: resolve them before a pipe execs `whop`, and refuse a range Whop would.
+  const dates = resolveDates(own.argv);
+  if (dates.error && !process.stdout.isTTY) {
+    process.stderr.write(`wv: ${dates.error.message}${dates.error.hint ? " " + dates.error.hint : ""}\n`);
+    process.exit(2);
+  }
+  const argv = dates.argv;
   const mode = modeFrom(sandbox);
   const env = whopEnv(mode);
 
@@ -125,7 +134,13 @@ export interface ExecuteOptions {
 }
 
 /** Runs one wv command end to end and prints it. Shared by the one-shot CLI and the session. */
-export async function execute(argv: string[], theme: Theme, opts: ExecuteOptions = {}): Promise<Outcome> {
+export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptions = {}): Promise<Outcome> {
+  const dates = resolveDates(argvIn);
+  if (dates.error) {
+    print(errorView({ code: dates.error.code, message: dates.error.message + (dates.error.hint ? "\n" + dates.error.hint : "") }, theme));
+    return { code: 2 };
+  }
+  const argv = dates.argv;
   const [group, verb] = argv;
   if (!group || group === "help") {
     const target = group === "help" ? argv[1] : undefined;

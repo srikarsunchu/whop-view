@@ -153,6 +153,8 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "sandbox.status.nokey": (t) => sandboxStatusView({ url: "https://sandbox-api.whop.com/api/v1", urlSource: "default", keySource: "none", configPath: CONFIG_PATH, account: envelope("error.sandbox_oauth") }, t),
   "sandbox.status.badkey": (t) => sandboxStatusView({ url: "http://localhost:9", urlSource: "env", key: "whop_wrong_key_abcdef1234", keySource: "env", configPath: CONFIG_PATH, account: envelope("error.sandbox_oauth") }, t),
   "sandbox.missing_key": (t) => sandboxMissingKeyView(CONFIG_PATH, t),
+  "error.events_range": (t) => errorView({ code: "EVENTS_RANGE", message: "Time range cannot exceed 30 days\n62 days from 2026-07-01T00:00:00Z to 2026-09-01T00:00:00Z. Try --last 30d, or move --from and --to closer together." }, t),
+  "error.bad_preset": (t) => errorView({ code: "BAD_PRESET", message: "--last week is not a date preset.\nPresets: --last 7d, --last 30d, --last 90d, --this month, --last month." }, t),
   "error.sandbox_auth": (t) => errorView({ code: "SANDBOX_AUTH", message: "The sandbox host answered 401 to the key whop_wro…1234. It is not a sandbox key, or it was revoked.", durationMs: 500 }, t),
   doctor: (t) => doctorView(DOCTOR, t),
   "doctor.ready": (t) => doctorView(DOCTOR_READY, t),
