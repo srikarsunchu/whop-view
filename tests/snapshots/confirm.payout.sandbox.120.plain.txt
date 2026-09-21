@@ -3,7 +3,7 @@
    whop payouts create --amount 250 --currency usd --payout_method_id potk_x1 --speed standard
 
    amount   $250.00 usd
-   to       Chase checking ••4242  potk_x1
+   to       Chase checking ••••4242  potk_x1
    speed    standard
    from     Hypermotion  biz_VraUMckluH8dzV
    balance  $418.56 available · $168.56 after

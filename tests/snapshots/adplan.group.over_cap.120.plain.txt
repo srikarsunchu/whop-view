@@ -1,0 +1,30 @@
+ ▌ Over the ad spend cap                                                                                         not run
+
+   whop ad-groups create --ad_campaign_id adcamp_x1 --title 'US broad' --budget_amount 120 --budget_type daily
+   --optimization_goal conversions --conversion_event purchase --regions '{"include":{"countries":["US"]}}'
+
+   campaign  Frame launch  adcamp_x1
+             objective  sales
+             platform   meta
+             budget     on each ad group
+             status     draft
+   group     US broad  new
+             budget     $120.00/day
+             goal       conversions on purchase
+             targeting  US
+
+   reach       210M–250M people on meta
+   spend       $120.00/day · $3,600.00 over 30 days · no end date
+   pays from   visa ••••4242
+   balance     $418.56 available
+   runs under  Hypermotion (facebook) @hypermotion
+   from        Hypermotion  biz_VraUMckluH8dzV
+   cap         $500.00 committed spend per plan from wv
+
+   This plan commits $3,600.00, more than the $500.00 cap wv allows per ad write. Raise it for one shell with
+   WV_AD_CAP=3600, set an end date so the commitment is real, or turn it off with WV_AD_CAP=none.
+
+ try first  wv --sandbox ad-groups create --ad_campaign_id adcamp_x1 --title 'US broad' --budget_amount 120
+            --budget_type daily --optimization_goal conversions --conversion_event purchase --regions
+            '{"include":{"countries":["US"]}}'
+

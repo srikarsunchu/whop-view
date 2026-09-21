@@ -1,0 +1,42 @@
+{
+  "primary": "user",
+  "status": "status",
+  "money": [
+    "total_earnings_usd",
+    "total_volume_usd",
+    "qualification_amount",
+    "reward_amount",
+    "partner_reward_amount",
+    "referred_business_reward_amount"
+  ],
+  "date": "joined_at",
+  "relation": "user",
+  "hidden": [
+    "profile_picture"
+  ],
+  "labels": {
+    "referred_businesses_count": "referred businesses",
+    "whop_partner_verified_at": "verified",
+    "verification_waitlist_joined": "on verification waitlist",
+    "total_earnings_usd": "earned",
+    "total_volume_usd": "volume",
+    "base_referral_url": "referral link",
+    "referral_url": "link",
+    "max_redemptions": "max claims",
+    "redemptions": "claimed",
+    "reward_type": "paid as",
+    "qualification_income_source": "qualifies on",
+    "qualification_amount": "qualifying volume",
+    "partner_reward_amount": "you earn",
+    "referred_business_reward_amount": "they get",
+    "income_source": "source",
+    "payout_rates": "rates"
+  },
+  "columns": [
+    "user",
+    "referred_businesses_count",
+    "joined_at",
+    "whop_partner_verified_at",
+    "id"
+  ]
+}

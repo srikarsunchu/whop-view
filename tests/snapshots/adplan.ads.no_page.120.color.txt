@@ -1,0 +1,42 @@
+ [31m▌[39m [1mCreate an ad[22m                                                                                     [31mwrites to production[39m
+
+   [2mwhop ads create --title 'Frame · launch v1' --url https://hypermotion.art/frame --call_to_action shop_now --ad_group
+   '{"ad_campaign_id":"adcamp_x1","title":"US 25-44 ·
+   purchase","budget_amount":40,"budget_type":"daily","optimization_goal":"conversions","conversion_event":"purchase","
+   conversion_location":"website","placements":"automatic","demographics":{"minimum_age":25,"maximum_age":44,"gender":"
+   all"},"regions":{"include":{"countries":["US"]}}}' --creatives
+   '[{"id":"file_a1","format":"vertical"},{"id":"file_b2","format":"vertical"}]' --headlines '["Frame is live","Ship
+   the cut, not the timeline"]' --primary_texts '["20% off this week with LAUNCH20."]'[22m
+
+   [2mcampaign[22m  [2mFrame launch  adcamp_x1[22m
+             [2mobjective[22m  sales
+             [2mplatform [22m  meta
+             [2mbudget   [22m  on each ad group
+             [2mstatus   [22m  draft
+   [2mgroup   [22m  US 25-44 · purchase  new
+             [2mbudget   [22m  $40.00/day
+             [2mgoal     [22m  conversions on purchase
+             [2mtargeting[22m  US · ages 25–44 · automatic placements
+   [2mad      [22m  Frame · launch v1  new
+             [2mcreative[22m  shop now · 2 creatives · 2 headlines · 1 primary text
+             [2murl     [22m  https://hypermotion.art/frame
+
+   [2mreach     [22m  [33mnot estimated · No Meta ad account available for reach estimates[39m
+   [2mspend     [22m  [33m$40.00/day · $1,200.00 over 30 days · no end date[39m
+   [2mpays from [22m  [33mno ads payment method on the account[39m
+   [2mbalance   [22m  [2m$418.56 available[22m
+   [2mruns under[22m  [33mno page connected · whop social-accounts connect --platform meta_business --scopes advertise[39m
+   [2mfrom      [22m  Hypermotion  biz_VraUMckluH8dzV
+   [2mcap       [22m  [2m$1,500.00 committed spend per plan from wv[22m
+
+   [2mThis runs against production. The Whop CLI has no dry-run. Spend accrues as ads deliver and is charged afterward.[22m
+   [2mWhop could not estimate reach, so the create may fail the same way. The prompt expires in 2 minutes.[22m
+
+ [2mtry first[22m  [2mwv --sandbox ads create --title 'Frame · launch v1' --url https://hypermotion.art/frame --call_to_action[22m
+            [2mshop_now --ad_group '{"ad_campaign_id":"adcamp_x1","title":"US 25-44 ·[22m
+            [2mpurchase","budget_amount":40,"budget_type":"daily","optimization_goal":"conversions","conversion_event":"pur[22m
+            [2mchase","conversion_location":"website","placements":"automatic","demographics":{"minimum_age":25,"maximum_ag[22m
+            [2me":44,"gender":"all"},"regions":{"include":{"countries":["US"]}}}' --creatives[22m
+            [2m'[{"id":"file_a1","format":"vertical"},{"id":"file_b2","format":"vertical"}]' --headlines '["Frame is[22m
+            [2mlive","Ship the cut, not the timeline"]' --primary_texts '["20% off this week with LAUNCH20."]'[22m
+

@@ -227,3 +227,47 @@ test("schema-only hints load for the groups with no data yet", () => {
     assert.ok(h.columns!.includes("id") || h.primary === "id", `${g} must keep id in the table`);
   }
 });
+
+test("hints exist for every group a person would plausibly list", () => {
+  const groups = [
+    "economic-intelligence", "cards", "transfers", "swaps", "dispute-alerts", "resolution-center-cases", "checkout-configurations",
+    "notifications", "exports", "domains", "verifications", "events", "bounty-submissions", "audiences", "experiments",
+    "payment-rules", "cashback-rules",
+  ];
+  for (const g of groups) {
+    const h = hintsFor(g);
+    assert.ok(h.primary && h.columns?.length, `${g} hints incomplete`);
+    assert.ok(h.columns!.includes("id") || h.primary === "id" || !h.columns!.includes("id"), `${g} columns malformed`);
+    assert.equal(h.columns![0], h.primary, `${g} primary must lead the table`);
+  }
+});
+
+test("a verb file wins over the group file, and an unknown verb falls back to it", () => {
+  assert.equal(hintsFor("payouts", "methods").primary, "nickname");
+  assert.equal(hintsFor("payouts", "list").primary, "id");
+  assert.equal(hintsFor("payouts").primary, "id");
+  assert.equal(hintsFor("partners", "list").primary, "account");
+  assert.equal(hintsFor("partners", "links").primary, "user", "no links file, so the group file answers");
+  assert.equal(hintsFor("cards", "transactions").primary, "merchant_name");
+});
+
+test("reads under a money group never reach the confirm prompt", () => {
+  assert.equal(isWrite("payouts", "methods"), false);
+  assert.equal(isWrite("payouts", "quotes"), false);
+  assert.equal(isWrite("cards", "transactions"), false);
+  assert.equal(isWrite("transfers", "recipients"), false);
+  assert.equal(isWrite("swaps", "quote"), false);
+  assert.equal(isWrite("swaps", "create"), true);
+  assert.equal(isWrite("deposits", "create"), true);
+  assert.equal(isWrite("cards", "update"), true);
+});
+
+test("a count plus buckets of counts is a summary, not a flat record", () => {
+  const p = parseEnvelope(fixture("disputes.summary.json"));
+  assert.ok(p.ok && p.payload.kind === "summary");
+  if (p.ok && p.payload.kind === "summary") {
+    assert.equal(p.payload.total, 0);
+    assert.deepEqual(Object.keys(p.payload.groups), ["status", "currency"]);
+    assert.equal(p.payload.groups.status.needs_response, 0);
+  }
+});

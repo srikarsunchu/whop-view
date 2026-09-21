@@ -4,11 +4,12 @@
    --speed standard[22m
 
    [2mamount [22m  $250.00 usd
-   [2mto     [22m  Chase checking ••4242  potk_x1
+   [2mto     [22m  Chase checking ••••4242  potk_x1
    [2mspeed  [22m  standard
    [2mfrom   [22m  Hypermotion  biz_VraUMckluH8dzV
    [2mbalance[22m  [32m$418.56 available · $168.56 after[39m
-   [2mcap    [22m  [2m$500.00 per payout[22m
+   [2mcap    [22m  [2m$1,000.00 standard from Whop · $500.00 from wv · $9,999.00 left[22m
+            [2mtoday[22m
 
    [2mThis runs against production. The Whop CLI has no dry-run. This moves real[22m
    [2mmoney. The prompt expires in 2 minutes.[22m

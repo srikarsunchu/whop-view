@@ -4,7 +4,7 @@
 
 The design is in [VIEWS.md](./VIEWS.md). This README shows it.
 
-> Unofficial, personal-use prototype. Not affiliated with, endorsed by, or distributed by Whop. "Whop" is a trademark of its owner. Built against `whop` 0.16.3 and 0.18.2.
+> Unofficial, personal-use prototype. Not affiliated with, endorsed by, or distributed by Whop. "Whop" is a trademark of its owner. Built against `whop` 0.18.2, API 2026-09-15.
 
 ## Why
 
@@ -17,6 +17,8 @@ git clone https://github.com/srikarsunchu/whop-view && cd whop-view && pnpm inst
 ```
 
 Needs Node 22 or newer and a working `whop` on your PATH. Then use `wv` anywhere you would type `whop`.
+
+`pnpm skill` copies the [`whop-gtm`](skills/whop-gtm/SKILL.md) skill into `~/.claude/skills`, so an agent that runs the Whop CLI learns the go-to-market loop and routes every ad write through `wv`. Whop's own `whop skills add` ships one generic skill with nothing about ads, audiences, bounties, or stats.
 
 ## Before and after
 
@@ -121,25 +123,68 @@ After:
    --speed standard
 
    amount   $250.00 usd
-   to       Chase checking ••4242  potk_x1
+   to       Chase checking ••••4242  potk_x1
    speed    standard
    from     Hypermotion  biz_VraUMckluH8dzV
    balance  $418.56 available · $168.56 after
-   cap      $500.00 per payout
+   cap      $1,000.00 standard from Whop · $500.00 from wv · $9,999.00 left
+            today
 
    This runs against production. The Whop CLI has no dry-run. This moves real
    money. The prompt expires in 2 minutes.
 
  try first  wv --sandbox payouts create --amount 250 --currency usd
             --payout_method_id potk_x1 --speed standard
- Run it? [y/N]
+ Type 250 to send it [250/N]
 ```
 
 ![payouts create](demo/payout-create.gif)
 
-The gate is shaped like Link's approval step, since a y/N prompt is not enough for a command that moves money. Before it asks, `wv` looks up the saved payout method behind `--payout_method_id` and the available balance in the payout's currency, so the amount, where it goes, and the ledger it draws from are all on one card. Two cases refuse before `whop` is called and exit 2: an amount over the per-payout cap, and an amount over the available balance. The cap is $500 unless `WV_PAYOUT_CAP` says otherwise, in whole currency units; `none` turns it off. A prompt left sitting is not consent, so a money prompt expires after two minutes (`WV_CONFIRM_TIMEOUT` in seconds, `none` to wait) and exits 130 like a `n`. The last line is the same command against the sandbox, so the safe path is on screen rather than in an env var you have to know about.
+The recording stops one step earlier than the text above: the demo account has not finished identity verification, so Whop's live limit is $0 and `wv` refuses in Whop's own words before any prompt. That is the gate doing its job.
 
-Every write verb gets the confirmation. Money groups and destructive verbs get the red gutter, other writes get yellow. `--yes` skips it. A pipe never sees it.
+The gate is shaped like Link's approval step, since a y/N prompt is not enough for a command that moves money. Before it asks, `wv` looks up the saved payout method behind `--payout_method_id`, Whop's live payout limit for the chosen speed, and the available balance in the payout's currency, so the amount, where it goes, what Whop will allow, and the ledger it draws from are all on one card. Three cases refuse before `whop` is called and exit 2: an amount over Whop's own limit for that speed (shown in Whop's words, for example "complete identity verification"), an amount over `wv`'s per-payout cap, and an amount over the available balance. The cap is $500 unless `WV_PAYOUT_CAP` says otherwise, in whole currency units; `none` turns it off. The prompt asks for the amount typed back, not `y`; `250`, `250.00`, and `$250` all count. A prompt left sitting is not consent, so a money prompt expires after two minutes (`WV_CONFIRM_TIMEOUT` in seconds, `none` to wait) and exits 130 like a `n`. The last line is the same command against the sandbox, so the safe path is on screen rather than in an env var you have to know about.
+
+Every write verb gets the confirmation. Money groups and destructive verbs get the red gutter, other writes get yellow. Non-money writes still answer `y`. `--yes` skips it. A pipe never sees it.
+
+### `ads create`
+
+Before: the campaign, the ad group, and the ad are created and start delivering. There is no prompt and no estimate.
+
+After:
+
+```
+ ▌ Create an ad                                             writes to production
+
+   whop ads create --title 'Frame · launch v1' --url https://hypermotion.art/frame
+   --call_to_action shop_now --ad_group '{"ad_campaign_id":"adcamp_x1", …}' …
+
+   campaign  Frame launch  adcamp_x1
+             objective  sales
+             budget     on each ad group
+   group     US 25-44 · purchase  new
+             budget     $40.00/day
+             goal       conversions on purchase
+             targeting  US · ages 25–44 · automatic placements
+   ad        Frame · launch v1  new
+             creative  shop now · 2 creatives · 2 headlines · 1 primary text
+             url       https://hypermotion.art/frame
+
+   reach       1.5M–1.8M people on meta
+   spend       $40.00/day · $1,200.00 over 30 days · no end date
+   pays from   visa ••••4242
+   balance     $418.56 available
+   runs under  Hypermotion (facebook) @hypermotion
+   from        Hypermotion  biz_VraUMckluH8dzV
+   cap         $500.00 committed spend per plan from wv
+
+   This runs against production. The Whop CLI has no dry-run. Spend accrues as
+   ads deliver and is charged afterward. The prompt expires in 2 minutes.
+
+ try first  wv --sandbox ads create …
+ Type 40 to create it [40/N]
+```
+
+The plan is the sandbox. Whop has no test mode for ads, so before any `create` or `update` under `ads`, `ad-groups`, or `ad-campaigns`, `wv` fetches the campaign and group the command points at, asks `accounts preferences` for the ads payment method, `social-accounts list` for the page the ad runs under, and runs `ad-groups estimate_reach` for real with the group's targeting. The whole tree is one card: what exists, what is `new`, what it will cost, and who pays. A daily budget with no end date is shown as its 30-day commitment, and a commitment over `WV_AD_CAP` ($500 unless set, `none` to turn off) refuses before `whop` is called. When the reach estimate fails, the card says so in Whop's words, since the create will usually fail the same way. `wv ads create … --plan` prints the card and exits without asking, which is the dry-run the CLI does not have.
 
 ### Sandbox
 
@@ -232,7 +277,7 @@ Three commands, one screen. The first line is a status line: account, profile an
 ```
 
 - Tab completes groups, then verbs, then the verb's flags and their values, all read from `whop --help` and cached for a day. After a list, tab also completes the ids on screen. Several matches open a list under the editor: tab moves the pointer, enter picks, esc closes. When nothing starts with what you typed, in-order matches fill in, so `mbrsh` finds `memberships`.
-- Type a row number to open that row. `copy 1` puts that row's id on the clipboard; `copy json` puts the agent command from the last teaching footer there, quoted for a shell. `home`, `help`, `help <group>`, `clear`, `quit`, or esc twice.
+- Type a row number to open that row. `copy 1` puts that row's id on the clipboard; `copy json` puts the agent command from the last teaching footer there, quoted for a shell. `next` fetches the following page of the last list while there is one; the hint row says `next for more` when that applies. `home`, `help`, `help <group>`, `clear`, `quit`, or esc twice.
 - The banner names the account and says `production`, because every command in it runs against production. One tip shows under it, a different one each time.
 - `!login` or any `!<args>` runs raw `whop` with the terminal, for the commands that own it.
 - Write verbs get the same confirmation as the CLI, inline.

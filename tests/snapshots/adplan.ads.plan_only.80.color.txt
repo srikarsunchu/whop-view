@@ -1,0 +1,60 @@
+ [1m▌[22m [1mCreate an ad[22m                                         [1mplan only · nothing runs[22m
+
+   [2mwhop ads create --title 'Frame · launch v1' --url
+   https://hypermotion.art/frame --call_to_action shop_now --ad_group
+   '{"ad_campaign_id":"adcamp_x1","title":"US 25-44 ·
+   purchase","budget_amount":40,"budget_type":"daily","optimization_goal":"conv
+   ersions","conversion_event":"purchase","conversion_location":"website","plac
+   ements":"automatic","demographics":{"minimum_age":25,"maximum_age":44,"gende
+   r":"all"},"regions":{"include":{"countries":["US"]}}}' --creatives
+   '[{"id":"file_a1","format":"vertical"},{"id":"file_b2","format":"vertical"}]
+   ' --headlines '["Frame is live","Ship the cut, not the timeline"]'
+   --primary_texts '["20% off this week with LAUNCH20."]'[22m
+
+   [2mcampaign[22m  [2mFrame launch  adcamp_x1[22m
+             [2mobjective[22m  sales
+             [2mplatform [22m  meta
+             [2mbudget   [22m  on each ad group
+             [2mstatus   [22m  draft
+   [2mgroup   [22m  US 25-44 · purchase  new
+             [2mbudget   [22m  $40.00/day
+             [2mgoal     [22m  conversions on purchase
+             [2mtargeting[22m  US · ages 25–44 · automatic placements
+   [2mad      [22m  Frame · launch v1  new
+             [2mcreative[22m  shop now · 2 creatives · 2 headlines · 1 primary text
+             [2murl     [22m  https://hypermotion.art/frame
+
+   [2mreach     [22m  1.5M–1.8M people on meta
+   [2mspend     [22m  [33m$40.00/day · $1,200.00 over 30 days · no end date[39m
+   [2mpays from [22m  visa ••••4242
+   [2mbalance   [22m  [2m$418.56 available[22m
+   [2mruns under[22m  Hypermotion (facebook) @hypermotion
+   [2mfrom      [22m  Hypermotion  biz_VraUMckluH8dzV
+
+   [2mThis runs against production. The Whop CLI has no dry-run. Spend accrues as[22m
+   [2mads deliver and is charged afterward. Nothing was written. Run the command[22m
+   [2mwithout --plan to be asked.[22m
+
+ [2mthen[22m  [2mwv ads create --title 'Frame · launch v1' --url[22m
+       [2mhttps://hypermotion.art/frame --call_to_action shop_now --ad_group[22m
+       [2m'{"ad_campaign_id":"adcamp_x1","title":"US 25-44 ·[22m
+       [2mpurchase","budget_amount":40,"budget_type":"daily","optimization_goal":"c[22m
+       [2monversions","conversion_event":"purchase","conversion_location":"website"[22m
+       [2m,"placements":"automatic","demographics":{"minimum_age":25,"maximum_age":[22m
+       [2m44,"gender":"all"},"regions":{"include":{"countries":["US"]}}}'[22m
+       [2m--creatives[22m
+       [2m'[{"id":"file_a1","format":"vertical"},{"id":"file_b2","format":"vertical[22m
+       [2m"}]' --headlines '["Frame is live","Ship the cut, not the timeline"]'[22m
+       [2m--primary_texts '["20% off this week with LAUNCH20."]'[22m
+ [2mtry first[22m  [2mwv --sandbox ads create --title 'Frame · launch v1' --url[22m
+            [2mhttps://hypermotion.art/frame --call_to_action shop_now --ad_group[22m
+            [2m'{"ad_campaign_id":"adcamp_x1","title":"US 25-44 ·[22m
+            [2mpurchase","budget_amount":40,"budget_type":"daily","optimization_goa[22m
+            [2ml":"conversions","conversion_event":"purchase","conversion_location"[22m
+            [2m:"website","placements":"automatic","demographics":{"minimum_age":25[22m
+            [2m,"maximum_age":44,"gender":"all"},"regions":{"include":{"countries":[22m
+            [2m["US"]}}}' --creatives[22m
+            [2m'[{"id":"file_a1","format":"vertical"},{"id":"file_b2","format":"ver[22m
+            [2mtical"}]' --headlines '["Frame is live","Ship the cut, not the[22m
+            [2mtimeline"]' --primary_texts '["20% off this week with LAUNCH20."]'[22m
+

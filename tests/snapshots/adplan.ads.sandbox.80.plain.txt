@@ -1,0 +1,35 @@
+ ▌ Create an ad                                                writes to sandbox
+
+   whop ads create --title 'Frame · launch v1' --url
+   https://hypermotion.art/frame --call_to_action shop_now --ad_group
+   '{"ad_campaign_id":"adcamp_x1","title":"US 25-44 ·
+   purchase","budget_amount":40,"budget_type":"daily","optimization_goal":"conv
+   ersions","conversion_event":"purchase","conversion_location":"website","plac
+   ements":"automatic","demographics":{"minimum_age":25,"maximum_age":44,"gende
+   r":"all"},"regions":{"include":{"countries":["US"]}}}' --creatives
+   '[{"id":"file_a1","format":"vertical"},{"id":"file_b2","format":"vertical"}]
+   ' --headlines '["Frame is live","Ship the cut, not the timeline"]'
+   --primary_texts '["20% off this week with LAUNCH20."]'
+
+   campaign  Frame launch  adcamp_x1
+             objective  sales
+             platform   meta
+             budget     on each ad group
+             status     draft
+   group     US 25-44 · purchase  new
+             budget     $40.00/day
+             goal       conversions on purchase
+             targeting  US · ages 25–44 · automatic placements
+   ad        Frame · launch v1  new
+             creative  shop now · 2 creatives · 2 headlines · 1 primary text
+             url       https://hypermotion.art/frame
+
+   reach       1.5M–1.8M people on meta
+   spend       $40.00/day · $1,200.00 over 30 days · no end date
+   pays from   visa ••••4242
+   balance     $418.56 available
+   runs under  Hypermotion (facebook) @hypermotion
+   from        Hypermotion  biz_VraUMckluH8dzV
+
+   This runs against the sandbox host. No real money moves.
+

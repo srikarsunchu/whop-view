@@ -3,7 +3,7 @@
    [2mwhop payouts create --amount 2000 --currency usd --payout_method_id potk_x1[22m
 
    [2mamount [22m  $2,000.00 usd
-   [2mto     [22m  Chase checking ••4242  potk_x1
+   [2mto     [22m  Chase checking ••••4242  potk_x1
    [2mfrom   [22m  Hypermotion  biz_VraUMckluH8dzV
    [2mbalance[22m  [32m$2,418.56 available · $418.56 after[39m
    [2mcap    [22m  [2m$500.00 per payout[22m

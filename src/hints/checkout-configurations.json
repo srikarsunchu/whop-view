@@ -1,0 +1,15 @@
+{
+  "primary": "id",
+  "status": "mode",
+  "date": "created_at",
+  "plan": "plan",
+  "columns": ["id", "mode", "plan", "affiliate_code", "three_ds_level", "created_at"],
+  "hidden": ["effective_payment_method_configuration"],
+  "labels": {
+    "affiliate_code": "affiliate",
+    "purchase_url": "checkout url",
+    "redirect_url": "redirect",
+    "three_ds_level": "3ds",
+    "account_id": "account"
+  }
+}

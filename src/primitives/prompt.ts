@@ -15,6 +15,8 @@ export interface PromptOptions {
   output?: NodeJS.WritableStream;
   /** Give up and answer `timeout` after this long. A money prompt left on screen is not consent. */
   timeoutMs?: number;
+  /** What counts as yes, and the bracket hint to show. Default: y or yes, `[y/N]`. */
+  accept?: { test: (answer: string) => boolean; hint: string };
 }
 
 export function prompt(question: string, theme: Theme, opts: PromptOptions = {}): Promise<Answer> {
@@ -46,6 +48,7 @@ export function prompt(question: string, theme: Theme, opts: PromptOptions = {})
       if (!done) output.write("\n");
       finish("no");
     });
-    rl.question(" " + paint(theme, "accent", question) + " " + paint(theme, "muted", copy.confirm.yesNo) + " ", (answer) => finish(/^y(es)?$/i.test(answer.trim()) ? "yes" : "no"));
+    const accept = opts.accept ?? { test: (a: string) => /^y(es)?$/i.test(a), hint: copy.confirm.yesNo };
+    rl.question(" " + paint(theme, "accent", question) + " " + paint(theme, "muted", accept.hint) + " ", (answer) => finish(accept.test(answer.trim()) ? "yes" : "no"));
   });
 }

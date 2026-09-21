@@ -4,7 +4,7 @@
    --speed standard
 
    amount   $250.00 usd
-   to       Chase checking ••4242  potk_x1
+   to       Chase checking ••••4242  potk_x1
    speed    standard
    from     Hypermotion  biz_VraUMckluH8dzV
    balance  $18.56 available · -$231.44 after

@@ -1,0 +1,17 @@
+{
+  "primary": "account",
+  "status": "status",
+  "date": "referral_started_at",
+  "columns": ["account", "status", "my_partner_tier", "referral_started_at", "referral_expires_at", "id"],
+  "labels": {
+    "my_partner_tier": "tier",
+    "referral_started_at": "referred",
+    "referral_expires_at": "expires",
+    "earnings_usd": "earnings",
+    "volume_usd": "volume",
+    "payout_percentages": "payout %",
+    "first_tier_partner": "first tier",
+    "second_tier_partner": "second tier",
+    "blueprint_partner": "blueprint"
+  }
+}

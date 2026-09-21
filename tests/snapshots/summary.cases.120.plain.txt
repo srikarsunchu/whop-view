@@ -1,0 +1,21 @@
+ resolution-center-cases summary · 0 total
+
+ ── By status ──────────────────────────────────────────────────────────────────────────────────────────────────────────
+   awaiting merchant  0
+   awaiting customer  0
+   under review       0
+   closed             0
+
+ ── By reason ──────────────────────────────────────────────────────────────────────────────────────────────────────────
+   fraudulent             0
+   product not received   0
+   not as described       0
+   product unacceptable   0
+   subscription canceled  0
+
+ ── By outcome ─────────────────────────────────────────────────────────────────────────────────────────────────────────
+   customer won  0
+   merchant won  0
+   withdrawn     0
+
+ json  whop resolution-center-cases summary --format json

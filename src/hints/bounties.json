@@ -1,30 +1,31 @@
 {
   "primary": "title",
   "status": "status",
-  "money": [
-    "gross_reward_amount",
-    "gross_paid_out_amount"
-  ],
-  "date": "publish_at",
-  "columns": [
-    "title",
-    "status",
-    "gross_reward_amount",
-    "gross_paid_out_amount",
-    "frequency",
-    "publish_at",
-    "id"
-  ],
-  "hidden": [
-    "capture_spec",
-    "publish_at_timezone"
-  ],
+  "money": ["gross_reward_amount", "net_reward_amount", "budget_amount", "gross_paid_out_amount", "affiliate_share_amount", "total_available", "total_paid"],
+  "date": "created_at",
+  "relation": "poster",
+  "columns": ["title", "status", "gross_reward_amount", "spots_remaining", "business_goal_type", "scheduled_publish_at", "created_at", "id"],
+  "hidden": ["discussion_feed_id", "discussion_post_id", "discussion_experience_id", "viewer_accepted_submissions_count", "accepted_deliverable_types", "capture_spec", "vote_threshold", "bounty_type"],
   "labels": {
     "gross_reward_amount": "reward",
+    "net_reward_amount": "net to worker",
+    "budget_amount": "escrow",
     "gross_paid_out_amount": "paid out",
+    "affiliate_share_amount": "affiliate share",
     "business_goal_type": "goal",
-    "accepted_submissions_limit": "max accepted",
-    "accepted_submissions_per_user_limit": "max per user",
-    "publish_at": "publishes"
+    "accepted_submissions_limit": "slots",
+    "accepted_submissions_count": "accepted",
+    "accepted_submissions_per_user_limit": "per worker",
+    "spots_remaining": "open slots",
+    "unresolved_submissions_count": "pending review",
+    "scheduled_publish_at": "publishes",
+    "scheduled_frequency": "repeats",
+    "submissions_closed_at": "closed",
+    "cancel_requested_at": "cancel requested",
+    "allowed_country_codes": "countries",
+    "min_total_verified_duration_seconds": "min footage (s)",
+    "funding_account": "funded by",
+    "hosting_account": "hosted by",
+    "experience_id": "experience"
   }
 }

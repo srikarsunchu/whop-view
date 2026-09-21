@@ -1,0 +1,21 @@
+ [1mresolution-center-cases summary[22m[2m · 0 total[22m
+
+ [2m── [22m[1mBy status[22m[2m ──────────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2mawaiting merchant[22m  [2m0[22m
+   [2mawaiting customer[22m  [2m0[22m
+   [2munder review     [22m  [2m0[22m
+   [2mclosed           [22m  [2m0[22m
+
+ [2m── [22m[1mBy reason[22m[2m ──────────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2mfraudulent           [22m  [2m0[22m
+   [2mproduct not received [22m  [2m0[22m
+   [2mnot as described     [22m  [2m0[22m
+   [2mproduct unacceptable [22m  [2m0[22m
+   [2msubscription canceled[22m  [2m0[22m
+
+ [2m── [22m[1mBy outcome[22m[2m ─────────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2mcustomer won[22m  [2m0[22m
+   [2mmerchant won[22m  [2m0[22m
+   [2mwithdrawn   [22m  [2m0[22m
+
+ [2mjson[22m  [2mwhop resolution-center-cases summary --format json[22m

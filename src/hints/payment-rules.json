@@ -1,0 +1,10 @@
+{
+  "primary": "name",
+  "status": "status",
+  "date": "created_at",
+  "columns": ["name", "status", "action", "created_at", "id"],
+  "labels": {
+    "deleted_at": "deleted",
+    "account_id": "account"
+  }
+}

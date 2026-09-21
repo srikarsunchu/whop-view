@@ -17,8 +17,9 @@
     "dev": "node --experimental-strip-types --no-warnings src/bin.ts",
     "test": "node --test --experimental-strip-types --no-warnings tests/*.test.ts",
     "fixtures": "node --experimental-strip-types --no-warnings scripts/fixtures.ts",
-    "demo": "pnpm build && for t in demo/*.tape; do case $t in *_common*) ;; *) vhs \"$t\";; esac; done && sh scripts/gif.sh",
-    "render": "node --experimental-strip-types --no-warnings tests/render.ts"
+    "demo": "pnpm build && rm -rf demo/*.frames && for t in demo/*.tape; do case $t in *_common*) ;; *) vhs \"$t\";; esac; done && sh scripts/gif.sh",
+    "render": "node --experimental-strip-types --no-warnings tests/render.ts",
+    "skill": "mkdir -p ~/.claude/skills && rm -rf ~/.claude/skills/whop-gtm && cp -R skills/whop-gtm ~/.claude/skills/whop-gtm && echo installed ~/.claude/skills/whop-gtm"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

@@ -20,6 +20,8 @@ export interface ListInput {
   canCreate?: boolean;
   /** Muted row numbers in a leading gutter, for the session's `N opens a row` shortcut. */
   numbered?: boolean;
+  /** What the rows are, for the header and the empty state. Defaults to the group. */
+  noun?: string;
 }
 
 /** The gutter's column key. Never a real field, never in the teaching footer. */
@@ -32,6 +34,8 @@ export interface ListRender {
   rowCount?: number;
   /** The agent command the footer teaches, as argv. */
   teach?: string[];
+  /** wv argv for the next page, when there is one. */
+  next?: string[];
 }
 
 export function listView(input: ListInput, theme: Theme): string[] {
@@ -41,15 +45,16 @@ export function listView(input: ListInput, theme: Theme): string[] {
 /** `listView` plus where the rows landed, so the session can repaint a picked row in place. */
 export function listViewWithMeta(input: ListInput, theme: Theme): ListRender {
   const { group, argv, rows, page, hints } = input;
+  const noun = input.noun ?? group;
   const out: string[] = [];
-  const left = paint(theme, "accent", group) + paint(theme, "muted", ` · ${rows.length}`);
+  const left = paint(theme, "accent", noun) + paint(theme, "muted", ` · ${rows.length}`);
   const right = input.accountTitle ? paint(theme, "muted", input.accountTitle) : "";
   const gap = theme.width - 1 - width(left) - width(right);
   out.push(" " + left + (right ? padStart(right, Math.max(2, gap) + width(right)) : ""));
   out.push("");
 
   if (rows.length === 0) {
-    out.push(" " + copy.list.empty(group));
+    out.push(" " + copy.list.empty(noun));
     if (input.canCreate) out.push(...footer([["try", copy.list.emptyHint(group)]], theme));
     return { lines: out };
   }
@@ -82,5 +87,13 @@ export function listViewWithMeta(input: ListInput, theme: Theme): ListRender {
   const scoped = takesAccount(argv) && !argv.includes("--account_id") ? [...argv, "--account_id", "<biz_id>"] : argv;
   const teach = teachArgv(scoped, "--filter-output", shown.join(","));
   out.push(...footer([`${copy.list.of(rows.length, null)} · ${pageLine}`, [copy.list.json, teach]], theme));
-  return { lines: out, rowStart, rowCount: rows.length, teach };
+  const next = page.has_next_page && page.end_cursor ? withAfter(argv, page.end_cursor) : undefined;
+  return { lines: out, rowStart, rowCount: rows.length, teach, next };
+}
+
+/** The same list one page on: replaces an existing `--after`, else appends one. */
+export function withAfter(argv: string[], cursor: string): string[] {
+  const i = argv.indexOf("--after");
+  if (i >= 0 && i + 1 < argv.length) return [...argv.slice(0, i + 1), cursor, ...argv.slice(i + 2)];
+  return [...argv.filter((a) => !a.startsWith("--after=")), "--after", cursor];
 }

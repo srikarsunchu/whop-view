@@ -3,7 +3,7 @@
    whop payouts create --amount 2000 --currency usd --payout_method_id potk_x1
 
    amount   $2,000.00 usd
-   to       Chase checking ••4242  potk_x1
+   to       Chase checking ••••4242  potk_x1
    from     Hypermotion  biz_VraUMckluH8dzV
    balance  $2,418.56 available · $418.56 after
    cap      $500.00 per payout

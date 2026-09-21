@@ -1,0 +1,17 @@
+ ▌ Create an ad campaign                                    writes to production
+
+   whop ad-campaigns create --title 'Frame launch' --platform meta --objective
+   sales --budget_optimization ad_group
+
+   campaign  Frame launch  new
+             objective  sales
+             platform   meta
+             budget     on each ad group
+
+   spend       none yet · nothing delivers until a budget exists
+   pays from   visa ••••4242
+   runs under  Hypermotion (facebook) @hypermotion
+   from        Hypermotion  biz_VraUMckluH8dzV
+
+   This runs against production. The Whop CLI has no dry-run.
+

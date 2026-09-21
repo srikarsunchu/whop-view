@@ -1,0 +1,14 @@
+ ▌ Whop would refuse this payout                                         not run
+
+   whop payouts create --amount 10 --payout_method_id potk_x1
+
+   amount   $10.00 usd
+   to       potk_x1  not among the saved payout methods
+   from     Hypermotion  biz_VraUMckluH8dzV
+   balance  $18.56 available · $8.56 after
+   cap      $0.00 standard from Whop · $500.00 from wv
+
+   Please complete identity verification before requesting a withdrawal.
+
+ try first  wv --sandbox payouts create --amount 10 --payout_method_id potk_x1
+

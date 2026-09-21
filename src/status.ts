@@ -40,11 +40,14 @@ export const WRITE_VERBS = new Set([
 /** Every verb under these groups moves money. */
 export const MONEY_GROUPS = new Set(["payouts", "swaps", "transfers", "cards", "deposits"]);
 
+/** Reads under a money group. `cards transactions` looks at spend; it moves nothing. */
+export const MONEY_READ_VERBS = new Set(["list", "get", "methods", "transactions", "get-transaction", "recipients", "quote", "quotes", "status", "supported-methods"]);
+
 export const DESTRUCTIVE_VERBS = new Set(["delete", "cancel", "transfer_ownership"]);
 
 export function isWrite(group: string, verb: string | undefined): boolean {
   if (!verb) return false;
-  if (MONEY_GROUPS.has(group) && verb !== "list" && verb !== "get") return true;
+  if (MONEY_GROUPS.has(group) && !MONEY_READ_VERBS.has(verb)) return true;
   return WRITE_VERBS.has(verb);
 }
 

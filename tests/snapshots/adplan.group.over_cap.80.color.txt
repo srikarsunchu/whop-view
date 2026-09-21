@@ -1,0 +1,33 @@
+ [31m▌[39m [1mOver the ad spend cap[22m                                                 [31mnot run[39m
+
+   [2mwhop ad-groups create --ad_campaign_id adcamp_x1 --title 'US broad'
+   --budget_amount 120 --budget_type daily --optimization_goal conversions
+   --conversion_event purchase --regions '{"include":{"countries":["US"]}}'[22m
+
+   [2mcampaign[22m  [2mFrame launch  adcamp_x1[22m
+             [2mobjective[22m  sales
+             [2mplatform [22m  meta
+             [2mbudget   [22m  on each ad group
+             [2mstatus   [22m  draft
+   [2mgroup   [22m  US broad  new
+             [2mbudget   [22m  $120.00/day
+             [2mgoal     [22m  conversions on purchase
+             [2mtargeting[22m  US
+
+   [2mreach     [22m  210M–250M people on meta
+   [2mspend     [22m  [33m$120.00/day · $3,600.00 over 30 days · no end date[39m
+   [2mpays from [22m  visa ••••4242
+   [2mbalance   [22m  [2m$418.56 available[22m
+   [2mruns under[22m  Hypermotion (facebook) @hypermotion
+   [2mfrom      [22m  Hypermotion  biz_VraUMckluH8dzV
+   [2mcap       [22m  [31m$500.00 committed spend per plan from wv[39m
+
+   [2mThis plan commits $3,600.00, more than the $500.00 cap wv allows per ad[22m
+   [2mwrite. Raise it for one shell with WV_AD_CAP=3600, set an end date so the[22m
+   [2mcommitment is real, or turn it off with WV_AD_CAP=none.[22m
+
+ [2mtry first[22m  [2mwv --sandbox ad-groups create --ad_campaign_id adcamp_x1 --title 'US[22m
+            [2mbroad' --budget_amount 120 --budget_type daily --optimization_goal[22m
+            [2mconversions --conversion_event purchase --regions[22m
+            [2m'{"include":{"countries":["US"]}}'[22m
+

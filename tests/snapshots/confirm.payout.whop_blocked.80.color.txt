@@ -1,0 +1,14 @@
+ [31m▌[39m [1mWhop would refuse this payout[22m                                         [31mnot run[39m
+
+   [2mwhop payouts create --amount 10 --payout_method_id potk_x1[22m
+
+   [2mamount [22m  $10.00 usd
+   [2mto     [22m  [33mpotk_x1  not among the saved payout methods[39m
+   [2mfrom   [22m  Hypermotion  biz_VraUMckluH8dzV
+   [2mbalance[22m  [32m$18.56 available · $8.56 after[39m
+   [2mcap    [22m  [31m$0.00 standard from Whop · $500.00 from wv[39m
+
+   [2mPlease complete identity verification before requesting a withdrawal.[22m
+
+ [2mtry first[22m  [2mwv --sandbox payouts create --amount 10 --payout_method_id potk_x1[22m
+

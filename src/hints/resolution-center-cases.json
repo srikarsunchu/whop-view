@@ -1,0 +1,16 @@
+{
+  "primary": "buyer",
+  "status": "status",
+  "money": ["amount"],
+  "date": "response_due_at",
+  "relation": "payment",
+  "columns": ["buyer", "status", "reason", "amount", "response_due_at", "id"],
+  "labels": {
+    "response_due_at": "respond by",
+    "customer_appealed": "appealed",
+    "available_actions": "actions",
+    "line_items": "items",
+    "plan_id": "plan",
+    "product_id": "product"
+  }
+}

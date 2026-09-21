@@ -4,7 +4,7 @@
    --speed standard[22m
 
    [2mamount [22m  $250.00 usd
-   [2mto     [22m  Chase checking ••4242  potk_x1
+   [2mto     [22m  Chase checking ••••4242  potk_x1
    [2mspeed  [22m  standard
    [2mfrom   [22m  Hypermotion  biz_VraUMckluH8dzV
    [2mbalance[22m  [32m$418.56 available · $168.56 after[39m

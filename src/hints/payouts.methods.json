@@ -1,0 +1,23 @@
+{
+  "primary": "nickname",
+  "status": "status",
+  "date": "last_paid_out_at",
+  "columns": ["nickname", "institution_name", "status", "destination_currency", "account_reference", "is_default", "last_paid_out_at", "id"],
+  "hidden": ["is_clone"],
+  "labels": {
+    "institution_name": "institution",
+    "destination_currency": "currency",
+    "account_reference": "account",
+    "is_default": "default",
+    "last_paid_out_at": "last payout",
+    "bank_verification_state": "bank verification",
+    "linked_via_plaid": "plaid",
+    "needs_plaid_reconnect": "reconnect plaid",
+    "payer_name": "payer",
+    "status_reason": "reason",
+    "unavailable_reason": "unavailable because",
+    "supported_payout_method": "method",
+    "estimated_arrival": "arrival",
+    "fee_structure": "fees"
+  }
+}

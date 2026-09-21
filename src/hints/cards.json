@@ -1,0 +1,12 @@
+{
+  "primary": "name",
+  "status": "status",
+  "date": "created_at",
+  "columns": ["name", "status", "type", "last4", "spent_last_month", "created_at", "id"],
+  "hidden": ["secrets", "billing", "expiration_month", "expiration_year"],
+  "labels": {
+    "spent_last_month": "spent last month",
+    "user_id": "user",
+    "canceled_at": "canceled"
+  }
+}

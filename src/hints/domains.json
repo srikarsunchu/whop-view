@@ -1,0 +1,17 @@
+{
+  "primary": "domain",
+  "status": "status",
+  "date": "created_at",
+  "columns": ["domain", "status", "dns_status", "certificate_status", "app_id", "created_at", "id"],
+  "labels": {
+    "dns_status": "dns",
+    "dns_records": "dns records",
+    "certificate_status": "certificate",
+    "hostname_status": "hostname",
+    "app_id": "app",
+    "account_id": "account",
+    "verified_at": "verified",
+    "last_checked_at": "checked",
+    "verification_expires_at": "verification expires"
+  }
+}

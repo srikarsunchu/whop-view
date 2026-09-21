@@ -1,0 +1,15 @@
+{
+  "primary": "title",
+  "status": "status",
+  "date": "created_at",
+  "columns": ["title", "status", "action_type", "created_at", "id"],
+  "hidden": ["ai_chat_id"],
+  "labels": {
+    "action_type": "action",
+    "executed_at": "approved",
+    "superseded_at": "rejected",
+    "user_feedback": "feedback",
+    "target_url": "site",
+    "input": "asked"
+  }
+}

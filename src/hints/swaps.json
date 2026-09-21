@@ -1,0 +1,9 @@
+{
+  "primary": "id",
+  "status": "status",
+  "columns": ["id", "status", "account_id", "tx_hashes", "error"],
+  "labels": {
+    "account_id": "account",
+    "tx_hashes": "transactions"
+  }
+}

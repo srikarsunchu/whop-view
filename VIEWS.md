@@ -1,6 +1,6 @@
 # VIEWS.md
 
-`wv` is the human view layer for the Whop CLI. It wraps `whop`, asks it for JSON, and renders for a person. Agents and scripts never see it. Written against `whop` 0.16.3, API 2026-08-25-2, from real envelopes captured on 2026-09-19.
+`wv` is the human view layer for the Whop CLI. It wraps `whop`, asks it for JSON, and renders for a person. Agents and scripts never see it. Written against `whop` 0.18.2, API 2026-09-15, from real envelopes captured on 2026-09-19 and 2026-09-21.
 
 ## Rendering approach: plain ANSI
 
@@ -44,6 +44,40 @@ Spacing: 2 columns between table columns, 1 blank line between blocks, 2-space i
 
 **Views.** Compose primitives. Never call `whop` directly; the runner hands them a parsed envelope.
 
+## Ads gate
+
+The CLI has no sandbox for ads, so the plan is the sandbox. `src/views/adplan.ts` renders `create` and `update` under `ads`, `ad-groups`, and `ad-campaigns` as one card before any write. `bin.ts` gathers it: `auth status`, `accounts preferences` (payment method, reporting currency), `social-accounts list`, `ledgers report balance_summary`, then `ad-groups get` and `ad-campaigns get` for the ids on the command line, `audiences list` when the group names audiences, and one real `ad-groups estimate_reach` built from the group's targeting flags (`reachArgv`). The pure parts are tested without the network.
+
+```
+ ▌ Create an ad                                             writes to production
+
+   whop ads create …
+
+   campaign  <title>  <id>            existing nodes are muted
+             objective  sales          new nodes are `new`
+   group     <title>  new
+             budget     $40.00/day
+             goal       conversions on purchase
+             targeting  US · ages 25–44 · automatic placements
+   ad        <title>  new
+             creative  shop now · 2 creatives · 2 headlines
+
+   reach       1.5M–1.8M people on meta       warn when Whop could not estimate
+   spend       $40.00/day · $1,200.00 over 30 days · no end date
+   pays from   visa ••••4242                  warn when no ads payment method
+   runs under  <page> (facebook) @handle      warn plus the connect command when none
+   from        <account>  <biz_id>
+   cap         $500.00 committed spend per plan from wv
+```
+
+Rules:
+
+- The budget that gets typed back is the one on the command line (`--budget_amount`, or inside `--ad_group`). A budget found on a fetched group or campaign is shown as `from the existing … budget` and the prompt is y/N.
+- Commitment is daily × days until `ends_at`, or × 30 with `no end date`; lifetime is itself. Over `WV_AD_CAP` (default $500, `none` off) refuses with exit 2 and names the env var and the end-date fix.
+- `--plan` is a wv flag: render the card with an `accent` gutter and `plan only · nothing runs`, exit 0. It also skips the cap and the timeout, since nothing runs.
+- Sandbox mode skips the cap and the timeout and still runs the estimate, which the sandbox host will usually refuse; the card shows that refusal.
+- The callout tag drops to its own line when the title and the badge do not both fit, since `Create an ad campaign` plus the badge is wider than 40 columns.
+
 ## Passthrough rules
 
 `wv` renders only when all of these hold. Otherwise it execs `whop` with the original argv, inherits stdio, and exits with its code.
@@ -73,6 +107,7 @@ Payload shapes the views must recognize:
 | series | `data.data.points` is an array | sparkline row |
 | report | `data.report_type` and `data.rows` exist | kv from rows |
 | status | `data.loggedIn` exists | home identity |
+| summary | `data.total` is a number and `data.groups` is an object of count objects | counts by facet |
 | anything else | | detail, flat |
 
 Every payload may carry `recommended_action` as a marketing string. It is always hidden.
@@ -120,7 +155,7 @@ Column drop order under width pressure: 7, 5, 4, 3, 2. The primary label and id 
 
 ## Hints schema
 
-`src/hints/<resource>.json`. Every key optional. Twenty-four shipped, eight of them from `--schema` alone because the account has no data there yet; every other resource renders from inference alone.
+`src/hints/<resource>.json`, or `src/hints/<resource>.<verb>.json` when one verb returns rows that share nothing with the group's list (`payouts methods`, `cards transactions`, `accounts reserves`, `partners list`). A verb file wins whole; it never merges with the group file. Every key optional. Forty-odd shipped. The 2026-09-21 batch (economic-intelligence, cards, transfers, swaps, dispute-alerts, resolution-center-cases, checkout-configurations, notifications, exports, domains, verifications, events, bounty-submissions, audiences, experiments, payment-rules, cashback-rules) was written from the response schemas in `https://api.whop.com/openapi.json`, because this account has no rows in any of them; `--schema` describes options, not responses, so it could not have helped.
 
 ```json
 {
@@ -177,7 +212,7 @@ Unchanged behavior, copied into `src/format.ts` and `src/status.ts`:
  json  whop products list --format json --filter-output id,title,visibility,default_plan,member_count,created_at
 ```
 
-Header: group, count, account title right-aligned. Footer: `n of total`, `next: --after <cursor>` when `has_next_page`, then the teaching line with exactly the columns shown. Empty page renders the header and `No products yet.` with the create command from copy.
+Header: noun, count, account title right-aligned. The noun is the group, or the verb when it names a sub-resource: `payouts methods` heads `methods · 0` and ends `No methods yet.` with no create hint, not `No payouts yet.` Footer: `n of total`, `next: --after <cursor>` when `has_next_page`, then the teaching line with exactly the columns shown. Empty page renders the header and `No products yet.` with the create command from copy.
 
 ### detail
 
@@ -210,25 +245,46 @@ Bare ids in relations are looked up only if the hints say `resolve: true` for th
    --speed standard
 
    amount   $250.00 usd
-   to       Chase checking ••4242  potk_x1
+   to       Chase checking ••••4242  potk_x1
    speed    standard
    from     Hypermotion  biz_VraUMckluH8dzV
    balance  $418.56 available · $168.56 after
-   cap      $500.00 per payout
+   cap      $1,000.00 standard from Whop · $500.00 from wv · $9,999.00 left
+            today
 
    This runs against production. The Whop CLI has no dry-run. This moves real
    money. The prompt expires in 2 minutes.
 
  try first  wv --sandbox payouts create --amount 250 --currency usd
             --payout_method_id potk_x1 --speed standard
- Run it? [y/N]
+ Type 250 to send it [250/N]
 ```
 
-Verbs that trigger it: `create update delete cancel pause resume transfer deploy publish unpublish replay extend invite duplicate retry_payment transfer_ownership form_company` and any verb under `payouts swaps transfers cards deposits`. Money groups and `delete`, `cancel`, `transfer_ownership` get `bad` gutter; other writes get `warn`. Summary rows come from the flags given, rendered through the same inference rules. The command line is the argv shell-quoted once, so a title with a space shows the way it must be typed. `--yes` skips the prompt. Non-TTY never reaches this view. On `n` exit 130 without calling `whop`.
+Verbs that trigger it: `create update delete cancel pause resume transfer deploy publish unpublish replay extend invite duplicate retry_payment transfer_ownership form_company` and any verb under `payouts swaps transfers cards deposits` except the reads there (`list get methods transactions get-transaction recipients quote quotes status supported-methods`). Money groups and `delete`, `cancel`, `transfer_ownership` get `bad` gutter; other writes get `warn`. Summary rows come from the flags given, rendered through the same inference rules. The command line is the argv shell-quoted once, so a title with a space shows the way it must be typed. `--yes` skips the prompt. Non-TTY never reaches this view. On `n` exit 130 without calling `whop`.
 
-**Money gate.** A money group with `--amount` gets the Link-shaped approval on top. Before the prompt, `wv` runs `payouts methods` and `ledgers report --report_type balance_summary --currency <cur>` alongside `auth status`, and adds three rows: `to` is the saved payout method behind `--payout_method_id` as `nickname ••last4  id` (the bare id plus a `warn` note when it is not in the list), `balance` is the available amount and what remains after, in `bad` when negative, and `cap` is the per-payout cap. Over the cap or over the balance, the view is `refusedView` instead: a `bad` callout tagged `not run`, the same rows, one sentence saying which limit and how to raise it, exit 2, and `whop` is never called. The cap is `WV_PAYOUT_CAP` in whole currency units, default 500, `none` to disable. The prompt takes `timeoutMs`; a money prompt expires after `WV_CONFIRM_TIMEOUT` seconds, default 120, and prints `Not run. The prompt sat for 2 minutes.` with exit 130. The last line of every production money confirm is `try first  wv --sandbox <same argv>`. A balance that cannot be read simply has no row; the API answers a valid report with a web page now and then, and that must not block a payout.
+**Money gate.** A money group with `--amount` gets the Link-shaped approval on top. Before the prompt, `wv` runs `payouts methods --include_limits --currency <cur>` and `ledgers report --report_type balance_summary --currency <cur>` alongside `auth status`, and adds three rows. `to` is the saved payout method behind `--payout_method_id` as `nickname account_reference  id`, falling back to `institution_name` then the destination category, with the bare id plus a `warn` note when it is not in the list. `balance` is the available amount and what remains after, in `bad` when negative. `cap` is Whop's live limit for the payout's speed (`limits.<speed>.max_amount`, with `daily_amount_remaining` when sent) next to `wv`'s own cap, in `bad` when the amount is over Whop's. Three refusals, in order: over Whop's limit (`refusedView` prints Whop's `error_message` verbatim, since "complete identity verification" beats any paraphrase), over `wv`'s cap, over the balance. Each is a `bad` callout tagged `not run`, the same rows, exit 2, and `whop` is never called. The cap is `WV_PAYOUT_CAP` in whole currency units, default 500, `none` to disable. The prompt for a live money write is `Type 250 to send it [250/N]`, accepting the amount in any common spelling (`amountMatcher`), and `y` is not consent. A money prompt expires after `WV_CONFIRM_TIMEOUT` seconds, default 120, and prints `Not run. The prompt sat for 2 minutes.` with exit 130. The last line of every production money confirm is `try first  wv --sandbox <same argv>`. A balance or limit that cannot be read simply has no row; the API answers a valid report with a web page now and then, and a missing `payout:withdrawal:read` scope drops `limits`, and neither must block a payout.
 
 **Sandbox.** `--sandbox` or `WV_SANDBOX=1` sets the mode. `whopEnv` in the runner gives the child `WHOP_API_BASE_URL` (`WV_SANDBOX_URL` or `https://sandbox-api.whop.com`) and `WHOP_API_KEY` from `WV_SANDBOX_KEY` when set. In sandbox the badge reads `writes to sandbox`, the gutter is `warn`, the warning says no real money moves, the cap and the timeout are off, and there is no `try first` line. The banner and home status line show `sandbox` in `good` instead of `production` in `warn`. A 401, 403, or 404 in sandbox mode without a sandbox key adds one line naming `WV_SANDBOX_KEY`.
+
+### summary
+
+```
+ resolution-center-cases summary · 0 total
+
+ ── By status ──────────────────────────────────────────────────────────────────
+   awaiting merchant  0
+   awaiting customer  0
+   under review       0
+   closed             0
+
+ ── By reason ──────────────────────────────────────────────────────────────────
+   fraudulent             0
+   product not received   0
+
+ json  whop resolution-center-cases summary --format json
+```
+
+`disputes summary` and `resolution-center-cases summary`. One section per facet, one row per bucket, zero rows kept because `won 0` is an answer. Status buckets take the status color. An empty facet (no currencies yet) is skipped. Before this view the shape fell to the flat detail: rule 4 painted `total` as `$0.00` because the key matches `/total/`, and the two-level flatten capped at eight lines, so the outcome facet never showed.
 
 ### error
 
@@ -247,11 +303,11 @@ Title comes from a code map in copy: `COMMAND_NOT_FOUND` Not a command, `HTTP_40
 ### help
 
 ```
- whop 0.16.3 · API 2026-08-25-2                    type wv <group> --help
+ whop 0.18.2 · API 2026-09-15                      type wv <group> --help
 
  GET STARTED
    quickstart   Start here — choose or create the business used by the CLI
-   apps         Build and deploy fully-hosted web apps (*.whop.app)
+   apps         Build and deploy fully-hosted web apps (*.whop.site)
    upgrade      Update the CLI to the latest version
 
  COMMERCE
@@ -312,7 +368,7 @@ The banner is the home breadcrumb without the balance, so opening a session cost
 
 **Completion.** `src/tui/complete.ts`. Word 0 offers groups from `whop --help` plus the builtins. Word 1 offers the group's verbs from `whop <group> --help`. Later words: a token starting with `-` offers the verb's `Options:` block, minus flags already used; after an `<a|b>` flag, its values; after the verb or an `--x_id` flag, the ids on screen from the last list. One candidate completes with a trailing space, several fill the common prefix and open a picker under the block: tab moves the pointer, enter puts the pick on the line, esc closes, any other key closes and edits. The list shows eight at a time in a window that follows the pointer, with `↑ N above` and `↓ N below`. Prefix matches win outright in catalog order, so tab behaves like a shell. Only when nothing starts with the word do in-order subsequence matches appear, scored prefix 100 then subsequence 50 plus density, shorter first (the Dodo CLI palette's ranking). A lone subsequence match completes like a lone prefix match; several share no prefix, so the line stays put. Help text is cached for a day at `~/.cache/whop-view/help/`, because each `whop --help` costs a quarter second.
 
-**Commands.** A line is `wv` argv; a leading `wv` or `whop` is dropped so either can be pasted. `home`, `help`, `help <group>`, `clear`, `quit`, `copy <N>`, `copy json`. `!<args>` runs raw `whop` owning the terminal, for `login` and friends. A bare number `N` runs `<group> get <id>` for row N of the last list; `copy N` puts that id on the clipboard through OSC 52 plus `pbcopy`, `wl-copy`, `xclip`, `xsel`, or `clip`, whichever is there, and confirms with a `good` notice; `copy json` copies the agent command from the last teaching footer, the same argv the footer printed, quoted by `shellJoin` once; session lists render a muted row-number gutter so N is visible, and the gutter never enters the teaching footer. Write verbs confirm inline through the same y/N prompt as the CLI: the session hands the TTY to readline and takes it back.
+**Commands.** A line is `wv` argv; a leading `wv` or `whop` is dropped so either can be pasted. `home`, `help`, `help <group>`, `clear`, `quit`, `copy <N>`, `copy json`, `next`. `!<args>` runs raw `whop` owning the terminal, for `login` and friends. A bare number `N` runs `<group> get <id>` for row N of the last list; `copy N` puts that id on the clipboard through OSC 52 plus `pbcopy`, `wl-copy`, `xclip`, `xsel`, or `clip`, whichever is there, and confirms with a `good` notice; `copy json` copies the agent command from the last teaching footer, the same argv the footer printed, quoted by `shellJoin` once; `next` runs the wv argv for the following page, which `listViewWithMeta` returns as `next` (the same argv with `--after <end_cursor>` appended or replaced) while `has_next_page` holds; session lists render a muted row-number gutter so N is visible, and the gutter never enters the teaching footer. Write verbs confirm inline through the same y/N prompt as the CLI: the session hands the TTY to readline and takes it back.
 
 **Shared dispatch.** `execute(argv, theme, opts)` in `src/bin.ts` runs one command end to end, prints it, and returns the exit code and any list rows. The one-shot CLI calls it once and exits; the session calls it per line. Nothing in `src/views` knows the session exists, apart from the optional numbered gutter on lists.
 
@@ -341,9 +397,10 @@ Four patterns from the oh-my-pi TUI, reproduced in the plain renderer with no de
 - Whop's CLI docs say there is no sandbox. The API spec lists `sandbox-api.whop.com`, the binary supports `WHOP_API_BASE_URL`, and that host answers like production but rejects an OAuth token with 401. So: a sandbox exists, the CLI does not expose it, and there is no dry-run flag. The confirm view says "runs against production" rather than "no sandbox".
 - The API occasionally answers a valid `get` with an HTML page. That renders as "Not a JSON response" rather than a raw doctype.
 - On 2026-09-21 the sandbox host answered `products list` under an OAuth login with 404, not the 401 seen earlier. The sandbox hint fires on either.
+- vhs 0.12 only writes frames into a directory that does not exist yet. A rerun over an old `demo/<name>.frames/` keeps the stale capture and says nothing, so `pnpm demo` clears them first.
+- A page's sibling keys survive as `extra` on the envelope (`limits` on `payouts methods --include_limits`). `recommended_action` is dropped there as everywhere.
 - Teaching footers and the confirm command line are argv arrays until `footer` or `confirmView` prints them. `src/argv.ts` quotes anything outside `[A-Za-z0-9_@%+=:,./-]` with POSIX single quotes and leaves `<biz_id>` placeholders bare. Product titles and notes are user text and will land in a command eventually; this is where that is solved once.
 
-- `payments list` does not exist. Payments hints target `payments status <id>`. The payments feed is `ledgers list`.
 - `stats get` requires `--from` and `--to`. Home supplies a 7-day UTC window.
 - `ledgers list` rejects `--first`. Fixtures capture it without paging flags.
 - Ledger lines carry `amount` in 1e8 precision units and `usd_amount` in dollars. Rule 5 uses `usd_amount`.
@@ -360,6 +417,9 @@ Four patterns from the oh-my-pi TUI, reproduced in the plain renderer with no de
 - The kv card assumed the value column was at least 16 wide, which was false under about 50 columns, so detail views overflowed. Sections stack key over value when the value would be narrower than 16.
 - Help text's headline was truncated to make room for the right-hand hint, so at 40 columns the header read `who…`. The hint drops first, then the API version, and only then does the headline truncate.
 - The home footer joined three commands with `·` and truncated, losing the third at 80. One teaching line per command.
+- Every verb under a money group was gated, so `wv cards transactions` and `wv payouts methods` asked for consent to read. `MONEY_READ_VERBS` in `status.ts` names the reads.
+- `accounts reserves` and `verifications list` answer `{ data: [] }` with no `page_info`. They classify as a page already; the header said `accounts · 0` and `No accounts yet.` until the list took a noun.
+- `recommended-actions` is gone from the CLI; `economic-intelligence` replaced it, and this account gets `HTTP_403` there. `error.gated` captures that.
 
 ## Tests
 

@@ -18,7 +18,7 @@ import type { Rec } from "../envelope.ts";
 
 /** What the session needs from the entry point: run one command and tell it what came back. */
 export interface Executor {
-  (argv: string[], theme: Theme): Promise<{ code: number; rows?: Rec[]; group?: string; teach?: string[] }>;
+  (argv: string[], theme: Theme): Promise<{ code: number; rows?: Rec[]; group?: string; teach?: string[]; next?: string[] }>;
 }
 
 export interface SessionOptions {
@@ -103,6 +103,8 @@ export async function session(opts: SessionOptions): Promise<number> {
   let lastRows: { group: string; ids: string[] } | null = null;
   /** The agent command under the last view, for `copy json`. */
   let lastTeach: string[] | undefined;
+  /** wv argv for the next page of the last list, while there is one. */
+  let lastNext: string[] | undefined;
   const mode = opts.mode ?? "production";
   const env = whopEnv(mode);
   let lastEsc = 0;
@@ -118,7 +120,10 @@ export async function session(opts: SessionOptions): Promise<number> {
 
   const hint = () => {
     if (picker) return copy.session.hints.completing;
-    return (lastRows && lastRows.ids.length ? `${copy.session.rows(lastRows.ids.length)} · ` : "") + copy.session.hints.idle;
+    const parts = [];
+    if (lastRows && lastRows.ids.length) parts.push(copy.session.rows(lastRows.ids.length));
+    if (lastNext) parts.push(copy.session.more);
+    return [...parts, copy.session.hints.idle].join(" · ");
   };
 
   const draw = () => {
@@ -166,6 +171,7 @@ export async function session(opts: SessionOptions): Promise<number> {
     const r = await suspend(() => opts.execute(argv, theme));
     if (r.rows && r.group) lastRows = { group: r.group, ids: r.rows.map((row) => (typeof row.id === "string" ? row.id : "")).filter(Boolean) };
     if (r.teach) lastTeach = r.teach;
+    if (r.rows) lastNext = r.next;
     return r;
   };
 
@@ -195,6 +201,13 @@ export async function session(opts: SessionOptions): Promise<number> {
       return draw();
     }
     if (head === "help" || head === "?") await run(argv.length > 1 ? [argv[1]] : []);
+    else if (head === "next" && argv.length === 1) {
+      if (!lastNext) {
+        notice = { text: copy.session.noNext, role: "warn" };
+        return draw();
+      }
+      await run(lastNext);
+    }
     else if (head === "!" || line.startsWith("!")) {
       // Raw whop, owning the terminal, exactly as typed.
       const raw = toArgv(line.replace(/^!\s*/, ""));

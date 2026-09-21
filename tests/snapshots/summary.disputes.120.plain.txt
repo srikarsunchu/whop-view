@@ -1,0 +1,10 @@
+ disputes summary · 0 total
+
+ ── By status ──────────────────────────────────────────────────────────────────────────────────────────────────────────
+   needs response  0
+   under review    0
+   won             0
+   lost            0
+   closed          0
+
+ json  whop disputes summary --format json

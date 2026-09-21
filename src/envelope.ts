@@ -28,10 +28,11 @@ export interface PageInfo {
 export type Rec = Record<string, unknown>;
 
 export type Payload =
-  | { kind: "page"; rows: Rec[]; page: PageInfo }
+  | { kind: "page"; rows: Rec[]; page: PageInfo; extra?: Rec }
   | { kind: "record"; record: Rec }
   | { kind: "series"; points: { timestamp: number; value: number }[]; currency?: string }
   | { kind: "report"; reportType: string; rows: Rec[]; total?: number }
+  | { kind: "summary"; total: number; groups: Record<string, Record<string, number>> }
   | { kind: "status"; record: Rec }
   | { kind: "other"; record: Rec };
 
@@ -76,7 +77,9 @@ export function parseEnvelope(text: string): Parsed {
 export function classify(data: unknown): Payload {
   if (!isObj(data)) return { kind: "other", record: { value: data } };
   if (Array.isArray(data.data) && isObj(data.page_info)) {
-    return { kind: "page", rows: data.data.filter(isObj), page: data.page_info as unknown as PageInfo };
+    // Siblings of the page, like `limits` on `payouts methods --include_limits`.
+    const { data: _rows, page_info: _page, recommended_action: _ra, ...extra } = data;
+    return { kind: "page", rows: data.data.filter(isObj), page: data.page_info as unknown as PageInfo, extra: Object.keys(extra).length ? extra : undefined };
   }
   if (isObj(data.data) && Array.isArray(data.data.points)) {
     return { kind: "series", points: data.data.points as { timestamp: number; value: number }[], currency: data.data.currency as string | undefined };
@@ -85,6 +88,12 @@ export function classify(data: unknown): Payload {
     return { kind: "report", reportType: data.report_type, rows: data.rows.filter(isObj), total: typeof data.total === "number" ? data.total : undefined };
   }
   if ("loggedIn" in data) return { kind: "status", record: data };
+  // `disputes summary`, `resolution-center-cases summary`: a count and one bucket of counts per facet.
+  if (typeof data.total === "number" && isObj(data.groups) && Object.values(data.groups).every(isObj)) {
+    const groups: Record<string, Record<string, number>> = {};
+    for (const [k, v] of Object.entries(data.groups as Record<string, Rec>)) groups[k] = Object.fromEntries(Object.entries(v).filter(([, n]) => typeof n === "number")) as Record<string, number>;
+    return { kind: "summary", total: data.total, groups };
+  }
   if (typeof data.id === "string") return { kind: "record", record: data };
   if (Array.isArray(data.data)) return { kind: "page", rows: data.data.filter(isObj), page: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } };
   return { kind: "other", record: data };

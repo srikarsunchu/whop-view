@@ -9,11 +9,14 @@ import { daysAgo, isoDay } from "./format.ts";
 import { copy } from "./copy.ts";
 import { listViewWithMeta, type ListRender } from "./views/list.ts";
 import { detailView } from "./views/detail.ts";
-import { confirmView, describeMethod, flagsToRecord, moneyOf, refusedView, type Balance } from "./views/confirm.ts";
+import { amountMatcher, confirmView, describeMethod, flagsToRecord, limitFor, moneyOf, refusedView, speedOf, type Balance, type WhopLimit } from "./views/confirm.ts";
+import { money } from "./format.ts";
+import { adPlanView, adRefusedView, budgetOf, commitment, isAdPlan, jsonFlags, reachArgv, treeFromArgv, type AdPlanInput, type AdTree, type Reach } from "./views/adplan.ts";
 import { errorView } from "./views/error.ts";
 import { helpView, parseHelp } from "./views/help.ts";
 import { homeView } from "./views/home.ts";
 import { seriesView } from "./views/series.ts";
+import { summaryView } from "./views/summary.ts";
 import { prompt } from "./primitives/prompt.ts";
 import { spinner } from "./primitives/spinner.ts";
 import { session } from "./tui/session.ts";
@@ -33,27 +36,40 @@ export interface Outcome {
   list?: ListRender;
   /** The agent command the view taught, as argv. The session's `copy json` puts it on the clipboard. */
   teach?: string[];
+  /** wv argv for the next page of a list. The session's `next` runs it. */
+  next?: string[];
 }
 
 /** Splits wv's own flags out of argv. */
-export function ownFlags(argvIn: string[]): { argv: string[]; width?: number; sandbox: boolean } {
+export function ownFlags(argvIn: string[]): { argv: string[]; width?: number; sandbox: boolean; plan: boolean } {
   let width: number | undefined;
   let sandbox = false;
+  let plan = false;
   const argv: string[] = [];
   for (let i = 0; i < argvIn.length; i++) {
     const a = argvIn[i];
     if (a === "--width") width = Number(argvIn[++i]);
     else if (a.startsWith("--width=")) width = Number(a.slice(8));
     else if (a === "--sandbox") sandbox = true;
+    else if (a === "--plan") plan = true;
     else argv.push(a);
   }
-  return { argv, width: width !== undefined && Number.isFinite(width) && width > 0 ? Math.floor(width) : undefined, sandbox };
+  return { argv, width: width !== undefined && Number.isFinite(width) && width > 0 ? Math.floor(width) : undefined, sandbox, plan };
 }
 
 /** Per-payout cap from `WV_PAYOUT_CAP`, in whole currency units. `none` turns it off. Default $500, like Link. */
 export const DEFAULT_CAP = 500;
 export function capFrom(env: NodeJS.ProcessEnv = process.env): number | null {
   const raw = env.WV_PAYOUT_CAP;
+  if (raw === undefined || raw === "") return DEFAULT_CAP;
+  if (/^(none|off|0)$/i.test(raw.trim())) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_CAP;
+}
+
+/** Cap on the spend an ad write commits, from `WV_AD_CAP`. Same default and spellings as the payout cap. */
+export function adCapFrom(env: NodeJS.ProcessEnv = process.env): number | null {
+  const raw = env.WV_AD_CAP;
   if (raw === undefined || raw === "") return DEFAULT_CAP;
   if (/^(none|off|0)$/i.test(raw.trim())) return null;
   const n = Number(raw);
@@ -71,7 +87,7 @@ export function timeoutFrom(env: NodeJS.ProcessEnv = process.env): number | unde
 }
 
 async function main(argvIn: string[]) {
-  const { argv, width, sandbox } = ownFlags(argvIn);
+  const { argv, width, sandbox, plan } = ownFlags(argvIn);
   const theme = makeTheme({ width });
   const mode = modeFrom(sandbox);
   const env = whopEnv(mode);
@@ -80,13 +96,14 @@ async function main(argvIn: string[]) {
     process.stderr.write(`wv: ${copy.session.needsTerminal}\n`);
     process.exit(2);
   }
-  if (shouldPassthrough(argv)) passthrough(argv, env);
+  // `--plan` never writes, so it is safe without a terminal and must never fall through to a real `whop` create.
+  if (shouldPassthrough(argv) && !plan) passthrough(argv, env);
 
   if (argv.length === 0) {
     const acct = await identity(env);
     process.exit(await session({ theme, execute: (a, t) => execute(a, t, { numbered: true, mode }), account: acct, mode }));
   }
-  process.exit((await execute(argv, theme, { mode })).code);
+  process.exit((await execute(argv, theme, { mode, plan })).code);
 }
 
 export interface ExecuteOptions {
@@ -94,6 +111,8 @@ export interface ExecuteOptions {
   numbered?: boolean;
   /** Which host the child `whop` talks to. Default production. */
   mode?: Mode;
+  /** `--plan`: for an ad write, print the plan card and run nothing. */
+  plan?: boolean;
 }
 
 /** Runs one wv command end to end and prints it. Shared by the one-shot CLI and the session. */
@@ -112,25 +131,55 @@ export async function execute(argv: string[], theme: Theme, opts: ExecuteOptions
     return { code: 0 };
   }
 
-  const hints = hintsFor(group);
+  const hints = hintsFor(group, verb);
   const yes = argv.includes("--yes");
   const args = argv.filter((a) => a !== "--yes");
 
-  if (isWrite(group, verb) && !yes) {
+  if (isAdPlan(group, verb) && (!yes || opts.plan)) {
+    // Ads gate. The CLI has no dry-run, so the plan is the sandbox: the tree, a real reach estimate,
+    // the committed spend, and who pays, on one card. `--plan` stops there.
+    const spin = spinner(copy.spinner.adplan, theme);
+    const input = await adPlanFor(group, verb, args, env, mode, !!opts.plan).finally(() => spin.stop());
+    if (opts.plan) {
+      print(adPlanView(input, theme));
+      return { code: 0 };
+    }
+    const live = mode !== "sandbox";
+    if (live && input.budget && input.cap != null && commitment(input.budget).total > input.cap) {
+      print(adRefusedView(input, theme));
+      return { code: 2 };
+    }
+    print(adPlanView(input, theme));
+    const typed = live && input.budget?.typed ? input.budget.amount : undefined;
+    const shown = typed !== undefined ? money(typed, input.currency ?? "usd").replace(/^[^\d]+/, "") : "";
+    const accept = typed !== undefined ? { test: amountMatcher(typed), hint: copy.confirm.amountNo(shown) } : undefined;
+    const answer = await prompt(typed !== undefined ? copy.adplan.typeBudget(shown) : copy.confirm.question, theme, { timeoutMs: input.timeoutSeconds ? input.timeoutSeconds * 1000 : undefined, accept });
+    if (answer !== "yes") {
+      print([" " + (answer === "timeout" && input.timeoutSeconds ? copy.confirm.expired(input.timeoutSeconds) : copy.confirm.aborted)]);
+      return { code: 130 };
+    }
+    print([""]);
+  } else if (isWrite(group, verb) && !yes) {
     // Money gate. Like Link's approval: the amount, where it goes, and what it draws from are on screen,
     // a cap refuses before the network, and a prompt left sitting is not consent.
     const m = MONEY_GROUPS.has(group) ? moneyOf(args) : null;
     const methodId = flagsToRecord(args).payout_method_id;
     const spin = spinner(m ? copy.spinner.money : copy.spinner.identity, theme);
-    const [acct, balance, destination] = await Promise.all([
+    const [acct, balance, methods] = await Promise.all([
       identity(env),
       m ? balanceFor(m.currency, env) : undefined,
-      typeof methodId === "string" ? methodFor(methodId, env) : undefined,
+      m || typeof methodId === "string" ? methodsFor(typeof methodId === "string" ? methodId : undefined, m?.currency ?? "usd", speedOf(args), env) : undefined,
     ]).finally(() => spin.stop());
     const live = m && mode !== "sandbox";
     const cap = live ? capFrom() : undefined;
+    const limit = live ? methods?.limit : undefined;
     const timeoutSeconds = live ? timeoutFrom() : undefined;
-    const input = { group, verb, argv: args, hints, accountTitle: acct?.title, accountId: acct?.id, mode, destination, balance, cap, timeoutSeconds };
+    const input = { group, verb, argv: args, hints, accountTitle: acct?.title, accountId: acct?.id, mode, destination: methods?.destination, balance, cap, limit, timeoutSeconds };
+    // Refusals, cheapest reason first. Whop's own limit wins over wv's when both are exceeded: it is the real one.
+    if (live && limit && m.amount > limit.max) {
+      print(refusedView({ ...input, reason: "whop" }, theme));
+      return { code: 2 };
+    }
     if (live && cap != null && m.amount > cap) {
       print(refusedView({ ...input, reason: "cap" }, theme));
       return { code: 2 };
@@ -140,7 +189,10 @@ export async function execute(argv: string[], theme: Theme, opts: ExecuteOptions
       return { code: 2 };
     }
     print(confirmView(input, theme));
-    const answer = await prompt(copy.confirm.question, theme, { timeoutMs: timeoutSeconds ? timeoutSeconds * 1000 : undefined });
+    // Money: type the amount back. Everything else: y.
+    const shown = m ? money(m.amount, m.currency).replace(/^[^\d]+/, "") : "";
+    const accept = live ? { test: amountMatcher(m.amount), hint: copy.confirm.amountNo(shown) } : undefined;
+    const answer = await prompt(live ? copy.confirm.typeAmount(shown) : copy.confirm.question, theme, { timeoutMs: timeoutSeconds ? timeoutSeconds * 1000 : undefined, accept });
     if (answer !== "yes") {
       print([" " + (answer === "timeout" && timeoutSeconds ? copy.confirm.expired(timeoutSeconds) : copy.confirm.aborted)]);
       return { code: 130 };
@@ -154,6 +206,76 @@ export async function execute(argv: string[], theme: Theme, opts: ExecuteOptions
   return { code, group, ...render(parsed, group, args, theme, opts) };
 }
 
+/**
+ * Everything the ad plan card shows, gathered in as few calls as the tree allows: identity, the account's
+ * ads preferences, connected pages, the balance, the campaign and group the command points at, the names
+ * of any audiences it targets, and one real `estimate_reach` for the group's targeting.
+ */
+async function adPlanFor(group: string, verb: string, args: string[], env: NodeJS.ProcessEnv, mode: Mode, planOnly: boolean): Promise<AdPlanInput> {
+  const tree: AdTree = treeFromArgv(group, verb, args);
+  const flags = jsonFlags(args);
+  const record = async (argv: string[]): Promise<Rec | undefined> => {
+    const { parsed } = await run(argv, env);
+    return parsed.ok && "record" in parsed.payload ? parsed.payload.record : undefined;
+  };
+  const page = async (argv: string[]): Promise<Rec[] | undefined> => {
+    const { parsed } = await run(argv, env);
+    return parsed.ok && parsed.payload.kind === "page" ? parsed.payload.rows : undefined;
+  };
+  const [acct, prefs, social, group0] = await Promise.all([
+    identity(env),
+    record(["accounts", "preferences"]),
+    page(["social-accounts", "list"]),
+    tree.group?.id ? record(["ad-groups", "get", tree.group.id]) : undefined,
+  ]);
+  if (tree.group && group0) tree.group.rec = { ...group0, ...tree.group.rec };
+  // The campaign can hide behind a fetched group.
+  const campaignId = tree.campaign?.id ?? (group0 && typeof group0.ad_campaign === "object" && group0.ad_campaign ? String((group0.ad_campaign as Rec).id ?? "") : "");
+  if (campaignId && !tree.campaign) tree.campaign = { id: campaignId, isNew: false, rec: {} };
+  const currency = typeof prefs?.ads_reporting_currency === "string" ? prefs.ads_reporting_currency : "usd";
+  const platform = typeof tree.campaign?.rec.platform === "string" ? tree.campaign.rec.platform : typeof flags.platform === "string" ? flags.platform : "meta";
+  const groupRec = tree.group?.rec ?? {};
+  const aud = groupRec.audiences && typeof groupRec.audiences === "object" ? (groupRec.audiences as Rec) : undefined;
+  const wantsAudiences = !!aud && (Array.isArray(aud.include) || Array.isArray(aud.exclude));
+  const estimate = tree.group ? reachArgv(groupRec, platform) : undefined;
+  const [campaign, balance, audiences, reachParsed] = await Promise.all([
+    tree.campaign?.id ? record(["ad-campaigns", "get", tree.campaign.id]) : undefined,
+    balanceFor(currency, env),
+    wantsAudiences ? page(["audiences", "list"]) : undefined,
+    estimate ? run(estimate, env).then((r) => r.parsed) : undefined,
+  ]);
+  if (tree.campaign && campaign) tree.campaign.rec = { ...campaign, ...tree.campaign.rec };
+  const audienceNames: Record<string, string> = {};
+  for (const a of audiences ?? []) if (typeof a.id === "string") audienceNames[a.id] = String(a.name ?? a.id);
+  let reach: Reach | undefined;
+  if (reachParsed) {
+    if (!reachParsed.ok) reach = { error: reachParsed.error.message };
+    else if ("record" in reachParsed.payload) {
+      const r = reachParsed.payload.record;
+      reach = { lower: typeof r.users_lower_bound === "number" ? r.users_lower_bound : undefined, upper: typeof r.users_upper_bound === "number" ? r.users_upper_bound : undefined };
+    }
+  }
+  const pm = prefs?.ads_payment_methods;
+  const paysFrom = Array.isArray(pm) && pm.length ? pm.map((m) => describePaymentMethod(m)).join(", ") : pm && typeof pm === "object" ? describePaymentMethod(pm) : typeof pm === "string" ? pm : undefined;
+  const budget = budgetOf(tree, flags);
+  const live = mode !== "sandbox" && !planOnly;
+  return {
+    group, verb, argv: args, tree, budget, reach, audienceNames, social, paysFrom, balance, currency,
+    accountTitle: acct?.title, accountId: acct?.id, mode,
+    cap: live && budget ? adCapFrom() : undefined,
+    timeoutSeconds: live && budget ? timeoutFrom() : undefined,
+    planOnly,
+  };
+}
+
+/** One line for whatever `ads_payment_methods` holds. The shape is undocumented, so lean on the usual names. */
+function describePaymentMethod(m: unknown): string {
+  if (!m || typeof m !== "object") return String(m);
+  const r = m as Rec;
+  const parts = [r.nickname, r.brand, r.card_brand, r.type, r.kind, r.last4 ? `••••${r.last4}` : r.card_last4 ? `••••${r.card_last4}` : undefined].filter((x) => typeof x === "string" && x) as string[];
+  return parts.length ? parts.join(" ") : String(r.id ?? copy.adplan.paysFrom);
+}
+
 /** Available balance in one currency from `ledgers report balance_summary`. Undefined when it cannot be read. */
 async function balanceFor(currency: string, env: NodeJS.ProcessEnv): Promise<Balance | undefined> {
   const { parsed } = await run(["ledgers", "report", "--report_type", "balance_summary", "--currency", currency], env);
@@ -163,29 +285,35 @@ async function balanceFor(currency: string, env: NodeJS.ProcessEnv): Promise<Bal
   return available != null && Number.isFinite(available) ? { available, currency } : undefined;
 }
 
-/** The saved payout method behind an id, described in one line. Undefined when it is not in the list. */
-async function methodFor(id: string, env: NodeJS.ProcessEnv): Promise<string | undefined> {
-  const { parsed } = await run(["payouts", "methods"], env);
+/**
+ * One call for two facts: the saved payout method behind an id, described in one line, and Whop's live
+ * limit for the payout's speed. Either is undefined when the list lacks it or the scope is missing.
+ */
+async function methodsFor(id: string | undefined, currency: string, speed: string, env: NodeJS.ProcessEnv): Promise<{ destination?: string; limit?: WhopLimit } | undefined> {
+  const { parsed } = await run(["payouts", "methods", "--include_limits", "--currency", currency], env);
   if (!parsed.ok || parsed.payload.kind !== "page") return undefined;
-  const m = parsed.payload.rows.find((r) => r.id === id);
-  return m ? describeMethod(m, id) : undefined;
+  const m = id ? parsed.payload.rows.find((r) => r.id === id) : undefined;
+  return { destination: m && id ? describeMethod(m, id) : undefined, limit: limitFor(parsed.payload.extra?.limits, speed) };
 }
 
 /** Prints the right view for a payload. Returns the rows and list geometry when it was a list. */
-function render(parsed: Parsed, group: string, argv: string[], theme: Theme, opts: ExecuteOptions): Pick<Outcome, "rows" | "list" | "teach"> {
+function render(parsed: Parsed, group: string, argv: string[], theme: Theme, opts: ExecuteOptions): Pick<Outcome, "rows" | "list" | "teach" | "next"> {
   if (!parsed.ok) {
     print(errorView(parsed.error, theme));
     // The sandbox host answers an OAuth token with 401 or 404. Say which variable fixes it.
     if (opts.mode === "sandbox" && /^HTTP_40[134]$/.test(parsed.error.code) && !process.env.WV_SANDBOX_KEY) print(["", " " + copy.error.sandboxKey]);
     return {};
   }
-  const hints = hintsFor(group);
+  const verb = argv[1];
+  const hints = hintsFor(group, verb);
+  // `payouts methods` lists methods, not payouts. Any verb that is not the plain list names the rows.
+  const noun = verb && verb !== "list" ? verb.replace(/[-_]/g, " ") : group;
   const p = parsed.payload;
   switch (p.kind) {
     case "page": {
-      const list = listViewWithMeta({ group, argv, rows: p.rows, page: p.page, hints, canCreate: p.rows.length ? undefined : canCreate(group), numbered: opts.numbered }, theme);
+      const list = listViewWithMeta({ group, argv, rows: p.rows, page: p.page, hints, noun, canCreate: p.rows.length || noun !== group ? undefined : canCreate(group), numbered: opts.numbered }, theme);
       print(list.lines);
-      return { rows: p.rows, list, teach: list.teach };
+      return { rows: p.rows, list, teach: list.teach, next: list.next };
     }
     case "record":
     case "status":
@@ -194,6 +322,9 @@ function render(parsed: Parsed, group: string, argv: string[], theme: Theme, opt
       return { teach: teach(argv) };
     case "report":
       print(detailView({ group, argv, record: reportToRecord(p.rows, p.total), hints }, theme));
+      return { teach: teach(argv) };
+    case "summary":
+      print(summaryView({ argv, total: p.total, groups: p.groups }, theme));
       return { teach: teach(argv) };
     case "series":
       print(seriesView({ argv, points: p.points, currency: p.currency }, theme));

@@ -13,9 +13,5 @@ Type "payouts create --amount 10 --currency usd --payout_method_id potk_example 
 Sleep 400ms
 Enter
 Sleep 5s
-Type "n"
-Sleep 800ms
-Enter
-Sleep 2500ms
 Ctrl+D
 Sleep 1500ms

@@ -19,11 +19,20 @@ export interface Hints {
 const dir = join(import.meta.dirname, "hints");
 const cache = new Map<string, Hints>();
 
-export function hintsFor(group: string): Hints {
-  const hit = cache.get(group);
+const load = (name: string): Hints | undefined => {
+  const file = join(dir, `${name}.json`);
+  return existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as Hints) : undefined;
+};
+
+/**
+ * Hints for a group, or for one verb of it when `<group>.<verb>.json` exists. A verb file wins
+ * whole, never merges: `payouts methods` rows share nothing with `payouts list` rows.
+ */
+export function hintsFor(group: string, verb?: string): Hints {
+  const key = verb ? `${group}.${verb}` : group;
+  const hit = cache.get(key);
   if (hit) return hit;
-  const file = join(dir, `${group}.json`);
-  const h: Hints = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : {};
-  cache.set(group, h);
+  const h = (verb && load(`${group}.${verb}`)) || load(group) || {};
+  cache.set(key, h);
   return h;
 }

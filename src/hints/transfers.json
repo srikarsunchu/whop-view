@@ -1,0 +1,17 @@
+{
+  "primary": "id",
+  "status": "status",
+  "money": ["amount", "fee_amount"],
+  "date": "created_at",
+  "relation": "created_by_user",
+  "columns": ["id", "status", "amount", "fee_amount", "created_by_user", "created_at"],
+  "hidden": ["failure_code"],
+  "labels": {
+    "fee_amount": "fee",
+    "origin_ledger_account_id": "from",
+    "destination_ledger_account_id": "to",
+    "created_by_user": "by",
+    "failed_at": "failed",
+    "failure_reason": "failure"
+  }
+}

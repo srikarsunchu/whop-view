@@ -1,0 +1,36 @@
+ [31m▌[39m [1mCreate an ad[22m                                             [31mwrites to production[39m
+
+   [2mwhop ads create --title 'Frame · launch v2' --url
+   https://hypermotion.art/frame --ad_group_id adgrp_x1 --headlines '["Frame is
+   live"]'[22m
+
+   [2mcampaign[22m  [2mFrame launch  adcamp_x1[22m
+             [2mobjective[22m  sales
+             [2mplatform [22m  meta
+             [2mbudget   [22m  on each ad group
+             [2mstatus   [22m  draft
+   [2mgroup   [22m  [2mUS 25-44 · purchase  adgrp_x1[22m
+             [2mbudget   [22m  $40.00/day
+             [2mgoal     [22m  conversions on purchase
+             [2mtargeting[22m  US · ages 25–44 · automatic placements
+             [2mruns     [22m  until Oct 5
+             [2mstatus   [22m  active
+   [2mad      [22m  Frame · launch v2  new
+             [2mcreative[22m  1 headline
+             [2murl     [22m  https://hypermotion.art/frame
+
+   [2mreach     [22m  1.5M–1.8M people on meta
+   [2mspend     [22m  $40.00/day · $640.00 over 16 days · from the existing group
+               budget
+   [2mpays from [22m  visa ••••4242
+   [2mbalance   [22m  [2m$418.56 available[22m
+   [2mruns under[22m  Hypermotion (facebook) @hypermotion
+   [2mfrom      [22m  Hypermotion  biz_VraUMckluH8dzV
+
+   [2mThis runs against production. The Whop CLI has no dry-run. Spend accrues as[22m
+   [2mads deliver and is charged afterward.[22m
+
+ [2mtry first[22m  [2mwv --sandbox ads create --title 'Frame · launch v2' --url[22m
+            [2mhttps://hypermotion.art/frame --ad_group_id adgrp_x1 --headlines[22m
+            [2m'["Frame is live"]'[22m
+

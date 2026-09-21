@@ -1,0 +1,16 @@
+{
+  "primary": "kind",
+  "status": "status",
+  "date": "created_at",
+  "columns": ["kind", "status", "business_name", "country", "created_at", "id"],
+  "hidden": ["address", "date_of_birth"],
+  "labels": {
+    "business_name": "business",
+    "business_structure": "structure",
+    "first_name": "first name",
+    "last_name": "last name",
+    "requested_information": "requested",
+    "required_documents": "documents",
+    "session_url": "session"
+  }
+}

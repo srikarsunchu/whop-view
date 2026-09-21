@@ -1,0 +1,10 @@
+ [1mdisputes summary[22m[2m · 0 total[22m
+
+ [2m── [22m[1mBy status[22m[2m ──────────────────────────────────────────────────────────────────[22m
+   [2mneeds response[22m  [2m0[22m
+   [2munder review  [22m  [2m0[22m
+   [2mwon           [22m  [2m0[22m
+   [2mlost          [22m  [2m0[22m
+   [2mclosed        [22m  [2m0[22m
+
+ [2mjson[22m  [2mwhop disputes summary --format json[22m

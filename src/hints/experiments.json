@@ -1,0 +1,18 @@
+{
+  "primary": "name",
+  "status": "status",
+  "date": "started_at",
+  "columns": ["name", "status", "flag_key", "bucket_by", "started_at", "ended_at", "id"],
+  "hidden": ["assignment_seed", "configuration_revision", "control"],
+  "labels": {
+    "flag_key": "flag",
+    "bucket_by": "bucket by",
+    "feature_flag_only": "flag only",
+    "winning_arm": "winner",
+    "started_at": "started",
+    "ended_at": "ended",
+    "created_by": "created by",
+    "related_resource": "resource",
+    "targeting_rules": "targeting"
+  }
+}

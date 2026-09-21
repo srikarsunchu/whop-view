@@ -1,0 +1,21 @@
+{
+  "primary": "name",
+  "status": "status",
+  "date": "created_at",
+  "columns": ["name", "status", "audience_type", "source_type", "total_rows", "matched_rows", "last_refreshed_at", "id"],
+  "hidden": ["platform_audience_ids", "match_rates", "engagement"],
+  "labels": {
+    "audience_type": "type",
+    "source_type": "source",
+    "total_rows": "people",
+    "processed_rows": "processed",
+    "matched_rows": "matched",
+    "progress_percent": "progress",
+    "last_refreshed_at": "refreshed",
+    "auto_refresh": "refreshes twice a day",
+    "lookalike_starting_ratio": "band from",
+    "lookalike_ratio": "band to",
+    "source_audience_id": "built from",
+    "error_message": "error"
+  }
+}

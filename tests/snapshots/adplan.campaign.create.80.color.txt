@@ -1,0 +1,17 @@
+ [33m▌[39m [1mCreate an ad campaign[22m                                    [33mwrites to production[39m
+
+   [2mwhop ad-campaigns create --title 'Frame launch' --platform meta --objective
+   sales --budget_optimization ad_group[22m
+
+   [2mcampaign[22m  Frame launch  new
+             [2mobjective[22m  sales
+             [2mplatform [22m  meta
+             [2mbudget   [22m  on each ad group
+
+   [2mspend     [22m  [2mnone yet · nothing delivers until a budget exists[22m
+   [2mpays from [22m  visa ••••4242
+   [2mruns under[22m  Hypermotion (facebook) @hypermotion
+   [2mfrom      [22m  Hypermotion  biz_VraUMckluH8dzV
+
+   [2mThis runs against production. The Whop CLI has no dry-run.[22m
+

@@ -4,11 +4,12 @@
    --speed standard
 
    amount   $250.00 usd
-   to       Chase checking ••4242  potk_x1
+   to       Chase checking ••••4242  potk_x1
    speed    standard
    from     Hypermotion  biz_VraUMckluH8dzV
    balance  $418.56 available · $168.56 after
-   cap      $500.00 per payout
+   cap      $1,000.00 standard from Whop · $500.00 from wv · $9,999.00 left
+            today
 
    This runs against production. The Whop CLI has no dry-run. This moves real
    money. The prompt expires in 2 minutes.
