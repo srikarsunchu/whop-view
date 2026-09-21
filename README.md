@@ -353,14 +353,17 @@ Three gates are mapped from the CLI's own words: Economic Intelligence (a prefer
 
 ## What agents see
 
-Reads: nothing new. `wv` execs `whop` with the original argv whenever any of these hold:
+Reads: the bytes are whop's. `wv products list | cat` is byte-identical to `whop products list`, and there is a test for it, so a script or a skill written against `whop` works unchanged with `wv` in its place. What changes is around the bytes:
 
-- stdout is not a TTY and the command is a read
-- `--format`, `--full-output`, `--filter-output`, `--llms`, `--schema`, `--help`, or any `--token-*` flag is present
-- `WV_RAW=1`
-- the command owns the terminal itself: `login`, `logout`, `quickstart`, `upgrade`, `apps dev|deploy|init|pull`
+- the exit code says what went wrong: 3 bad request, 4 not allowed, 5 not found, where `whop` says 1 for all of them
+- `--all` follows the cursor and streams every row
+- `--last 7d`, `--this month`, and `--last month` resolve to `--from` and `--to` before `whop` runs
+- dotted paths, repeated flags, and `@file` assemble to the JSON flag `whop` expects
+- a bad preset or a missing `@file` comes back as a JSON envelope on stdout, exit 2, instead of a stderr line
 
-`--sandbox`, `--width`, `--plan`, and `--yes` are `wv`'s own flags and are stripped before the exec, so `wv --sandbox products list | cat` is `whop products list` against the sandbox host. `wv products list | cat` is byte-identical to `whop products list`. There is a test for it.
+`wv` execs `whop` with the original argv whenever `--format`, `--full-output`, `--filter-output`, `--llms`, `--schema`, `--help`, or any `--token-*` flag is present, when `WV_RAW=1`, or when the command owns the terminal itself: `login`, `logout`, `quickstart`, `upgrade`, `apps dev|deploy|init|pull`. Only the exit status is mapped even then; `WV_EXIT=whop` keeps whop's.
+
+`--sandbox`, `--width`, `--plan`, `--all`, and `--yes` are `wv`'s own flags and are stripped before the exec, so `wv --sandbox products list | cat` is `whop products list` against the sandbox host.
 
 Writes: the same gate a person gets, as JSON. `whop --llms-full` marks 149 commands "Confirm with the user before executing this destructive command" and enforces none of it, and there is no `--dry-run`. So a write in a pipe without `--yes` never reaches `whop`. It exits 2 with the plan and the command that runs it:
 
