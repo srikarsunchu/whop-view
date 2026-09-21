@@ -1,11 +1,11 @@
 ---
 name: whop-gtm
-description: Run go-to-market on Whop from the terminal with the Whop CLI — tracking and people, audiences, ad creative, Meta ads, promo codes and checkout links, affiliates and bounties, attribution stats, and Whop's own recommendations. Use when asked to launch, promote, retarget, scale, or report on a Whop product, or when the user says GTM, ads, audiences, campaign, promo, winback, lookalike, bounty, affiliate, ROAS, or "what should I do next" about a Whop business. Not for building apps or payment integration (use the generic whop skill).
+description: Run go-to-market on Whop from the terminal, through wv over the Whop CLI, so every write is a plan the person approves before it runs — tracking and people, audiences, ad creative, Meta ads, promo codes and checkout links, affiliates and bounties, attribution stats, and Whop's own recommendations. Use when asked to launch, promote, retarget, scale, or report on a Whop product, or when the user says GTM, ads, audiences, campaign, promo, winback, lookalike, bounty, affiliate, ROAS, or "what should I do next" about a Whop business. Not for building apps or payment integration (use the generic whop skill).
 ---
 
 # Whop GTM
 
-The Whop CLI (`whop`, 0.18+) exposes every go-to-market stage as a command group with `--format json` and `--schema`. This skill is the loop that connects them, plus the rules that keep an agent from spending money it was not asked to spend.
+The Whop CLI (`whop`, 0.18+) exposes every go-to-market stage as a command group with `--format json` and `--schema`, and enforces nothing around them: the 149 commands it tags "confirm before executing" run on sight, every failure exits 1, and its manifests are either too thin to act on or too big for a turn. This skill runs the loop through `wv` ([whop-view](https://github.com/srikarsunchu/whop-view)), which forwards every read as `whop`'s own bytes and turns every write into a plan the person approves: `wv doctor --format json` is the preflight, `wv agent <group>` is the manifest with every flag, and a write without `--yes` comes back as a `CONFIRMATION_REQUIRED` envelope with the plan and a `rerun` instead of money moving. The command reference below is generated from the live CLI by `pnpm skill`.
 
 ## Rules before any command
 
