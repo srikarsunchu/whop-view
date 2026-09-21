@@ -6,6 +6,7 @@ import { paint, type Role, type Theme } from "../tokens.ts";
 import { copy } from "../copy.ts";
 import { DESTRUCTIVE_VERBS, MONEY_GROUPS } from "../status.ts";
 import { money } from "../format.ts";
+import { wrap } from "../ansi.ts";
 
 export interface ConfirmInput {
   group: string;
@@ -63,7 +64,7 @@ export function confirmView(input: ConfirmInput, theme: Theme): string[] {
   out.push("");
   out.push(...kv([{ rows }], theme));
   out.push("");
-  out.push("   " + paint(theme, "muted", copy.confirm.warning + (isMoney ? " " + copy.confirm.money : "")));
+  for (const l of wrap(copy.confirm.warning + (isMoney ? " " + copy.confirm.money : ""), theme.width - 3)) out.push("   " + paint(theme, "muted", l));
   out.push("");
   return out;
 }
