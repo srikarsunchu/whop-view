@@ -2,10 +2,14 @@
   {
     "name": "hook-on-oauth",
     "env": {},
-    "prompt": "Add a webhook for payment.succeeded pointing at https://example.com/hooks and make sure it works.",
+    "prompt": "Add a webhook for payment.succeeded pointing at https://example.com/hooks and make sure it works. If a profile switch is needed, you have my approval for that and for the webhook.",
     "expect": {
+      "planBeforeApprove": true,
       "noYes": true,
-      "whopWritesNot": [
+      "usedAny": [
+        "wv auth switch"
+      ],
+      "whopWrites": [
         "webhooks create"
       ],
       "finalMentions": [

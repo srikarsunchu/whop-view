@@ -17,6 +17,8 @@ export type AgentCode = "CONFIRMATION_REQUIRED" | "APPROVAL_EXPIRED" | "APPROVAL
 
 export interface AgentEnvelope {
   ok: boolean;
+  /** On a `--plan` answer: how to get the rerun. */
+  hint?: string;
   error?: { code: AgentCode | string; message: string; hint?: string };
   /** What the confirm or ad plan card would have shown, as data. */
   plan?: Rec;
@@ -96,9 +98,9 @@ export function adPlan(input: AdPlanInput): Rec {
   };
 }
 
-/** `ok: true` and the plan. `--plan` in a pipe. */
+/** `ok: true` and the plan. `--plan` in a pipe. The hint says how to get from the plan to a rerun, since `--yes` beside `--plan` runs nothing. */
 export function planEnvelope(argv: string[], mode: Mode, plan: Rec): AgentEnvelope {
-  return envelope(argv, mode, { ok: true, plan });
+  return { ok: true, plan, hint: copy.agent.planHint(shellJoin(["wv", ...argv.filter((a) => a !== "--plan" && a !== "--yes")])), meta: { command: command(argv), wrapper: "wv", mode } } as AgentEnvelope;
 }
 
 /** The gate asking for consent: exit 2, the plan, and the rerun with its approval token. */

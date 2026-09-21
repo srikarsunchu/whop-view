@@ -785,6 +785,7 @@ export const copy = {
   agent: {
     confirm: (cmd: string, mode: Mode) => `${cmd} writes to ${mode}. wv did not run it.`,
     confirmHint: (minutes: number) => `Show the plan to the person. Run the command in \`rerun\` to run it; its --approve token matches this exact command and expires in ${minutes} ${minutes === 1 ? "minute" : "minutes"}. Add --plan to see the plan and run nothing.`,
+    planHint: (cmd: string) => `Plan only; nothing ran, and --yes beside --plan does nothing. To run it: ${cmd} (without --plan) returns CONFIRMATION_REQUIRED with a rerun; run that rerun exactly as given.`,
     approvalExpired: "The approval expired. Run the command without --approve for a fresh plan and a new rerun.",
     approvalInvalid: "The approval does not match this command. It was minted for a different argv, mode, or machine. Run the command without --approve for a fresh plan.",
     needsTerminal: (what: string) => `wv ${what} draws a screen and needs a terminal. wv doctor and wv gtm answer JSON in a pipe.`,
