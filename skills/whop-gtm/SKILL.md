@@ -59,54 +59,66 @@ Fixes, each once:
 
 ## Playbooks
 
-Ids are placeholders. Lines marked `# $` commit money. Every write is `wv …`: in a pipe it answers with the plan and exits 2 until the person approves and the agent runs the `rerun` it was given; reads stay `whop …`.
+Every line is `wv`, reads and writes alike: a read is `whop`'s bytes with a real exit code, a write is a plan until the person approves. Ids are placeholders. Lines marked `# $` commit money. Each playbook starts with the same preflight and ends with the same approval step:
+
+```bash
+wv doctor --format json          # exit 1 and a `fix` per red check means stop and show the person
+# … the playbook's reads, then one write at a time:
+wv <group> <verb> … --plan       # the plan, nothing runs: show it
+wv <group> <verb> …              # exit 2, CONFIRMATION_REQUIRED, `plan`, `rerun`
+# the person says yes → run `rerun` exactly as given (it carries --approve and --idempotency-key)
+```
 
 ### 1 · Launch day
+
+Needs `pixel`, `page`, and `payment` green in doctor, or the ad write will refuse in Whop's words.
 
 ```bash
 wv promo-codes create --account_id $BIZ --code LAUNCH20 --promo_type percentage --amount_off 20 \
   --base_currency usd --new_users_only true --promo_duration_months 1 --product_id $PROD \
-  --stock 200 --expires_at 2026-09-28T07:00:00Z --format json
-wv checkout-configurations create --account_id $BIZ --plan_id $PLAN \
-  --metadata '{"campaign":"launch-sep26"}' --format json --filter-output id,purchase_url
-wv media generate --type image --prompt "9:16 product still, dark studio, single key light" \
-  --wait --timeout 300 --format json --filter-output file.id                                   # $ balance
-wv ad-campaigns create --title "Launch" --platform meta --objective sales --budget_optimization ad_group --format json --filter-output id
+  --stock 200 --expires_at 2026-09-28T07:00:00Z
+wv checkout-configurations create --account_id $BIZ --plan_id $PLAN --metadata.campaign launch-sep26
+wv media generate --type image --prompt "9:16 product still, dark studio, single key light" --wait --timeout 300   # $ balance
+wv ad-campaigns create --title "Launch" --platform meta --objective sales --budget_optimization ad_group
 wv ads create --title "Launch · v1" --url "$PURCHASE_URL" --call_to_action shop_now \
-  --ad_group '{"ad_campaign_id":"adcamp_x","title":"US 25-44 · purchase","budget_amount":40,"budget_type":"daily","optimization_goal":"conversions","conversion_event":"purchase","conversion_location":"website","placements":"automatic","demographics":{"minimum_age":25,"maximum_age":44,"gender":"all"},"regions":{"include":{"countries":["US"]}}}' \
-  --creatives '[{"id":"file_a","format":"vertical"}]' --headlines '["It is live"]' \
-  --primary_texts '["20% off this week with LAUNCH20."]' --url_parameters '{"utm_campaign":"launch-sep26"}' --plan   # $ daily budget; drop --plan to be asked
+  --ad_group.ad_campaign_id adcamp_x --ad_group.title "US 25-44 · purchase" \
+  --ad_group.budget_amount 40 --ad_group.budget_type daily \
+  --ad_group.optimization_goal conversions --ad_group.conversion_event purchase --ad_group.conversion_location website \
+  --ad_group.placements automatic --ad_group.demographics.minimum_age 25 --ad_group.demographics.maximum_age 44 --ad_group.demographics.gender all \
+  --ad_group.regions.include.countries US \
+  --creatives.0.id file_a --creatives.0.format vertical --headlines "It is live" \
+  --primary_texts "20% off this week with LAUNCH20." --url_parameters.utm_campaign launch-sep26 --plan   # $ daily budget
 ```
 
-Do not set `utm_source`, `utm_medium`, `utm_content`, `wacid`, `waid`, `wasid`: Whop reserves them.
+The `ads create` plan is the campaign tree, a real reach estimate, the 30-day commitment of the daily budget, who pays, and the assembled `whop` command with the JSON `whop` expects; over `WV_AD_CAP` it refuses before the call. The `purchase_url` for the ad comes from the checkout configuration's plan in the pipe. Do not set `utm_source`, `utm_medium`, `utm_content`, `wacid`, `waid`, `wasid`: Whop reserves them.
 
 ### 2 · Winback
 
 ```bash
 wv audiences create --account_id $BIZ --name "visited 30d, no purchase" --source_type people_filter \
-  --filters '{"has_purchased":false,"last_seen_within_days":30,"contactable":true}' --auto_refresh true
-wv audiences create --account_id $BIZ --name "customers" --source_type people_filter --filters '{"has_purchased":true}'
+  --filters.has_purchased false --filters.last_seen_within_days 30 --filters.contactable true --auto_refresh true
+wv audiences create --account_id $BIZ --name "customers" --source_type people_filter --filters.has_purchased true
 wv promo-codes create --account_id $BIZ --code COMEBACK --promo_type flat_amount --amount_off 5 --base_currency usd \
   --new_users_only false --churned_users_only true --promo_duration_months 1 --one_per_customer true
 wv ad-groups create --ad_campaign_id adcamp_x --title "winback 30d" --budget_amount 15 --budget_type daily \
   --optimization_goal conversions --conversion_event purchase \
-  --audiences '{"include":["adaud_visitors"],"exclude":["adaud_customers"]}' --placements automatic   # $
+  --audiences.include adaud_visitors --audiences.exclude adaud_customers --placements automatic   # $
 ```
 
-Filters must be rolling windows (`last_seen_within_days`), never fixed dates, or the audience will not refresh.
+Filters must be rolling windows (`last_seen_within_days`), never fixed dates, or the audience will not refresh. The audience ids for the ad group come from the two `create` responses; `wv audiences list --format json` lists them again.
 
 ### 3 · Lookalike scale
 
 ```bash
 wv audiences create --account_id $BIZ --audience_type lookalike --source_audience_id adaud_customers --count 3 --percentage 6
-whop ad-groups estimate_reach --platform meta --audiences '{"include":["adaud_lal_1"]}' --regions '{"include":{"countries":["US"]}}' --format json
-# one ad group per band, then after three days:
-whop stats get ad_delivery --account_id $BIZ --from 2026-09-22 --to 2026-09-25 --source "whop:adcamp_x:*" --group_by source --metric cost_per_result --format json
+wv ad-groups estimate_reach --platform meta --audiences.include adaud_lal_1 --regions.include.countries US --format json
+# one ad group per band (each a gated write), then after three days:
+wv stats get ad_delivery --account_id $BIZ --last 3d --source "whop:adcamp_x:*" --group_by source --metric cost_per_result --format json
 wv ad-groups pause adgrp_worst
 wv ads duplicate ad_best
 ```
 
-The source audience needs at least 100 matched people. `percentage` must divide evenly by `count`.
+The source audience needs at least 100 matched people. `percentage` must divide evenly by `count`. `pause` and `duplicate` are writes and get the plan like any other; a pause moves no money, so its plan is the command and the account and the prompt is a plain yes.
 
 ### 4 · Creators do the distribution
 
@@ -116,24 +128,28 @@ wv bounties create --account_id $BIZ --title "Clip a 30s vertical from the launc
   --description "Cut a 30s vertical. Link the post. Paid per approved clip." --business_goal_type clipping \
   --gross_reward_amount 25 --accepted_submissions_limit 20 \
   --publish_at 2026-09-29T16:00:00Z --publish_at_timezone America/Los_Angeles --frequency weekly     # $ escrows 25 × 20 every week
-whop bounty-submissions list --bounty_id bnty_x --status submitted --format json
-whop stats get affiliate_fees --account_id $BIZ --from 2026-09-01 --to 2026-09-30 --format json
-whop partners links --format json
+wv bounty-submissions list --bounty_id bnty_x --status submitted --all
+wv stats get affiliate_fees --account_id $BIZ --this month --format json
+wv partners links --format json
 ```
 
-Approve or deny is dashboard only. Poll submissions about once a minute while a person reviews.
+The `products update` plan shows the change, `global affiliate status  disabled → enabled`, read from the record before anything runs. Approve or deny on a submission is dashboard only. `--all` streams every submission as one object per line; poll about once a minute while a person reviews.
 
 ### 5 · Monday report that asks Whop what to do
 
+Needs `intelligence` green in doctor; otherwise `economic-intelligence` answers a 403 whose fix is `whop accounts update-preferences --economic_intelligence true`.
+
 ```bash
 for m in page_visits new_users trial_conversion_rate gross_revenue ad_spend churn_rate; do
-  whop stats get $m --account_id $BIZ --from $(date -v-7d +%F) --to $(date +%F) --format json --filter-output totals
+  wv stats get $m --account_id $BIZ --last 7d --format json --filter-output totals
 done
 wv economic-intelligence create --account_id $BIZ --input "<one paragraph: what you sell, the six numbers, what you want, what you can spend>"
-whop economic-intelligence list --account_id $BIZ --status ready --format json
-wv economic-intelligence update reca_x --status executed          # approve
+wv economic-intelligence list --account_id $BIZ --status ready --format json
+wv economic-intelligence update reca_x --status executed          # approve: a write, so a plan first
 wv economic-intelligence update reca_x --status superseded --reason "wrong audience"   # reject
 ```
+
+`wv gtm --format json` is the same six numbers plus the people summary, the campaigns, the offers, and the launch gaps in one call, if the report is for a person rather than for Whop's recommender.
 
 ## Command reference
 
