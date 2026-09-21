@@ -226,6 +226,10 @@ Three commands, one screen. The first line is a status line: account, profile an
 
 ![session](demo/session.gif)
 
+A write verb inside the session gets the same confirmation, then hands the terminal back to the editor:
+
+![payouts create in the session](demo/session-payout.gif)
+
 ## Other views
 
 - `wv help` renders the 51 groups the way `whop --help` orders them, two columns at 120 and one at 80.
@@ -255,4 +259,4 @@ Re-records the fixtures from your own account. Read-only commands only.
 pnpm demo
 ```
 
-Re-records the six GIFs above. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them.
+Re-records the seven GIFs above. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them.
