@@ -5,11 +5,11 @@ Type "export PATH=$PWD/node_modules/.bin:$PATH; alias wv='node $PWD/dist/bin.js'
 Enter
 Sleep 500ms
 Show
-Type "wv payouts create --amount 250 --currency usd --payout_method_id potk_example --speed standard"
+Type "wv payouts create --amount 10 --currency usd --payout_method_id potk_example --speed standard"
 Sleep 300ms
 Enter
-Sleep 3s
+Sleep 5s
 Type "n"
 Sleep 800ms
 Enter
-Sleep 3s
+Sleep 5s

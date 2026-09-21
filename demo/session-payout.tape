@@ -9,10 +9,10 @@ Type "wv"
 Sleep 300ms
 Enter
 Sleep 2500ms
-Type "payouts create --amount 250 --currency usd --payout_method_id potk_example --speed standard"
+Type "payouts create --amount 10 --currency usd --payout_method_id potk_example --speed standard"
 Sleep 400ms
 Enter
-Sleep 3500ms
+Sleep 5s
 Type "n"
 Sleep 800ms
 Enter
