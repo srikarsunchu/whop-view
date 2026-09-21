@@ -1,0 +1,26 @@
+ [1mFrame[22m[2m › [22m[2mbiz_VraUMckluH8dzV[22m[2m › [22m[33mproduction[39m[2m › [22m[1mmoney[22m
+
+ [2m── [22m[1mBalances[22m[2m ───────────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2musd[22m  [32m$18.56 available[39m
+
+ [2m── [22m[1mPayout limits[22m[2m ──────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2mstandard[22m  [31mblocked · Please complete identity verification before requesting a withdrawal.[39m
+   [2minstant [22m  [31mblocked · Instant payouts are currently disabled for your account.[39m
+
+ [2m── [22m[1mSaved payout methods[22m[2m ───────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2mSaved payout methods[22m  [33mNo saved payout method. Add one: whop payouts create-method --help, or the dashboard.[39m
+
+ [1mRecent payouts[22m
+ [2mNo payouts yet.[22m
+
+   [2mPayouts are blocked until identity verification completes. Everything else on this screen still works; the close plan[22m
+   [2mwill refuse until the block lifts.[22m
+
+ [2mfix[22m  [2mwhop verifications create --account_id biz_VraUMckluH8dzV[22m
+ [2mmonth end[22m  [2mwv money close --plan[22m
+ [2mjson[22m  [2mwhop ledgers report --report_type balance_summary --currency usd --format json[22m
+ [2mjson[22m  [2mwhop payouts methods --include_limits --format json[22m
+ [2mjson[22m  [2mwhop payouts list --first 5 --format json[22m
+ [2mjson[22m  [2mwhop accounts reserves --format json[22m
+ [2mjson[22m  [2mwhop verifications list --format json[22m
+

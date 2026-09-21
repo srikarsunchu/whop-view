@@ -448,3 +448,40 @@ test("rank: the groups under a campaign, ranked by cost per result, with the rub
   assert.equal(bad.status, 2);
   assert.equal(envelopeOf(bad).error?.code, "VALIDATION_ERROR");
 });
+
+// `wv money`: the screen as data, and `wv money close`: export then payout as one plan.
+test("money: the screen as JSON names the identity block, and the close plan is refused by it", () => {
+  const r = wv(["money"], gateEnv());
+  assert.equal(r.status, 0, r.stdout);
+  const d = JSON.parse(r.stdout) as { ok: boolean; payoutsBlocked?: { code: string }; balances: { currency: string; available: number }[] };
+  assert.equal(d.payoutsBlocked?.code, "kyc_completed");
+  assert.deepEqual(d.balances.map((b) => [b.currency, b.available]), [["usd", 18.56]]);
+  const blocked = wv(["money", "close", "--keep", "10"], gateEnv());
+  assert.equal(blocked.status, 2);
+  const e = envelopeOf(blocked);
+  assert.equal(e.error?.code, "CLOSE_BLOCKED");
+  assert.match(e.error?.hint ?? "", /identity verification/);
+  assert.equal(wroteTo(blocked, "payouts create"), false);
+  assert.equal(wroteTo(blocked, "exports create"), false);
+});
+
+test("money close: on a ready account the approved rerun exports, then pays out, keys from one base", () => {
+  const env = gateEnv({ WV_FAKE_METHODS: "payouts.methods.ready.json", WV_PAYOUT_CAP: "none" });
+  const asked = envelopeOf(wv(["money", "close", "--keep", "10", "--idempotency-key", "base"], env));
+  assert.equal(asked.error?.code, "CONFIRMATION_REQUIRED", JSON.stringify(asked));
+  const plan = asked.plan as { amount: number; steps: { key: string }[]; typedAmount: { amount: number } };
+  assert.equal(plan.amount, 8.56);
+  assert.deepEqual(plan.steps.map((s) => s.key), ["export", "payout"]);
+  assert.equal(plan.typedAmount.amount, 8.56);
+  const ran = wv(asked.rerun!.slice(1), env);
+  assert.equal(ran.status, 0, ran.stdout + ran.stderr);
+  const args = ran.stderr.split("\n").filter((l) => l.startsWith("ARGS: ")).map((l) => l.slice(6));
+  const writes = args.filter((a) => /^(exports|payouts) create/.test(a));
+  assert.equal(writes[0].startsWith("exports create"), true);
+  assert.match(writes[0], /financial-activity/);
+  assert.match(writes[0], /--idempotency-key base-export/);
+  assert.match(writes[1], /^payouts create --account_id biz_VraUMckluH8dzV --amount 8.56 --currency usd --payout_method_id potk_x1 --speed standard/);
+  assert.match(writes[1], /--idempotency-key base-payout/);
+  const done = envelopeOf(ran) as ReturnType<typeof envelopeOf> & { results: Record<string, { id: string }> };
+  assert.deepEqual(Object.keys(done.results), ["export", "payout"]);
+});

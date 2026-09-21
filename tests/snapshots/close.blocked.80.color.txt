@@ -1,0 +1,37 @@
+ [31m▌[39m [1mClose the month[22m                                        [31mblocked · nothing runs[39m
+
+   [2mwv money close --keep 100 --idempotency-key
+   5b2c1d6e-0000-4000-8000-000000000004[22m
+
+   [2mbalance[22m  $18.56 available
+   [2mkeep   [22m  [2m$100.00[22m
+   [2mpayout [22m  [2m$0.00 · standard[22m
+   [2mto     [22m  [33mNo saved payout method. Add one: whop payouts create-method --help,[39m
+            [33mor the dashboard.[39m
+   [2mcap    [22m  [31mblocked · Please complete identity verification before requesting a[39m
+            [31mwithdrawal.[39m
+   [2mwindow [22m  [2mAugust 2026 · Aug 1 to Sep 1[22m
+   [2mfrom   [22m  Frame  biz_VraUMckluH8dzV
+
+ [2m── [22m[1mSteps[22m[2m ──────────────────────────────────────────────────────────────────────[22m
+   [2m1  ledger export[22m  financial activity for August 2026 in usd · CSV, ready in
+                     minutes
+                     [2mruns[22m  whop exports create --account_id biz_VraUMckluH8d…
+   [2m2  payout       [22m  $0.00 to a saved method · standard
+                     [2mruns[22m  whop payouts create --account_id biz_VraUMckluH8d…
+
+   [31m✗ Nothing to pay out: $18.56 available, $100.00 kept. Lower --keep or wait[39m
+   [31mfor settlement.[39m
+   [31m✗ No saved payout method. Add one: whop payouts create-method --help, or the[39m
+   [31mdashboard.[39m
+   [31m✗ Whop blocks payouts on this account: Please complete identity verification[39m
+   [31mbefore requesting a withdrawal.[39m
+
+   [2m2 writes run in order against production, each with its own idempotency key.[22m
+   [2mA step that fails stops the rest; what was created stays, and the card names[22m
+   [2mit.[22m
+
+ [2mfix[22m  [2mwv doctor[22m
+ [2mevery argv[22m  [2mwv money close --keep 100 --idempotency-key[22m
+             [2m5b2c1d6e-0000-4000-8000-000000000004 --plan | cat[22m
+

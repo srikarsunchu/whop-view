@@ -1,0 +1,23 @@
+ [33m▌[39m [1mClose the month[22m                                                                                  [33mwrites to production[39m
+
+   [2mwv money close --keep 100 --idempotency-key 5b2c1d6e-0000-4000-8000-000000000004[22m
+
+   [2mbalance[22m  $1,234.56 available · $40.00 pending
+   [2mkeep   [22m  [2m$100.00[22m
+   [2mpayout [22m  [33m$1,134.56 · standard[39m
+   [2mto     [22m  Chase checking ••••4242  potk_x1
+   [2mcap    [22m  [2m$5,000.00 standard from Whop · $2,000.00 from wv[22m
+   [2mwindow [22m  [2mAugust 2026 · Aug 1 to Sep 1[22m
+   [2mfrom   [22m  Hypermotion  biz_VraUMckluH8dzV
+
+ [2m── [22m[1mSteps[22m[2m ──────────────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2m1  ledger export[22m  financial activity for August 2026 in usd · CSV, ready in minutes
+                     [2mruns[22m  whop exports create --account_id biz_VraUMckluH8dzV --resource financial-activity --filte…
+   [2m2  payout       [22m  $1,134.56 to Chase checking ••••4242  potk_x1 · standard
+                     [2mruns[22m  whop payouts create --account_id biz_VraUMckluH8dzV --amount 1134.56 --currency usd --pay…
+
+   [2m2 writes run in order against production, each with its own idempotency key. A step that fails stops the rest; what[22m
+   [2mwas created stays, and the card names it.[22m
+
+ [2mevery argv[22m  [2mwv money close --keep 100 --idempotency-key 5b2c1d6e-0000-4000-8000-000000000004 --plan | cat[22m
+

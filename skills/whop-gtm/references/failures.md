@@ -8,7 +8,7 @@ Every failure is one of these. The exit code says which family; the `code` in th
 | exit | code and message | what it means | what to do |
 |---|---|---|---|
 | 2 | `CONFIRMATION_REQUIRED` | not a failure: the plan is ready | show `plan`, get a yes, run `rerun` unchanged |
-| 2 | `LAUNCH_BLOCKED` | a launch step cannot run | every reason is in `plan.blockers` and `hint`; fix them, plan again |
+| 2 | `LAUNCH_BLOCKED` | a launch step cannot run | every reason is in `plan.blockers` and `hint`; report them, fix them, plan again; never run the unblocked steps by hand through `whop` |
 | 2 | `WHOP_LIMIT` · "Please complete identity verification…" | Whop refuses the payout, in its words | `whop verifications create --account_id <biz>`, then the dashboard; nothing to retry |
 | 2 | `WV_CAP`, `WV_AD_CAP` | over wv's per-write cap | report the amount and the cap; the person raises `WV_PAYOUT_CAP` or `WV_AD_CAP` for one shell, or lowers the amount, or sets an end date so an ad's commitment is real |
 | 2 | `INSUFFICIENT_BALANCE` | the ledger cannot cover it | report; `wv ledgers report --report_type balance_summary --format json` for the number |

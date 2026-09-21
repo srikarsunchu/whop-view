@@ -12,6 +12,7 @@ import { buildLaunch, launchDoneView, launchView, parseLaunchArgs } from "../src
 import { buildWinback, parseWinbackArgs } from "../src/views/winback.ts";
 import { recipeView } from "../src/views/recipe.ts";
 import { rankView } from "../src/views/rank.ts";
+import { balanceOf, buildClose, moneyView, parseCloseArgs } from "../src/views/money.ts";
 import { errorView } from "../src/views/error.ts";
 import { helpView, parseHelp } from "../src/views/help.ts";
 import { homeView } from "../src/views/home.ts";
@@ -145,6 +146,14 @@ const RANK_GROUPS = [
   { id: "adgrp_d1", title: "broad", status: "active", delivery_status: "issues", spend: 0, results: 0, created_at: "2026-09-19T00:00:00Z" },
 ];
 export const RANK = { campaignId: "adcamp_x1", campaign: { id: "adcamp_x1", title: "Launch · Hypermotion", status: "active" }, groups: parseEnvelope(JSON.stringify({ ok: true, data: { data: RANK_GROUPS, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } }, meta: { command: "ad-groups list", duration: "1ms" } })), target: 8, currency: "usd", accountTitle: "Hypermotion", accountId: "biz_VraUMckluH8dzV", now: LAUNCH_NOW.getTime(), commands: [["ad-campaigns", "get", "adcamp_x1"], ["ad-groups", "list", "--ad_campaign_id", "adcamp_x1", "--order", "cost_per_result", "--direction", "asc"]] };
+
+const MONEY_COMMANDS = [["ledgers", "report", "--report_type", "balance_summary", "--currency", "usd"], ["payouts", "methods", "--include_limits"], ["payouts", "list", "--first", "5"], ["accounts", "reserves"], ["verifications", "list"]];
+export const MONEY = { accountTitle: "Frame", accountId: "biz_VraUMckluH8dzV", balances: [balanceOf("usd", envelope("ledgers.report"))], methods: envelope("payouts.methods.limits"), payouts: envelope("payouts.list"), reserves: envelope("accounts.reserves"), verifications: envelope("verifications.list"), now: LAUNCH_NOW.getTime(), commands: MONEY_COMMANDS };
+const READY_PAYOUTS = parseEnvelope(JSON.stringify({ ok: true, data: { data: [{ id: "wdrl_x1", amount: "500.00", currency: "usd", status: "completed", speed: "standard", created_at: "2026-09-01T12:00:00Z" }, { id: "wdrl_x2", amount: "120.00", currency: "usd", status: "processing", speed: "standard", created_at: "2026-09-20T12:00:00Z" }], page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } }, meta: { command: "payouts list", duration: "1ms" } }));
+export const MONEY_READY = { ...MONEY, accountTitle: "Hypermotion", balances: [{ currency: "usd", available: 1234.56, other: [{ category: "pending", amount: 40 }] }, { currency: "eur", available: 80, other: [] }], methods: envelope("payouts.methods.ready"), payouts: READY_PAYOUTS };
+const CLOSE_ARGV = ["money", "close", "--keep", "100", "--idempotency-key", "5b2c1d6e-0000-4000-8000-000000000004"];
+export const CLOSE_BLOCKED = buildClose(CLOSE_ARGV, parseCloseArgs(CLOSE_ARGV).opts!, { balance: balanceOf("usd", envelope("ledgers.report")), methods: envelope("payouts.methods.limits"), accountId: "biz_VraUMckluH8dzV", accountTitle: "Frame", cap: 500, now: LAUNCH_NOW });
+export const CLOSE_READY = buildClose(CLOSE_ARGV, parseCloseArgs(CLOSE_ARGV).opts!, { balance: { currency: "usd", available: 1234.56, other: [{ category: "pending", amount: 40 }] }, methods: envelope("payouts.methods.ready"), accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion", cap: 2000, now: LAUNCH_NOW });
 
 export const synth = (data: unknown) => parseEnvelope(JSON.stringify({ ok: true, data, meta: { command: "synthetic", duration: "1ms" } }));
 const synthPage = (rows: unknown[]) => synth({ data: rows, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } });
@@ -313,6 +322,10 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "confirm.payout.sandbox": (t) => confirmView({ ...PAYOUT, mode: "sandbox", destination: "Chase checking ••••4242  potk_x1", balance: { available: 418.56, currency: "usd" } }, t),
   "confirm.payout.over_cap": (t) => refusedView({ ...PAYOUT, argv: ["payouts", "create", "--amount", "2000", "--currency", "usd", "--payout_method_id", "potk_x1"], reason: "cap", destination: "Chase checking ••••4242  potk_x1", balance: { available: 2418.56, currency: "usd" }, cap: 500 }, t),
   "confirm.payout.over_balance": (t) => refusedView({ ...PAYOUT, reason: "balance", destination: "Chase checking ••••4242  potk_x1", balance: { available: 18.56, currency: "usd" }, cap: 500 }, t),
+  money: (t) => moneyView(MONEY, t),
+  "money.ready": (t) => moneyView(MONEY_READY, t),
+  "close.blocked": (t) => recipeView(CLOSE_BLOCKED, t),
+  "close.ready": (t) => recipeView(CLOSE_READY, t),
   "winback.ready": (t) => recipeView(WINBACK_READY, t),
   rank: (t) => rankView(RANK, t),
   "rank.no_target": (t) => rankView({ ...RANK, target: undefined }, t),

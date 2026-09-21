@@ -1,0 +1,26 @@
+ Frame › biz_VraUMckluH8dzV › production › money
+
+ ── Balances ───────────────────────────────────────────────────────────────────────────────────────────────────────────
+   usd  $18.56 available
+
+ ── Payout limits ──────────────────────────────────────────────────────────────────────────────────────────────────────
+   standard  blocked · Please complete identity verification before requesting a withdrawal.
+   instant   blocked · Instant payouts are currently disabled for your account.
+
+ ── Saved payout methods ───────────────────────────────────────────────────────────────────────────────────────────────
+   Saved payout methods  No saved payout method. Add one: whop payouts create-method --help, or the dashboard.
+
+ Recent payouts
+ No payouts yet.
+
+   Payouts are blocked until identity verification completes. Everything else on this screen still works; the close plan
+   will refuse until the block lifts.
+
+ fix  whop verifications create --account_id biz_VraUMckluH8dzV
+ month end  wv money close --plan
+ json  whop ledgers report --report_type balance_summary --currency usd --format json
+ json  whop payouts methods --include_limits --format json
+ json  whop payouts list --first 5 --format json
+ json  whop accounts reserves --format json
+ json  whop verifications list --format json
+

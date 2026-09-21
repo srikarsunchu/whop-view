@@ -24,6 +24,10 @@ case "$1 $2" in
   "products get") fx products.get.json ;;
   "auth status") fx auth.status.json ;;
   "people list") fx people.list.json ;;
+  "payouts list") fx payouts.list.json ;;
+  "accounts reserves") fx accounts.reserves.json ;;
+  "verifications list") fx verifications.list.json ;;
+  "exports create") echo '{"ok":true,"data":{"id":"exp_1","resource":"financial-activity","status":"pending","progress_percent":0},"meta":{"command":"exports create","duration":"1ms"}}'; exit 0 ;;
   "ledgers report") fx ledgers.report.json ;;
   "payouts methods") fx "${WV_FAKE_METHODS:-payouts.methods.limits.json}" ;;
   "accounts preferences") [ -n "$WV_FAKE_READY" ] && { echo '{"ok":true,"data":{"ads_payment_methods":[{"id":"pm_1","brand":"visa","last4":"4242"}],"ads_reporting_currency":"usd","economic_intelligence":true},"meta":{"command":"accounts preferences","duration":"1ms"}}'; exit 0; }; fx accounts.preferences.json ;;

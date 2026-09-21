@@ -1,0 +1,43 @@
+{
+  "ok": true,
+  "data": {
+    "data": [
+      {
+        "id": "potk_x1",
+        "object": "payout_method",
+        "nickname": "Chase checking",
+        "institution_name": "JPMorgan Chase",
+        "account_reference": "\u2022\u2022\u2022\u20224242",
+        "currency": "usd",
+        "is_default": true,
+        "status": "active",
+        "destination": {
+          "category": "bank_account"
+        }
+      }
+    ],
+    "page_info": {
+      "start_cursor": null,
+      "end_cursor": null,
+      "has_next_page": false,
+      "has_previous_page": false
+    },
+    "limits": {
+      "object": "payout_limit",
+      "currency": "usd",
+      "standard": {
+        "max_amount": 5000,
+        "daily_amount_remaining": 5000
+      },
+      "instant": {
+        "max_amount": 0,
+        "error_code": "restricted_account",
+        "error_message": "Instant payouts are currently disabled for your account."
+      }
+    }
+  },
+  "meta": {
+    "command": "payouts methods",
+    "duration": "1ms"
+  }
+}

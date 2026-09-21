@@ -1,0 +1,23 @@
+ ▌ Close the month                                                                                  writes to production
+
+   wv money close --keep 100 --idempotency-key 5b2c1d6e-0000-4000-8000-000000000004
+
+   balance  $1,234.56 available · $40.00 pending
+   keep     $100.00
+   payout   $1,134.56 · standard
+   to       Chase checking ••••4242  potk_x1
+   cap      $5,000.00 standard from Whop · $2,000.00 from wv
+   window   August 2026 · Aug 1 to Sep 1
+   from     Hypermotion  biz_VraUMckluH8dzV
+
+ ── Steps ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1  ledger export  financial activity for August 2026 in usd · CSV, ready in minutes
+                     runs  whop exports create --account_id biz_VraUMckluH8dzV --resource financial-activity --filte…
+   2  payout         $1,134.56 to Chase checking ••••4242  potk_x1 · standard
+                     runs  whop payouts create --account_id biz_VraUMckluH8dzV --amount 1134.56 --currency usd --pay…
+
+   2 writes run in order against production, each with its own idempotency key. A step that fails stops the rest; what
+   was created stays, and the card names it.
+
+ every argv  wv money close --keep 100 --idempotency-key 5b2c1d6e-0000-4000-8000-000000000004 --plan | cat
+

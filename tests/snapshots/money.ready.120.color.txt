@@ -1,0 +1,25 @@
+ [1mHypermotion[22m[2m › [22m[2mbiz_VraUMckluH8dzV[22m[2m › [22m[33mproduction[39m[2m › [22m[1mmoney[22m
+
+ [2m── [22m[1mBalances[22m[2m ───────────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2musd[22m  [32m$1,234.56 available · $40.00 pending[39m
+   [2meur[22m  [32m€80.00 available[39m
+
+ [2m── [22m[1mPayout limits[22m[2m ──────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2mstandard[22m  up to $5,000.00 per payout · $5,000.00 left today
+   [2minstant [22m  [31mblocked · Instant payouts are currently disabled for your account.[39m
+
+ [2m── [22m[1mSaved payout methods[22m[2m ───────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2mChase checking[22m  Chase checking ••••4242  potk_x1 · usd · default · active
+
+ [1mRecent payouts[22m
+ [2m amount[22m  [2mstatus    [22m  [2mspeed   [22m  [2mcreated[22m  [2mid[22m
+ $500.00  [32mcompleted [39m  [2mstandard[22m  [2m18d ago[22m  [2mwdrl_x1[22m
+ $120.00  processing  [2mstandard[22m  [2min 24h [22m  [2mwdrl_x2[22m
+
+ [2mmonth end[22m  [2mwv money close --plan[22m
+ [2mjson[22m  [2mwhop ledgers report --report_type balance_summary --currency usd --format json[22m
+ [2mjson[22m  [2mwhop payouts methods --include_limits --format json[22m
+ [2mjson[22m  [2mwhop payouts list --first 5 --format json[22m
+ [2mjson[22m  [2mwhop accounts reserves --format json[22m
+ [2mjson[22m  [2mwhop verifications list --format json[22m
+

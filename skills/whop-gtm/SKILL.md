@@ -57,3 +57,4 @@ Ids are placeholders. Every write is `wv …` and answers with a plan; reads sta
 - `references/decide.md`: the rubric `wv gtm rank` runs. A target before the first read, three days and fifty results before judging, pause over 2× the target, scale under it, one change per campaign per day, duplicate instead of editing.
 - `references/failures.md`: every exit code and `code` the CLI and `wv` return, the recorded message, and the fix. On any 4 or 5, run `wv doctor --format json` before retrying.
 - `references/commands.md`: the generated command map, the semantics the schema does not say, and the webhooks that close the loop.
+- `references/gate.md`: the rules every wv skill shares, in full, with the envelope shape.

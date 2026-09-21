@@ -1,0 +1,25 @@
+ Hypermotion › biz_VraUMckluH8dzV › production › money
+
+ ── Balances ───────────────────────────────────────────────────────────────────────────────────────────────────────────
+   usd  $1,234.56 available · $40.00 pending
+   eur  €80.00 available
+
+ ── Payout limits ──────────────────────────────────────────────────────────────────────────────────────────────────────
+   standard  up to $5,000.00 per payout · $5,000.00 left today
+   instant   blocked · Instant payouts are currently disabled for your account.
+
+ ── Saved payout methods ───────────────────────────────────────────────────────────────────────────────────────────────
+   Chase checking  Chase checking ••••4242  potk_x1 · usd · default · active
+
+ Recent payouts
+  amount  status      speed     created  id
+ $500.00  completed   standard  18d ago  wdrl_x1
+ $120.00  processing  standard  in 24h   wdrl_x2
+
+ month end  wv money close --plan
+ json  whop ledgers report --report_type balance_summary --currency usd --format json
+ json  whop payouts methods --include_limits --format json
+ json  whop payouts list --first 5 --format json
+ json  whop accounts reserves --format json
+ json  whop verifications list --format json
+

@@ -1,0 +1,37 @@
+ ▌ Close the month                                        blocked · nothing runs
+
+   wv money close --keep 100 --idempotency-key
+   5b2c1d6e-0000-4000-8000-000000000004
+
+   balance  $18.56 available
+   keep     $100.00
+   payout   $0.00 · standard
+   to       No saved payout method. Add one: whop payouts create-method --help,
+            or the dashboard.
+   cap      blocked · Please complete identity verification before requesting a
+            withdrawal.
+   window   August 2026 · Aug 1 to Sep 1
+   from     Frame  biz_VraUMckluH8dzV
+
+ ── Steps ──────────────────────────────────────────────────────────────────────
+   1  ledger export  financial activity for August 2026 in usd · CSV, ready in
+                     minutes
+                     runs  whop exports create --account_id biz_VraUMckluH8d…
+   2  payout         $0.00 to a saved method · standard
+                     runs  whop payouts create --account_id biz_VraUMckluH8d…
+
+   ✗ Nothing to pay out: $18.56 available, $100.00 kept. Lower --keep or wait
+   for settlement.
+   ✗ No saved payout method. Add one: whop payouts create-method --help, or the
+   dashboard.
+   ✗ Whop blocks payouts on this account: Please complete identity verification
+   before requesting a withdrawal.
+
+   2 writes run in order against production, each with its own idempotency key.
+   A step that fails stops the rest; what was created stays, and the card names
+   it.
+
+ fix  wv doctor
+ every argv  wv money close --keep 100 --idempotency-key
+             5b2c1d6e-0000-4000-8000-000000000004 --plan | cat
+

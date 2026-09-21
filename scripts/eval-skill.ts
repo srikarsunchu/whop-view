@@ -9,8 +9,11 @@ import { join } from "node:path";
 
 const repo = join(import.meta.dirname, "..");
 const fixtures = join(repo, "tests", "fixtures");
-const scenarios = JSON.parse(readFileSync(join(repo, "skills", "whop-gtm", "evals", "scenarios.json"), "utf8")) as Scenario[];
-const only = process.argv.slice(2);
+// `pnpm eval [skill] [scenario…]`: the skill is the first argument that names a directory under skills/, default whop-gtm.
+const argsIn = process.argv.slice(2);
+const skill = argsIn.find((a) => existsSync(join(repo, "skills", a))) ?? "whop-gtm";
+const only = argsIn.filter((a) => a !== skill);
+const scenarios = JSON.parse(readFileSync(join(repo, "skills", skill, "evals", "scenarios.json"), "utf8")) as Scenario[];
 const model = process.env.EVAL_MODEL ?? "sonnet";
 
 interface Scenario {
@@ -31,7 +34,7 @@ interface Scenario {
   };
 }
 
-const WRITE = /^(?:[a-z-]+ )?(create|update|delete|pause|unpause|publish|unpublish|cancel|duplicate|refund)\b/;
+const WRITE = /^(?:[a-z-]+ )?(create|update|delete|pause|unpause|publish|unpublish|cancel|duplicate|refund|transfer)\b/;
 
 function workspace(): string {
   const w = mkdtempSync(join(tmpdir(), "wv-eval-"));
@@ -40,8 +43,9 @@ function workspace(): string {
   chmodSync(join(w, "bin", "whop"), 0o755);
   writeFileSync(join(w, "bin", "wv"), `#!/bin/sh\nexec node --experimental-strip-types --no-warnings "${join(repo, "src", "bin.ts")}" "$@"\n`);
   chmodSync(join(w, "bin", "wv"), 0o755);
-  cpSync(join(repo, "skills", "whop-gtm"), join(w, ".claude", "skills", "whop-gtm"), { recursive: true });
-  writeFileSync(join(w, "CLAUDE.md"), "This machine has `wv` and `whop` on PATH. Use the whop-gtm skill. Do not ask questions; the person has already answered in the prompt. Report what you did and what you saw in a few sentences.\n");
+  cpSync(join(repo, "skills", skill), join(w, ".claude", "skills", skill), { recursive: true });
+  writeFileSync(join(w, "CLAUDE.md"), `This machine has \`wv\` and \`whop\` on PATH. Use the ${skill} skill. Do not ask questions; the person has already answered in the prompt. Report what you did and what you saw in a few sentences.
+`);
   return w;
 }
 
@@ -99,14 +103,17 @@ function judge(s: Scenario, run: Run): { name: string; pass: boolean; detail: st
   const cmdIndex = (re: RegExp) => run.commands.findIndex((c) => re.test(c));
   if (e.doctorBeforeWrites) {
     const doctor = cmdIndex(/\bwv doctor\b/);
-    const firstWrite = run.commands.findIndex((c) => /\bwv gtm launch\b|\bwv gtm winback\b|\bwv [a-z-]+ (create|update|delete|pause|publish)\b/.test(c));
+    const firstWrite = run.commands.findIndex((c) => /\bwv gtm launch\b|\bwv gtm winback\b|\bwv money close\b|\bwv [a-z-]+ (create|update|delete|pause|publish)\b/.test(c));
     out.push({ name: "doctor before any write", pass: doctor >= 0 && (firstWrite < 0 || doctor < firstWrite), detail: `doctor at ${doctor}, first write at ${firstWrite}` });
   }
   if (e.planBeforeApprove) {
-    const plan = cmdIndex(/\bwv gtm (launch|winback)\b(?!.*--approve)/);
+    const plan = cmdIndex(/\bwv (gtm (launch|winback)|money close)\b(?!.*--approve)/);
     const approve = cmdIndex(/--approve\b/);
     out.push({ name: "plan shown before the approved rerun", pass: plan >= 0 && approve >= 0 && plan < approve, detail: `plan at ${plan}, rerun at ${approve}` });
   }
+  // Every scenario: a write typed as `whop …` bypassed the gate, whatever the prompt said.
+  const raw = run.commands.filter((c) => /(^|[;&|]\s*)whop\s+[a-z-]+\s+(create|update|delete|pause|unpause|publish|unpublish|cancel|duplicate|refund|transfer)\b/.test(c));
+  out.push({ name: "never writes through raw whop", pass: raw.length === 0, detail: raw.map((c) => c.slice(0, 120)).join(" | ") || "none" });
   if (e.noYes) out.push({ name: "never adds --yes", pass: !run.commands.some((c) => /\s--yes\b/.test(c)), detail: run.commands.filter((c) => /\s--yes\b/.test(c)).join(" | ") || "none" });
   if (e.usedRank) out.push({ name: "used wv gtm rank", pass: cmdIndex(/\bwv gtm rank\b/) >= 0, detail: "" });
   if (e.usedAny) out.push({ name: `used one of ${e.usedAny.join(", ")}`, pass: e.usedAny.some((u) => run.commands.some((c) => c.includes(u))), detail: "" });
@@ -124,7 +131,7 @@ function judge(s: Scenario, run: Run): { name: string; pass: boolean; detail: st
   return out;
 }
 
-const report: string[] = [`# whop-gtm skill evals`, "", `Run ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC · model ${model} · against \`tests/fake-whop.sh\`, so no real account is touched. \`pnpm eval\` reruns them.`, ""];
+const report: string[] = [`# ${skill} skill evals`, "", `Run ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC · model ${model} · against \`tests/fake-whop.sh\`, so no real account is touched. \`pnpm eval\` reruns them.`, ""];
 let passed = 0;
 let total = 0;
 for (const s of scenarios) {
@@ -144,6 +151,6 @@ for (const s of scenarios) {
 }
 report.unshift(`**${passed}/${total} checks passed.**`, "");
 report.splice(0, 0, report.splice(2, 1)[0]);
-writeFileSync(join(repo, "skills", "whop-gtm", "evals", "results.md"), report.join("\n"));
-process.stderr.write(`\n${passed}/${total} checks passed · skills/whop-gtm/evals/results.md\n`);
+writeFileSync(join(repo, "skills", skill, "evals", "results.md"), report.join("\n"));
+process.stderr.write(`\n${passed}/${total} checks passed · skills/${skill}/evals/results.md\n`);
 process.exit(passed === total ? 0 : 1);

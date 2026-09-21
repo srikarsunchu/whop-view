@@ -29,6 +29,7 @@ import { manifest, manifestData, manifestIndex, manifestIndexData, type VerbSche
 import { adGroupFor, buildLaunch, parseLaunchArgs, type LaunchReads } from "./views/launch.ts";
 import { buildWinback, parseWinbackArgs, winbackGroup, type WinbackReads } from "./views/winback.ts";
 import { rankData, rankView, type RankInput } from "./views/rank.ts";
+import { balanceOf, buildClose, moneyData, moneyView, parseCloseArgs, type MoneyInput } from "./views/money.ts";
 import { recipeData, recipeDoneView, recipeView, substitute, type RecipePlan } from "./views/recipe.ts";
 import { randomUUID } from "node:crypto";
 import { homeView } from "./views/home.ts";
@@ -44,7 +45,7 @@ import type { Parsed, Rec } from "./envelope.ts";
 const print = (lines: string[]) => process.stdout.write(lines.join("\n") + "\n");
 
 /** Words that are wv's, not whop's. */
-const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox", "agent"]);
+const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox", "agent", "money"]);
 
 export interface Outcome {
   code: number;
@@ -164,7 +165,7 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
     print(lines!);
     process.exit(0);
   }
-  if (argv[0] === "gtm" && (argv[1] === "launch" || argv[1] === "winback")) return recipePiped(argv, mode, env, plan);
+  if ((argv[0] === "gtm" && (argv[1] === "launch" || argv[1] === "winback")) || (argv[0] === "money" && argv[1] === "close")) return recipePiped(argv, mode, env, plan);
   if (argv[0] === "gtm" && argv[1] === "rank") process.exit(await rankJson(argv, mode, env));
   // Two screens are data as well as pictures. The rest draw and need a terminal.
   if (DATA_SCREENS.has(argv[0])) process.exit(await screenJson(argv[0], mode, env));
@@ -284,6 +285,13 @@ async function winbackReads(opts: NonNullable<ReturnType<typeof parseWinbackArgs
 
 /** One recipe by name: parse its flags, gather its reads, build its plan. `error` is a refusal in words before any read. */
 async function buildRecipe(argv: string[], env: NodeJS.ProcessEnv, mode: Mode, live: boolean): Promise<{ plan?: RecipePlan; error?: string }> {
+  if (argv[0] === "money") {
+    const parsed = parseCloseArgs(argv);
+    if (!parsed.opts) return { error: parsed.error };
+    const o = parsed.opts;
+    const [acct, balance, methods] = await Promise.all([identity(env), run(["ledgers", "report", "--report_type", "balance_summary", "--currency", o.currency], env), run(["payouts", "methods", "--include_limits", "--currency", o.currency], env)]);
+    return { plan: buildClose(argv, o, { balance: balanceOf(o.currency, balance.parsed), methods: methods.parsed, accountTitle: acct?.title, accountId: acct?.id, mode, cap: live ? capFrom() : undefined }) };
+  }
   if (argv[1] === "winback") {
     const parsed = parseWinbackArgs(argv);
     if (!parsed.opts) return { error: parsed.error };
@@ -321,7 +329,7 @@ async function recipeTerminal(argvIn: string[], theme: Theme, mode: Mode, env: N
   }
   const approved = yesFlag || split.token !== undefined;
   const live = mode !== "sandbox" && !planOnly;
-  const spin = spinner(argv[1] === "winback" ? copy.spinner.winback : copy.spinner.launch, theme);
+  const spin = spinner(argv[0] === "money" ? copy.spinner.close : argv[1] === "winback" ? copy.spinner.winback : copy.spinner.launch, theme);
   const built = await buildRecipe(argv, env, mode, live).finally(() => spin.stop());
   if (!built.plan) {
     print(errorView({ code: "VALIDATION_ERROR", message: built.error ?? "" }, theme));
@@ -423,7 +431,7 @@ async function rankJson(argv: string[], mode: Mode, env: NodeJS.ProcessEnv): Pro
 }
 
 /** wv screens that have a JSON face: `--format json`, or any pipe. */
-const DATA_SCREENS = new Set(["doctor", "gtm"]);
+const DATA_SCREENS = new Set(["doctor", "gtm", "money"]);
 const wantsJson = (argv: string[]) => argv.some((a, i) => a === "--format=json" || (a === "--format" && argv[i + 1] === "json"));
 
 /** Prints a screen's data as JSON and returns the exit code the screen would have used. */
@@ -435,9 +443,43 @@ async function screenJson(screen: string, mode: Mode, env: NodeJS.ProcessEnv): P
     process.stdout.write(JSON.stringify({ ...data, meta: { command: "doctor", wrapper: "wv", mode } }, null, 2) + "\n");
     return data.ok ? 0 : 1;
   }
+  if (screen === "money") {
+    const input = await gatherMoney(theme, env, mode);
+    const data = moneyData(input);
+    process.stdout.write(JSON.stringify({ ...data, meta: { command: "money", wrapper: "wv", mode } }, null, 2) + "\n");
+    return data.ok ? 0 : 1;
+  }
   const { input, failed } = await gatherGtm(theme, env, mode);
   process.stdout.write(JSON.stringify({ ...gtmData(input), meta: { command: "gtm", wrapper: "wv", mode } }, null, 2) + "\n");
   return failed ? 1 : 0;
+}
+
+/** `wv money`: identity, the usd balance plus one per saved-method currency, methods with limits, recent payouts, reserves, verifications. */
+async function gatherMoney(theme: Theme, env: NodeJS.ProcessEnv, mode: Mode): Promise<MoneyInput> {
+  const spin = spinner(copy.spinner.moneyScreen, theme);
+  const methodsCmd = ["payouts", "methods", "--include_limits"];
+  const cmds = [["payouts", "list", "--first", "5"], ["accounts", "reserves"], ["verifications", "list"]];
+  const [acct, methods, payouts, reserves, verifications] = await Promise.all([identity(env), run(methodsCmd, env), ...cmds.map((c) => run(c, env))]);
+  const currencies = ["usd"];
+  for (const m of methods.parsed.ok && methods.parsed.payload.kind === "page" ? methods.parsed.payload.rows : []) {
+    const c = typeof m.currency === "string" ? m.currency.toLowerCase() : "";
+    if (c && !currencies.includes(c)) currencies.push(c);
+  }
+  const balanceCmds = currencies.map((c) => ["ledgers", "report", "--report_type", "balance_summary", "--currency", c]);
+  const balances = await Promise.all(balanceCmds.map((c) => run(c, env)));
+  spin.stop();
+  return {
+    accountTitle: acct?.title, accountId: acct?.id, mode,
+    balances: balances.map((b, i) => balanceOf(currencies[i], b.parsed)),
+    methods: methods.parsed, payouts: payouts.parsed, reserves: reserves.parsed, verifications: verifications.parsed,
+    commands: [...balanceCmds, methodsCmd, ...cmds],
+  };
+}
+
+async function moneyScreen(theme: Theme, mode: Mode): Promise<Outcome> {
+  const input = await gatherMoney(theme, whopEnv(mode), mode);
+  print(moneyView(input, theme));
+  return { code: moneyData(input).ok ? 0 : 1, group: "money" };
 }
 
 /** Pages `--all` will follow before stopping. A cursor that never ends is a bug in the API, not a reason to loop. */
@@ -529,7 +571,8 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
     return { code: 0 };
   }
   if (group === "home") return home(theme, mode);
-  if (group === "gtm" && (verb === "launch" || verb === "winback")) return recipeTerminal(argv, theme, mode, env, !!opts.plan);
+  if ((group === "gtm" && (verb === "launch" || verb === "winback")) || (group === "money" && verb === "close")) return recipeTerminal(argv, theme, mode, env, !!opts.plan);
+  if (group === "money") return moneyScreen(theme, mode);
   if (group === "gtm" && verb === "rank") return rank(argv, theme, mode, env);
   if (group === "gtm") return gtm(theme, mode);
   if (group === "doctor") return doctor(theme, mode);
