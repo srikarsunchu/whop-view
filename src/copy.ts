@@ -855,6 +855,23 @@ export const copy = {
     write: "Plan or run a write, or a recipe (`gtm launch`, `gtm winback`, `money close`, `support refund`, `support dispute`, `dev hook`, `store price`, `store publish`). The first call returns the plan and a `rerun` and runs nothing. After the person has seen the plan and said yes, call again with the `rerun` array exactly as given: that runs it. `plan: true` returns the plan with no rerun.",
     unknownTool: (name: string) => `Unknown tool: ${name}`,
     readIsWrite: (cmd: string) => `${cmd} is a write. wv_read only reads; call wv_write with the same argv to get the plan.`,
+    /** The elicitation fields. The person sees these in their own client, not the model. */
+    amountField: (amount: string) => `Type ${amount} exactly to send it. Anything else, or Cancel, runs nothing.`,
+    approveField: "Yes runs it now. No or Cancel runs nothing.",
+    declined: {
+      declined: "The person said no. Nothing ran.",
+      cancelled: "The person dismissed the prompt. Nothing ran.",
+      mismatch: "The amount typed did not match the plan. Nothing ran.",
+    } as Record<"declined" | "cancelled" | "mismatch", string>,
+    declinedHint: "There is no rerun. Do not retry the write; ask the person what they want instead.",
+    approvedLog: (cmd: string) => `wv: the person approved ${cmd}`,
+  },
+  mcpDoctor: {
+    ok: (n: number) => `wv --mcp starts and lists ${n} tools`,
+    failed: (why: string) => `wv --mcp did not answer: ${why}`,
+    timeout: "no answer within fifteen seconds",
+    noTools: "the server answered with no tools",
+    register: (command: string) => `Register it: whop mcp add --agent claude-code --command "${command}"`,
   },
 };
 

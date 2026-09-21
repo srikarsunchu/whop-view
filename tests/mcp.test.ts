@@ -9,7 +9,8 @@ import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { FIXTURES } from "./render.ts";
-import { argvFor, handle, toolResult, TOOLS, type ToolResult } from "../src/mcp.ts";
+import { argvFor, consented, elicitParamsFor, handle, mcpAddArgv, planMessage, toolResult, TOOLS, type ElicitResult, type ToolResult } from "../src/mcp.ts";
+import { spawnSync } from "node:child_process";
 
 const bin = join(import.meta.dirname, "..", "src", "bin.ts");
 
@@ -29,8 +30,14 @@ interface Rpc {
   params?: unknown;
 }
 
-/** Starts `wv --mcp`, sends every message, closes stdin, and returns the responses by id plus whop's argv log. */
-function serve(messages: Rpc[], env: NodeJS.ProcessEnv = {}): Promise<{ byId: Map<number, { result?: ToolResult & Record<string, unknown>; error?: { code: number; message: string } }>; argv: string[]; status: number | null }> {
+type Served = { byId: Map<number, { result?: ToolResult & Record<string, unknown>; error?: { code: number; message: string } }>; argv: string[]; status: number | null; asked: { message: string; requestedSchema: { properties: Record<string, unknown>; required?: string[] } }[] };
+
+/**
+ * Starts `wv --mcp`, sends every message, and returns the responses by id plus whop's argv log. With `person`,
+ * the client declares elicitation and answers each `elicitation/create` the server sends with what the person
+ * would have done; stdin closes once every request has been answered. Without it, stdin closes at once.
+ */
+function serve(messages: Rpc[], env: NodeJS.ProcessEnv = {}, person?: (params: { message: string; requestedSchema: { properties: Record<string, unknown> } }) => ElicitResult): Promise<Served> {
   return new Promise((resolve) => {
     const child = spawn(process.execPath, ["--experimental-strip-types", "--no-warnings", bin, "--mcp"], {
       env: { ...process.env, WV_CONFIG: "/nonexistent/wv.json", XDG_CACHE_HOME: mkdtempSync(join(tmpdir(), "wv-cache-")), WV_SANDBOX_KEY: "", WV_SANDBOX_URL: "", WV_SANDBOX: "", ...env },
@@ -38,23 +45,44 @@ function serve(messages: Rpc[], env: NodeJS.ProcessEnv = {}): Promise<{ byId: Ma
     });
     let out = "";
     let err = "";
-    child.stdout.on("data", (d) => (out += d));
+    let buffered = "";
+    const asked: Served["asked"] = [];
+    const expected = new Set(messages.filter((m) => m.id !== undefined).map((m) => m.id as number));
     child.stderr.on("data", (d) => (err += d));
+    child.stdout.on("data", (d) => {
+      out += d;
+      if (!person) return;
+      buffered += d;
+      const lines = buffered.split("\n");
+      buffered = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const j = JSON.parse(line) as { id?: number; method?: string; params?: Served["asked"][number] };
+        if (j.method === "elicitation/create" && j.params) {
+          asked.push(j.params);
+          child.stdin.write(JSON.stringify({ jsonrpc: "2.0", id: j.id, result: person(j.params) }) + "\n");
+        } else if (j.id !== undefined) {
+          expected.delete(j.id);
+          if (expected.size === 0) child.stdin.end();
+        }
+      }
+    });
     for (const m of messages) child.stdin.write(JSON.stringify({ jsonrpc: "2.0", ...m }) + "\n");
-    child.stdin.end();
+    if (!person) child.stdin.end();
     child.on("close", (status) => {
       const byId = new Map<number, { result?: ToolResult & Record<string, unknown>; error?: { code: number; message: string } }>();
       for (const line of out.split("\n")) {
         if (!line.trim()) continue;
-        const j = JSON.parse(line) as { id: number; result?: ToolResult & Record<string, unknown>; error?: { code: number; message: string } };
-        byId.set(j.id, j);
+        const j = JSON.parse(line) as { id: number; method?: string; result?: ToolResult & Record<string, unknown>; error?: { code: number; message: string } };
+        if (j.method === undefined) byId.set(j.id, j);
       }
-      resolve({ byId, argv: err.split("\n").filter((l) => l.startsWith("ARGS: ")).map((l) => l.slice(6)), status });
+      resolve({ byId, argv: err.split("\n").filter((l) => l.startsWith("ARGS: ")).map((l) => l.slice(6)), status, asked });
     });
   });
 }
 
 const init: Rpc = { id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "0" } } };
+const initElicit: Rpc = { id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: { elicitation: {} }, clientInfo: { name: "test", version: "0" } } };
 const call = (id: number, name: string, args: Record<string, unknown>): Rpc => ({ id, method: "tools/call", params: { name, arguments: args } });
 const structured = (r: { result?: ToolResult }) => r.result?.structuredContent as { ok: boolean; error?: { code: string }; plan?: Record<string, unknown>; rerun?: string[]; meta?: Record<string, unknown> } | undefined;
 
@@ -164,4 +192,113 @@ test("mcp: a parse error and an unknown tool answer in protocol, and handle is p
   const unknown = JSON.parse((await handle({ jsonrpc: "2.0", id: 9, method: "tools/call", params: { name: "wv_nope", arguments: {} } }))!) as { result: ToolResult };
   assert.equal(unknown.result.isError, true);
   assert.equal(await handle({ jsonrpc: "2.0", method: "notifications/cancelled" }), undefined);
+});
+
+// Elicitation: when the client can ask the person, the server does, and the model never holds the approval.
+
+test("mcp elicitation: a yes from the person runs the write in the same call; the model never sees a rerun", async () => {
+  const env = gateEnv();
+  const r = await serve([initElicit, call(2, "wv_write", { argv: ["products", "update", "prod_1", "--title", "Frame Pro"] })], env, () => ({ action: "accept", content: { approve: true } }));
+  assert.equal(r.asked.length, 1, "one question was asked");
+  assert.match(r.asked[0].message, /whop products update prod_1 --title 'Frame Pro'/);
+  assert.match(r.asked[0].message, /production/);
+  assert.deepEqual(r.asked[0].requestedSchema.required, ["approve"]);
+  assert.ok(r.argv.includes("products update prod_1 --title Frame Pro"), "the write ran, with no wv flags in whop's argv");
+  const result = r.byId.get(2)!.result!;
+  assert.equal(result.isError, undefined);
+  assert.match(result.content[0].text, /fake_1/, "the tool's answer is whop's answer to the write");
+  assert.equal(structured(r.byId.get(2)!)?.rerun, undefined);
+});
+
+test("mcp elicitation: a no, a dismissed prompt, or a wrong amount runs nothing and comes back with no rerun", async () => {
+  const env = gateEnv();
+  const write = call(2, "wv_write", { argv: ["products", "update", "prod_1", "--title", "Frame Pro"] });
+  for (const [answer, code] of [
+    [{ action: "decline" }, /said no/],
+    [{ action: "cancel" }, /dismissed/],
+    [{ action: "accept", content: { approve: false } }, /said no/],
+  ] as [ElicitResult, RegExp][]) {
+    const r = await serve([initElicit, write], env, () => answer);
+    const e = structured(r.byId.get(2)!)!;
+    assert.equal(e.error?.code, "DECLINED");
+    assert.match((e.error as { message: string }).message, code);
+    assert.equal(e.rerun, undefined, "no rerun after a no");
+    assert.equal(e.plan?.kind, "write", "the plan is still there for the model to report");
+    assert.equal(r.byId.get(2)!.result?.isError, true);
+    assert.ok(!r.argv.some((a) => a.startsWith("products update")), "nothing ran");
+  }
+});
+
+test("mcp elicitation: money asks for the amount typed back, and y is not consent for a payout", async () => {
+  const env = gateEnv({ WV_FAKE_METHODS: "payouts.methods.json" });
+  const payout = call(2, "wv_write", { argv: ["payouts", "create", "--amount", "5", "--payout_method_id", "potk_1"] });
+  const wrong = await serve([initElicit, payout], env, () => ({ action: "accept", content: { amount: "50" } }));
+  assert.deepEqual(wrong.asked[0].requestedSchema.required, ["amount"]);
+  assert.match(wrong.asked[0].message, /moves real money/);
+  assert.match(structured(wrong.byId.get(2)!)!.error!.code, /DECLINED/);
+  assert.match((structured(wrong.byId.get(2)!)!.error as { message: string }).message, /did not match/);
+  assert.ok(!wrong.argv.some((a) => a.startsWith("payouts create")), "a wrong amount sends nothing");
+  const right = await serve([initElicit, payout], env, () => ({ action: "accept", content: { amount: "$5.00" } }));
+  assert.ok(right.argv.some((a) => a.startsWith("payouts create --amount 5 --payout_method_id potk_1")), "the exact amount, however written, sends it");
+  assert.equal(right.byId.get(2)!.result?.isError, undefined);
+});
+
+test("mcp elicitation: a client that did not declare it gets the plan and the rerun, as in the pipe", async () => {
+  const env = gateEnv();
+  const r = await serve([init, call(2, "wv_write", { argv: ["products", "update", "prod_1", "--title", "Frame Pro"] })], env, () => ({ action: "accept", content: { approve: true } }));
+  assert.equal(r.asked.length, 0, "nothing was asked");
+  assert.equal(structured(r.byId.get(2)!)?.error?.code, "CONFIRMATION_REQUIRED");
+  assert.ok(Array.isArray(structured(r.byId.get(2)!)?.rerun));
+});
+
+test("mcp elicitation: plan only never asks, and the sandbox asks for a yes, not an amount", async () => {
+  const env = gateEnv({ WV_SANDBOX_KEY: "whop_test" });
+  const planned = await serve([initElicit, call(2, "wv_write", { argv: ["products", "update", "prod_1", "--title", "x"], plan: true })], env, () => ({ action: "accept", content: { approve: true } }));
+  assert.equal(planned.asked.length, 0);
+  assert.equal(structured(planned.byId.get(2)!)?.ok, true);
+  const sandbox = await serve([initElicit, call(2, "wv_write", { argv: ["payouts", "create", "--amount", "5", "--payout_method_id", "potk_1"], sandbox: true })], env, () => ({ action: "accept", content: { approve: true } }));
+  assert.deepEqual(sandbox.asked[0].requestedSchema.required, ["approve"]);
+  assert.match(sandbox.asked[0].message, /sandbox/);
+  assert.ok(sandbox.argv.some((a) => a.startsWith("payouts create")));
+});
+
+test("mcp elicitation: the question and the consent rule, as pure functions", () => {
+  const plan = { kind: "write", command: "whop payouts create --amount 250", money: { amount: 250, currency: "usd" }, destination: "Chase ••4421", account: { title: "Frame", id: "biz_1" } };
+  const q = elicitParamsFor(plan, "production");
+  assert.match(q.message, /\$250\.00 to Chase/);
+  assert.match(q.message, /Account: Frame \(biz_1\)/);
+  assert.deepEqual(q.requestedSchema.required, ["amount"]);
+  assert.equal(consented(plan, "production", { action: "accept", content: { amount: "250" } }), true);
+  assert.equal(consented(plan, "production", { action: "accept", content: { amount: "250.01" } }), false);
+  assert.equal(consented(plan, "production", { action: "accept", content: { approve: true } }), false, "a yes is not an amount");
+  assert.equal(consented(plan, "sandbox", { action: "accept", content: { approve: true } }), true);
+  const recipe = { kind: "hook", command: "wv dev hook https://x", steps: [{ key: "create", label: "Create the webhook", command: "whop webhooks create --url https://x" }, { key: "skip", label: "Skipped", command: "x", skipped: true }], changes: [], warnings: ["The account is on an OAuth login."] };
+  const m = planMessage(recipe, "production");
+  assert.match(m, /Steps:\n  Create the webhook: whop webhooks create/);
+  assert.doesNotMatch(m, /Skipped/);
+  assert.match(m, /Warning: The account is on an OAuth login/);
+  assert.equal(consented(recipe, "production", { action: "decline" }), false);
+});
+
+// `wv mcp add` and `wv mcp doctor`: registration through whop's installer, and the startup path a client takes.
+
+test("mcp add: whop's installer is told to run wv, and a --command the person gave wins", () => {
+  assert.deepEqual(mcpAddArgv([]), ["mcp", "add", "--command", "wv --mcp"]);
+  assert.deepEqual(mcpAddArgv(["--agent", "claude-code", "--no-global"]), ["mcp", "add", "--command", "wv --mcp", "--agent", "claude-code", "--no-global"]);
+  assert.deepEqual(mcpAddArgv(["--command", "pnpm wv --mcp"]), ["mcp", "add", "--command", "pnpm wv --mcp"]);
+  assert.deepEqual(mcpAddArgv(["-c", "x"]), ["mcp", "add", "-c", "x"]);
+  const r = spawnSync(process.execPath, ["--experimental-strip-types", "--no-warnings", bin, "mcp", "add", "--agent", "cursor"], { encoding: "utf8", env: { ...process.env, ...gateEnv(), WV_CONFIG: "/nonexistent/wv.json", WV_SANDBOX: "", WV_SANDBOX_KEY: "" } });
+  assert.match(r.stderr, /^ARGS: mcp add --command wv --mcp --agent cursor$/m, "whop's own mcp add runs, with wv's command");
+});
+
+test("mcp doctor: starts the server, lists its tools, and answers JSON in a pipe", () => {
+  const r = spawnSync(process.execPath, ["--experimental-strip-types", "--no-warnings", bin, "mcp", "doctor"], { encoding: "utf8", env: { ...process.env, ...gateEnv(), WV_CONFIG: "/nonexistent/wv.json", WV_SANDBOX: "", WV_SANDBOX_KEY: "" } });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const d = JSON.parse(r.stdout) as { ok: boolean; toolCount: number; tools: { name: string }[]; server: { name: string; protocolVersion: string }; command: string; meta: { command: string } };
+  assert.equal(d.ok, true);
+  assert.equal(d.toolCount, 4);
+  assert.deepEqual(d.tools.map((t) => t.name), TOOLS.map((t) => t.name));
+  assert.equal(d.server.name, "wv");
+  assert.equal(d.command, "wv --mcp");
+  assert.deepEqual(d.meta, { command: "mcp doctor", wrapper: "wv", mode: "production" });
 });

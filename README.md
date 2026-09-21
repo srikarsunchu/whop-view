@@ -46,11 +46,13 @@ Runs a skill's scenarios through `claude -p` against `tests/fake-whop.sh`, so no
 wv --mcp
 ```
 
-The same agent face as a Model Context Protocol server on stdio, for a client that never opens a terminal. Four tools: `wv_manifest`, `wv_read`, `wv_screen`, `wv_write`. `wv_write` never writes on the first call: it returns the plan and a `rerun`, and the second call with that `rerun` runs it, under the same signed approval and idempotency key the pipe uses. `whop --mcp` serves 298 tools and `payouts_create` on it moves money on the first call; this one asks first. Register it with Whop's own installer:
+The same agent face as a Model Context Protocol server on stdio, for a client that never opens a terminal. Four tools: `wv_manifest`, `wv_read`, `wv_screen`, `wv_write`. `wv_write` never writes on the first call. In a client that supports elicitation (Claude desktop, Claude Code), the server puts the plan in front of the person itself, asks for a yes, or for the amount typed back when real money moves, and runs it on the answer; the model never holds an approval, and a no comes back with no way to rerun. In a client without it, the tool returns the plan and a `rerun`, and the second call with that `rerun` runs it, under the same signed approval and idempotency key the pipe uses. `whop --mcp` serves 298 tools and `payouts_create` on it moves money on the first call; this one asks first.
 
 ```bash
-whop mcp add --agent claude-code --command "wv --mcp"
+wv mcp add --agent claude-code
 ```
+
+Registers it through Whop's own installer (`whop mcp add --command "wv --mcp"`). `wv mcp doctor` starts the server and lists its tools, like `whop mcp doctor`.
 
 ## The skills
 

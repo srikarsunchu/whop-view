@@ -45,7 +45,7 @@ import { summaryView } from "./views/summary.ts";
 import { prompt } from "./primitives/prompt.ts";
 import { spinner } from "./primitives/spinner.ts";
 import { session } from "./tui/session.ts";
-import { serveMcp } from "./mcp.ts";
+import { mcpAddArgv, mcpDoctor, serveMcp } from "./mcp.ts";
 import type { Parsed, Rec } from "./envelope.ts";
 
 const print = (lines: string[]) => process.stdout.write(lines.join("\n") + "\n");
@@ -121,6 +121,9 @@ export function timeoutFrom(env: NodeJS.ProcessEnv = process.env): number | unde
 async function main(argvIn: string[]) {
   // `wv --mcp`: the agent face as an MCP stdio server. Same gate, same envelopes, tools instead of argv.
   if (argvIn[0] === "--mcp") return serveMcp();
+  // `wv mcp add` registers wv, not whop, through whop's own installer; `wv mcp doctor` starts this server and lists its tools.
+  if (argvIn[0] === "mcp" && argvIn[1] === "add") passthrough(mcpAddArgv(argvIn.slice(2)), whopEnv(modeFrom(false)));
+  if (argvIn[0] === "mcp" && argvIn[1] === "doctor") process.exit(await mcpDoctorRun(argvIn.slice(2)));
   const own = ownFlags(argvIn);
   const { width, sandbox, plan, follow, all, md } = own;
   const theme = makeTheme({ width });
@@ -243,6 +246,21 @@ export async function agentReply(argvIn: string[], opts: AgentOptions): Promise<
   // `--all`: follow the cursor and stream every row, one JSON object per line, or one array with `--format json`.
   if (all && argv.length >= 2) return allPagesReply(args, env);
   return { kind: "exec", argv: argv0IsCheck(args) ? ["memberships", "get", ...args.slice(2)] : args, env };
+}
+
+/** `wv mcp doctor`: the server started and asked for its tools, as JSON in a pipe or with `--format json`, as lines in a terminal. */
+async function mcpDoctorRun(args: string[]): Promise<number> {
+  const data = await mcpDoctor();
+  if (!process.stdout.isTTY || wantsJson(args)) {
+    process.stdout.write(JSON.stringify({ ...data, meta: { command: "mcp doctor", wrapper: "wv", mode: "production" } }, null, 2) + "\n");
+    return data.ok ? 0 : 1;
+  }
+  const theme = makeTheme({});
+  const lines = data.ok
+    ? [paint(theme, "good", copy.mcpDoctor.ok(data.toolCount)), ...data.tools.map((t) => `  ${paint(theme, "accent", t.name)}  ${paint(theme, "muted", t.description.split(". ")[0])}`), "", paint(theme, "muted", copy.mcpDoctor.register(data.command))]
+    : [paint(theme, "bad", copy.mcpDoctor.failed(data.error ?? ""))];
+  print(lines);
+  return data.ok ? 0 : 1;
 }
 
 /** The pipe: print the reply and exit, or exec `whop` with its stdout forwarded byte for byte. */
