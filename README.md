@@ -416,6 +416,10 @@ Manifest: `wv agent <group>` prints one Markdown page per command group from `--
 
 Playbooks as one plan: `wv gtm launch <prod_id> --budget 40 --creative file_x` plans a promo code, a checkout link for the product's default plan, a Meta campaign, and one ad pointed at that checkout link, as four steps with one approval. The plan carries the commitment, the reach estimate, who pays, and every step's command with its own idempotency key; a missing page, payment method, or default plan blocks it before anything runs, and a step that fails stops the rest and names what was made. In a pipe it is the same envelope and rerun as any write, and the finished run returns the ids and the reads that prove the launch is live.
 
+![gtm launch](demo/gtm-launch.gif)
+
+The recording is the plan on the demo account, which has no Meta page and no ads payment method yet, so the two blockers are real.
+
 For a write against one record, `wv` reads the record first and the plan says what changes, so `products update` shows `title  Hypermotion → Hypermotion Pro` and `products unpublish` shows `visibility  visible → hidden`; the terminal card gets the same `Changes` section.
 
 `rerun` carries an `--idempotency-key` wv minted at the plan step when the verb takes one, so the approved retry cannot write twice; the terminal card shows the same key. Which verbs count as writes comes from whop's own manifest, fetched once a day, with wv's list underneath, so a verb that ships tomorrow is gated tomorrow.
@@ -581,4 +585,4 @@ Re-records the fixtures from your own account. Read-only commands only. `pnpm fi
 pnpm demo
 ```
 
-Re-records every GIF above. The seven agent tapes (`agent-gate`, `agent-plan`, `doctor-json`, `agent-manifest`, `agent-index`, `approve`, `exit-codes`) run against production reads only; the gate never sends the write, and the `approve` tape reruns a plan with a token minted for a different product so the refusal is what gets recorded. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them. The `sandbox-status` and `logs-follow` tapes start `scripts/mock-api.ts` on port 8931 themselves, a stand-in for the sandbox host that answers `accounts get me` and grows an app's log by one line every couple of seconds; `pnpm demo:mock` runs it on its own. The `sandbox-ads` tape expects a richer mock on the same port that was never committed, so it records against whatever answers there.
+Re-records every GIF above. The eight agent tapes (`agent-gate`, `agent-plan`, `doctor-json`, `agent-manifest`, `agent-index`, `approve`, `exit-codes`, `gtm-launch`) run against production reads only; the gate never sends the write, and the `approve` tape reruns a plan with a token minted for a different product so the refusal is what gets recorded. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them. The `sandbox-status` and `logs-follow` tapes start `scripts/mock-api.ts` on port 8931 themselves, a stand-in for the sandbox host that answers `accounts get me` and grows an app's log by one line every couple of seconds; `pnpm demo:mock` runs it on its own. The `sandbox-ads` tape expects a richer mock on the same port that was never committed, so it records against whatever answers there.
