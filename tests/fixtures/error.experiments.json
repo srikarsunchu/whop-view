@@ -1,0 +1,11 @@
+{
+  "ok": false,
+  "error": {
+    "code": "HTTP_403",
+    "message": "This endpoint requires Whop internal access"
+  },
+  "meta": {
+    "command": "experiments list",
+    "duration": "270ms"
+  }
+}

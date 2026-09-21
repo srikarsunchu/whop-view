@@ -333,6 +333,34 @@ After:
 
 The CLI already emits a `cta` block on this one error. `wv` renders it and adds a known fix for the errors that lack one: not signed in, missing scope, rate limited, CLI not installed, missing flags.
 
+### Feature gates
+
+A 403 that says "You don't have access to X yet" is not a permission problem, and `whop login --api-key` will not fix it. `wv` renders those as a muted band with what unlocks the feature, in one line, and the command when the CLI has one:
+
+```
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ Not available on this business yet
+ You don't have access to Economic Intelligence yet.
+ A preference on the business turns it on; nothing to buy.
+ fix  whop accounts update-preferences --economic_intelligence true
+ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+```
+
+Three gates are mapped from the CLI's own words: Economic Intelligence (a preference, with the command), experiments (Whop-internal, so one line says no plan or preference unlocks it), and cards (a Rain account that Whop opens after identity verification, with `whop verifications create` as the first step). A gate nobody has mapped says so and points at the dashboard. "Authenticate with an account-scoped credential", which `cashback-rules` answers to an OAuth login, is a login problem and renders as one, with the API-key login as the fix.
+
+## Gaps this round
+
+Eight gaps a developer or software seller hits in the Whop CLI, and where each landed:
+
+1. **Doctor**: shipped. `wv doctor`, nine checks, exit 1 on a blocking failure.
+2. **Sandbox**: shipped, with one honest hole. The key lives in `wv`'s config file, `wv sandbox status` pings the host, keys never cross sides. Where a sandbox key is issued is not written anywhere the CLI or the API reference reaches, so the screen says "get one from Whop" and links the getting-started page, nothing more specific.
+3. **Date presets**: shipped. `--last Nd`, `--this month`, `--last month` on `stats get` and `events list`; an events range over 30 days is refused in Whop's words.
+4. **Log following**: shipped. `wv apps logs <id> --follow`, polling on `--created_after`, level colored, Ctrl-C stops.
+5. **Webhook loop**: shipped, partial on one word. `wv webhooks test` shows the round trip and `webhooks deliveries` is a table, but the API has no attempt counter, so the column is `replay of` rather than attempts.
+6. **License check**: shipped. `memberships get` accepts a license key, so `wv memberships check <key>` is that call plus a verdict and an exit code.
+7. **JSON flags for humans**: shipped. Dotted paths, repeated flags, and `@file` assemble to the JSON flag; the round trip is tested.
+8. **Feature gate errors**: shipped. Three gates mapped, an unknown gate says so.
+
 ## What agents see
 
 Nothing new. `wv` execs `whop` with the original argv whenever any of these hold:

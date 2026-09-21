@@ -1,6 +1,7 @@
  ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
  Not available on this business yet
- You don't have access to Economic Intelligence yet.
- A preference on the business turns it on; nothing to buy.
- fix  whop accounts update-preferences --economic_intelligence true
+ No Rain account found for this account.
+ Card issuing needs a verified identity first; Whop opens the Rain account once
+ verification passes.
+ fix  whop verifications create --account_id <biz_id>
  ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌

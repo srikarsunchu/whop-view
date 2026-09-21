@@ -1,0 +1,11 @@
+{
+  "ok": false,
+  "error": {
+    "code": "HTTP_400",
+    "message": "No Rain account found for this account."
+  },
+  "meta": {
+    "command": "cards list",
+    "duration": "265ms"
+  }
+}

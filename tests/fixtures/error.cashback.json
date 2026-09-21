@@ -1,0 +1,11 @@
+{
+  "ok": false,
+  "error": {
+    "code": "HTTP_400",
+    "message": "Authenticate with an account-scoped credential to manage cashback rules"
+  },
+  "meta": {
+    "command": "cashback-rules list",
+    "duration": "234ms"
+  }
+}

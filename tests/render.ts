@@ -309,6 +309,10 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "error.scope": (t) => errorView({ code: "HTTP_403", message: "Missing required permission: developer:manage_webhook" }, t),
   "error.enoent": (t) => errorView({ code: "ENOENT", message: "spawn whop ENOENT" }, t),
   "error.gated": (t) => error("error.gated", t),
+  "error.experiments": (t) => error("error.experiments", t),
+  "error.cards": (t) => error("error.cards", t),
+  "error.cashback": (t) => error("error.cashback", t),
+  "error.gated.unknown": (t) => errorView({ code: "HTTP_403", message: "You don't have access to Financing yet.", durationMs: 200 }, t),
   "detail.auth": (t) => record("auth.status", "auth", ["auth", "status"], t),
   "series.net_revenue": (t) => {
     const p = envelope("stats.net_revenue");

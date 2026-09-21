@@ -1,0 +1,5 @@
+ ▌ Missing permission                                                      234ms
+
+   Authenticate with an account-scoped credential to manage cashback rules
+
+   fix  whop login --api-key

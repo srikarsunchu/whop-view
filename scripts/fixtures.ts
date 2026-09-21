@@ -50,6 +50,10 @@ const CASES: [string, string[], NodeJS.ProcessEnv?][] = [
   ["apps.logs", ["apps", "logs", "app_HKnLpw6UGGEqk6"]],
   // `memberships get` takes a membership id or a software license key; a key nobody issued is a 404.
   ["error.license_404", ["memberships", "get", "ABCD-1234-EFGH-5678"]],
+  // Feature gates in Whop's words: internal-only, a preference, and card issuing behind a Rain account.
+  ["error.experiments", ["experiments", "list"]],
+  ["error.cards", ["cards", "list"]],
+  ["error.cashback", ["cashback-rules", "list"]],
 ];
 
 // Fixtures are committed. Nothing a real person could be identified by survives recording:

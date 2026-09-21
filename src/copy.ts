@@ -166,6 +166,13 @@ export const copy = {
       ENOENT: "curl -fsSL https://whop.com/install.sh | sh",
     } as Record<string, string>,
     fix: "fix",
+    /** What unlocks a feature gate, in one line each. */
+    gates: {
+      preference: "A preference on the business turns it on; nothing to buy.",
+      internal: "Whop-internal only. No plan or preference unlocks it outside Whop.",
+      cards: "Card issuing needs a verified identity first; Whop opens the Rain account once verification passes.",
+      unknown: "Whop turns this on per business. No CLI preference is known for it; ask Whop, or look in the dashboard.",
+    },
     field: (path: string, msg: string) => `--${path}  ${msg}`,
     suggested: "Suggested commands:",
   },

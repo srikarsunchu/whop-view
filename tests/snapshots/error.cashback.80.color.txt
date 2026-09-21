@@ -1,0 +1,5 @@
+ [31m▌[39m [1mMissing permission[22m                                                      [31m234ms[39m
+
+   Authenticate with an account-scoped credential to manage cashback rules
+
+   [2mfix[22m  [2mwhop login --api-key[22m
