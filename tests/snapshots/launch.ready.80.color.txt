@@ -1,0 +1,32 @@
+ [33m▌[39m [1mLaunch a product[22m                                         [33mwrites to production[39m
+
+   [2mwv gtm launch prod_iQ2Zub6GFQS5Q --budget 40 --creative file_x1
+   --idempotency-key 5b2c1d6e-0000-4000-8000-000000000002[22m
+
+   [2mproduct   [22m  Hypermotion  prod_iQ2Zub6GFQS5Q
+   [2mspend     [22m  [33m$40.00/day · $1,200.00 over 30 days · no end date[39m
+   [2mreach     [22m  1.5M–1.8M people on meta
+   [2mpays from [22m  the account's ads payment method
+   [2mruns under[22m  Hypermotion (facebook) @hypermotion
+   [2mcap       [22m  [2m$2,000.00 committed spend per plan from wv[22m
+   [2mfrom      [22m  Hypermotion  biz_VraUMckluH8dzV
+
+ [2m── [22m[1mSteps[22m[2m ──────────────────────────────────────────────────────────────────────[22m
+   [2m1  promo code   [22m  LAUNCH20 · 20% off · new customers · 7 days
+                     [2mruns[22m  whop promo-codes create --account_id biz_VraUMckluH…
+   [2m2  checkout link[22m  Creator — 1,000 credits · $29.00/mo · tagged with the
+                     campaign
+                     [2mruns[22m  whop checkout-configurations create --account_id bi…
+   [2m3  campaign     [22m  Meta · sales · budget on the ad group
+                     [2mruns[22m  whop ad-campaigns create --title 'Launch · Hypermot…
+   [2m4  ad           [22m  1 creative · US · ages 25–44 · destination is the checkout
+                     link
+                     [2mruns[22m  whop ads create --title 'Launch · Hypermotion · v1'…
+
+   [2m4 writes run in order against production, each with its own idempotency key.[22m
+   [2mA step that fails stops the rest; what was created stays, and the card names[22m
+   [2mit.[22m
+
+ [2mevery argv[22m  [2mwv gtm launch prod_iQ2Zub6GFQS5Q --budget 40 --creative file_x1[22m
+             [2m--idempotency-key 5b2c1d6e-0000-4000-8000-000000000002 --plan | cat[22m
+

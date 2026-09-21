@@ -414,6 +414,8 @@ Manifest: `wv agent <group>` prints one Markdown page per command group from `--
 
 ![agent gate refusing a payout](demo/agent-plan.gif)
 
+Playbooks as one plan: `wv gtm launch <prod_id> --budget 40 --creative file_x` plans a promo code, a checkout link for the product's default plan, a Meta campaign, and one ad pointed at that checkout link, as four steps with one approval. The plan carries the commitment, the reach estimate, who pays, and every step's command with its own idempotency key; a missing page, payment method, or default plan blocks it before anything runs, and a step that fails stops the rest and names what was made. In a pipe it is the same envelope and rerun as any write, and the finished run returns the ids and the reads that prove the launch is live.
+
 For a write against one record, `wv` reads the record first and the plan says what changes, so `products update` shows `title  Hypermotion → Hypermotion Pro` and `products unpublish` shows `visibility  visible → hidden`; the terminal card gets the same `Changes` section.
 
 `rerun` carries an `--idempotency-key` wv minted at the plan step when the verb takes one, so the approved retry cannot write twice; the terminal card shows the same key. Which verbs count as writes comes from whop's own manifest, fetched once a day, with wv's list underneath, so a verb that ships tomorrow is gated tomorrow.

@@ -1,0 +1,35 @@
+ [31m▌[39m [1mLaunch a product[22m                                                                               [31mblocked · nothing runs[39m
+
+   [2mwv gtm launch prod_iQ2Zub6GFQS5Q --budget 40 --creative file_x1 --idempotency-key
+   5b2c1d6e-0000-4000-8000-000000000002[22m
+
+   [2mproduct   [22m  Hypermotion  prod_iQ2Zub6GFQS5Q
+   [2mspend     [22m  [33m$40.00/day · $1,200.00 over 30 days · no end date[39m
+   [2mreach     [22m  [33mnot estimated · No connected Meta account[39m
+   [2mpays from [22m  [33mno ads payment method on the account[39m
+   [2mruns under[22m  [33mno page connected · whop social-accounts connect --platform meta_business --scopes advertise[39m
+   [2mcap       [22m  [2m$500.00 committed spend per plan from wv[22m
+   [2mfrom      [22m  Hypermotion  biz_VraUMckluH8dzV
+
+ [2m── [22m[1mSteps[22m[2m ──────────────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2m1  promo code   [22m  LAUNCH20 · 20% off · new customers · 7 days
+                     [2mruns[22m  whop promo-codes create --account_id biz_VraUMckluH8dzV --code LAUNCH20 --promo_type percen…
+   [2m2  checkout link[22m  Creator — 1,000 credits · $29.00/mo · tagged with the campaign
+                     [2mruns[22m  whop checkout-configurations create --account_id biz_VraUMckluH8dzV --plan_id plan_ozEZmitg…
+   [2m3  campaign     [22m  Meta · sales · budget on the ad group
+                     [2mruns[22m  whop ad-campaigns create --title 'Launch · Hypermotion' --platform meta --objective sales -…
+   [2m4  ad           [22m  1 creative · US · ages 25–44 · destination is the checkout link
+                     [2mruns[22m  whop ads create --title 'Launch · Hypermotion · v1' --url '{checkout.purchase_url}' --call_…
+
+   [31m✗ No Meta page is connected, so the ad write will refuse. wv doctor names the fix.[39m
+   [31m✗ No ads payment method on the account, so the campaign cannot deliver. Add one in the dashboard, or leave --budget[39m
+   [31moff.[39m
+   [31m✗ The daily budget commits $1,200.00 over 30 days, more than the $500.00 cap wv allows per ad write (WV_AD_CAP).[39m
+
+   [2m4 writes run in order against production, each with its own idempotency key. A step that fails stops the rest; what[22m
+   [2mwas created stays, and the card names it.[22m
+
+ [2mfix[22m  [2mwv doctor[22m
+ [2mevery argv[22m  [2mwv gtm launch prod_iQ2Zub6GFQS5Q --budget 40 --creative file_x1 --idempotency-key[22m
+             [2m5b2c1d6e-0000-4000-8000-000000000002 --plan | cat[22m
+

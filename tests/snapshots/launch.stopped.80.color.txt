@@ -1,0 +1,14 @@
+ [31m▌[39m [1mStopped[22m
+
+   [2mpromo code   [22m  [32mLAUNCH20  promo_x1  active[39m
+   [2mcheckout link[22m  [32mchk_x1  https://whop.com/checkout/chk_x1[39m
+   [2mcampaign     [22m  [31mfailed · No ads payment method[39m
+   [2mad           [22m  [2mnot run[22m
+
+   [2mRerun the same command to resume: every step carries its idempotency key, so[22m
+   [2mthe finished ones return what they made.[22m
+
+ [2mpromo[22m  [2mwhop promo-codes get promo_x1 --format json[22m
+ [2mcheckout[22m  [2mopen https://whop.com/checkout/chk_x1[22m
+ [2mthe funnel[22m  [2mwv gtm[22m
+

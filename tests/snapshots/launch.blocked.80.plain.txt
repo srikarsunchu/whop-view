@@ -1,0 +1,41 @@
+ ▌ Launch a product                                       blocked · nothing runs
+
+   wv gtm launch prod_iQ2Zub6GFQS5Q --budget 40 --creative file_x1
+   --idempotency-key 5b2c1d6e-0000-4000-8000-000000000002
+
+   product     Hypermotion  prod_iQ2Zub6GFQS5Q
+   spend       $40.00/day · $1,200.00 over 30 days · no end date
+   reach       not estimated · No connected Meta account
+   pays from   no ads payment method on the account
+   runs under  no page connected · whop social-accounts connect --platform
+               meta_business --scopes advertise
+   cap         $500.00 committed spend per plan from wv
+   from        Hypermotion  biz_VraUMckluH8dzV
+
+ ── Steps ──────────────────────────────────────────────────────────────────────
+   1  promo code     LAUNCH20 · 20% off · new customers · 7 days
+                     runs  whop promo-codes create --account_id biz_VraUMckluH…
+   2  checkout link  Creator — 1,000 credits · $29.00/mo · tagged with the
+                     campaign
+                     runs  whop checkout-configurations create --account_id bi…
+   3  campaign       Meta · sales · budget on the ad group
+                     runs  whop ad-campaigns create --title 'Launch · Hypermot…
+   4  ad             1 creative · US · ages 25–44 · destination is the checkout
+                     link
+                     runs  whop ads create --title 'Launch · Hypermotion · v1'…
+
+   ✗ No Meta page is connected, so the ad write will refuse. wv doctor names the
+   fix.
+   ✗ No ads payment method on the account, so the campaign cannot deliver. Add
+   one in the dashboard, or leave --budget off.
+   ✗ The daily budget commits $1,200.00 over 30 days, more than the $500.00 cap
+   wv allows per ad write (WV_AD_CAP).
+
+   4 writes run in order against production, each with its own idempotency key.
+   A step that fails stops the rest; what was created stays, and the card names
+   it.
+
+ fix  wv doctor
+ every argv  wv gtm launch prod_iQ2Zub6GFQS5Q --budget 40 --creative file_x1
+             --idempotency-key 5b2c1d6e-0000-4000-8000-000000000002 --plan | cat
+

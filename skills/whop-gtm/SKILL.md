@@ -69,26 +69,18 @@ wv <group> <verb> …              # exit 2, CONFIRMATION_REQUIRED, `plan`, `rer
 
 ### 1 · Launch day
 
-Needs `pixel`, `page`, and `payment` green in doctor, or the ad write will refuse in Whop's words.
+One command plans the whole day: a promo code, a checkout link for the product's default plan, a Meta campaign, and one ad pointed at that checkout link. Four writes, one approval, one rerun.
 
 ```bash
-wv promo-codes create --account_id $BIZ --code LAUNCH20 --promo_type percentage --amount_off 20 \
-  --base_currency usd --new_users_only true --promo_duration_months 1 --product_id $PROD \
-  --stock 200 --expires_at 2026-09-28T07:00:00Z
-wv checkout-configurations create --account_id $BIZ --plan_id $PLAN --metadata.campaign launch-sep26
-wv media generate --type image --prompt "9:16 product still, dark studio, single key light" --wait --timeout 300   # $ balance
-wv ad-campaigns create --title "Launch" --platform meta --objective sales --budget_optimization ad_group
-wv ads create --title "Launch · v1" --url "$PURCHASE_URL" --call_to_action shop_now \
-  --ad_group.ad_campaign_id adcamp_x --ad_group.title "US 25-44 · purchase" \
-  --ad_group.budget_amount 40 --ad_group.budget_type daily \
-  --ad_group.optimization_goal conversions --ad_group.conversion_event purchase --ad_group.conversion_location website \
-  --ad_group.placements automatic --ad_group.demographics.minimum_age 25 --ad_group.demographics.maximum_age 44 --ad_group.demographics.gender all \
-  --ad_group.regions.include.countries US \
-  --creatives.0.id file_a --creatives.0.format vertical --headlines "It is live" \
-  --primary_texts "20% off this week with LAUNCH20." --url_parameters.utm_campaign launch-sep26 --plan   # $ daily budget
+wv gtm launch $PROD --budget 40 --creative file_a --plan          # the plan and nothing else
+wv gtm launch $PROD --budget 40 --creative file_a                 # CONFIRMATION_REQUIRED with plan and rerun
 ```
 
-The `ads create` plan is the campaign tree, a real reach estimate, the 30-day commitment of the daily budget, who pays, and the assembled `whop` command with the JSON `whop` expects; over `WV_AD_CAP` it refuses before the call. The `purchase_url` for the ad comes from the checkout configuration's plan in the pipe. Do not set `utm_source`, `utm_medium`, `utm_content`, `wacid`, `waid`, `wasid`: Whop reserves them.
+Read `plan.blockers` first: no default plan, no Meta page, no ads payment method, or a 30-day commitment over `WV_AD_CAP` come back as `LAUNCH_BLOCKED` with no `rerun`; fix them (`wv doctor --format json` has the commands) and plan again. `plan.steps` is every command with its own idempotency key, later steps referencing earlier results as `{campaign.id}` and `{checkout.purchase_url}`. Show the person the spend line, the reach, and the four steps, then run `rerun` unchanged. Flags: `--code` and `--percent` (default `LAUNCH20`, 20% for new customers, 7 days), `--days`, `--stock`, `--headline`, `--primary-text`, `--countries US,CA`, `--ages 25-44`, `--url` to point the ad elsewhere, `--campaign` for the utm. Leave `--budget` off to create only the promo and the checkout link. A creative comes from `wv media generate --type image --prompt "…" --wait --timeout 300` (billed from balance, gated like any write) and its `file.id` goes to `--creative`.
+
+Done when the run's `next` reads agree: `promo-codes get` is `active`, the `purchase_url` opens, `ad-campaigns get` and `ads get` exist (the ad sits `in_review` until Meta approves it), `wv stats get ad_delivery --last 1d --source whop:<campaign>:*` shows spend the next day, and `wv gtm` has no gaps. A step that fails stops the rest: the envelope carries `results` for what was made, `failed` for the step, and a `rerun` with the same keys, so running it again finishes the launch without creating anything twice.
+
+Do not set `utm_source`, `utm_medium`, `utm_content`, `wacid`, `waid`, `wasid`: Whop reserves them.
 
 ### 2 · Winback
 

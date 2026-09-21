@@ -8,6 +8,7 @@ import { setNow } from "../src/format.ts";
 import { listView } from "../src/views/list.ts";
 import { detailView } from "../src/views/detail.ts";
 import { changesFor, confirmView, currentSummary, refusedView } from "../src/views/confirm.ts";
+import { buildLaunch, launchDoneView, launchView, parseLaunchArgs } from "../src/views/launch.ts";
 import { errorView } from "../src/views/error.ts";
 import { helpView, parseHelp } from "../src/views/help.ts";
 import { homeView } from "../src/views/home.ts";
@@ -123,6 +124,14 @@ const record0 = (name: string): Rec => {
   const p = envelope(name);
   return p.ok && "record" in p.payload ? p.payload.record : {};
 };
+
+const LAUNCH_NOW = new Date("2026-09-21T12:00:00Z");
+const LAUNCH_ARGV = ["gtm", "launch", "prod_iQ2Zub6GFQS5Q", "--budget", "40", "--creative", "file_x1", "--idempotency-key", "5b2c1d6e-0000-4000-8000-000000000002"];
+const LAUNCH_OPTS = parseLaunchArgs(LAUNCH_ARGV, LAUNCH_NOW).opts!;
+/** The recorded account: no page, no payment method, so the ad steps block. */
+export const LAUNCH_BLOCKED = buildLaunch(LAUNCH_ARGV, LAUNCH_OPTS, { product: record0("products.get"), preferences: record0("accounts.preferences"), social: [], reach: { error: "No connected Meta account" }, accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion", cap: 500, now: LAUNCH_NOW });
+/** The same launch on an account that is set up. */
+export const LAUNCH_READY = buildLaunch(LAUNCH_ARGV, LAUNCH_OPTS, { product: record0("products.get"), preferences: { ads_reporting_currency: "usd", ads_payment_methods: [{ id: "pm_1", brand: "visa", last4: "4242" }] }, social: [{ id: "sacc_x1", platform: "facebook", name: "Hypermotion", username: "hypermotion" }], reach: { lower: 1_500_000, upper: 1_800_000 }, accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion", cap: 2000, now: LAUNCH_NOW });
 
 export const synth = (data: unknown) => parseEnvelope(JSON.stringify({ ok: true, data, meta: { command: "synthetic", duration: "1ms" } }));
 const synthPage = (rows: unknown[]) => synth({ data: rows, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } });
@@ -291,6 +300,11 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "confirm.payout.sandbox": (t) => confirmView({ ...PAYOUT, mode: "sandbox", destination: "Chase checking ••••4242  potk_x1", balance: { available: 418.56, currency: "usd" } }, t),
   "confirm.payout.over_cap": (t) => refusedView({ ...PAYOUT, argv: ["payouts", "create", "--amount", "2000", "--currency", "usd", "--payout_method_id", "potk_x1"], reason: "cap", destination: "Chase checking ••••4242  potk_x1", balance: { available: 2418.56, currency: "usd" }, cap: 500 }, t),
   "confirm.payout.over_balance": (t) => refusedView({ ...PAYOUT, reason: "balance", destination: "Chase checking ••••4242  potk_x1", balance: { available: 18.56, currency: "usd" }, cap: 500 }, t),
+  "launch.blocked": (t) => launchView(LAUNCH_BLOCKED, t),
+  "launch.ready": (t) => launchView(LAUNCH_READY, t),
+  "launch.plan_only": (t) => launchView(LAUNCH_READY, t, { planOnly: true }),
+  "launch.done": (t) => launchDoneView(LAUNCH_READY, { promo: { id: "promo_x1", code: "LAUNCH20", status: "active" }, checkout: { id: "chk_x1", purchase_url: "https://whop.com/checkout/chk_x1" }, campaign: { id: "adcamp_x1", status: "paused" }, ad: { id: "ad_x1", status: "in_review" } }, undefined, t),
+  "launch.stopped": (t) => launchDoneView(LAUNCH_READY, { promo: { id: "promo_x1", code: "LAUNCH20", status: "active" }, checkout: { id: "chk_x1", purchase_url: "https://whop.com/checkout/chk_x1" } }, { step: "campaign", message: "No ads payment method" }, t),
   "confirm.update.diff": (t) => {
     const rec = record0("products.get");
     const argv = ["products", "update", "prod_iQ2Zub6GFQS5Q", "--title", "Hypermotion Pro", "--headline", "Words, into motion.", "--idempotency-key", "5b2c1d6e-0000-4000-8000-000000000001"];

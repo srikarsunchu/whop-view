@@ -23,9 +23,12 @@ import { detailView } from "./views/detail.ts";
 import { amountMatcher, changesFor, confirmView, currentSummary, describeMethod, flagsToRecord, limitFor, moneyOf, refusedView, speedOf, type Balance, type ConfirmInput, type RefusedInput, type WhopLimit } from "./views/confirm.ts";
 import { money } from "./format.ts";
 import { adPlanView, adRefusedView, budgetOf, commitment, isAdPlan, jsonFlags, reachArgv, treeFromArgv, type AdPlanInput, type AdTree, type Reach } from "./views/adplan.ts";
+import { doneChecks } from "./views/launch.ts";
 import { errorView } from "./views/error.ts";
 import { helpView, parseHelp } from "./views/help.ts";
 import { manifest, manifestData, manifestIndex, manifestIndexData, type VerbSchema, type VerbsByGroup } from "./views/manifest.ts";
+import { adGroupFor, buildLaunch, launchData, launchDoneView, launchView, parseLaunchArgs, substitute, type LaunchPlan, type LaunchReads, type StepKey } from "./views/launch.ts";
+import { randomUUID } from "node:crypto";
 import { homeView } from "./views/home.ts";
 import { gtmData, gtmView, type GtmInput } from "./views/gtm.ts";
 import { blocked, checks, doctorData, doctorView, DOCTOR_ACTIONS, type DoctorInput } from "./views/doctor.ts";
@@ -158,6 +161,7 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
     print(lines!);
     process.exit(0);
   }
+  if (argv[0] === "gtm" && argv[1] === "launch") return launchPiped(argv, mode, env, plan);
   // Two screens are data as well as pictures. The rest draw and need a terminal.
   if (DATA_SCREENS.has(argv[0])) process.exit(await screenJson(argv[0], mode, env));
   if (OURS.has(argv[0])) emit(wvErrorEnvelope(argv, mode, { code: "NEEDS_TERMINAL", message: copy.agent.needsTerminal(argv[0]) }), 2);
@@ -219,6 +223,134 @@ async function agentManifest(group?: string, json = false): Promise<string[] | n
   const input = { group, desc: entry.desc, verbs, version, api: root.api };
   return json ? asJson(manifestData(input)) : manifest(input);
 }
+
+/** `--idempotency-key <base>` on the launch argv, minted here when absent, so every step's key survives into the rerun. */
+function launchArgvWithKey(argv: string[]): string[] {
+  return argv.some((a) => a === "--idempotency-key" || a.startsWith("--idempotency-key=")) ? argv : [...argv, "--idempotency-key", randomUUID()];
+}
+
+/** The reads behind the launch card: identity, the product, ads preferences, connected pages, and one reach estimate. */
+async function launchReads(opts: NonNullable<ReturnType<typeof parseLaunchArgs>["opts"]>, env: NodeJS.ProcessEnv, mode: Mode, live: boolean): Promise<LaunchReads> {
+  const record = async (argv: string[]): Promise<Rec | undefined> => {
+    const { parsed } = await run(argv, env);
+    return parsed.ok && "record" in parsed.payload ? parsed.payload.record : undefined;
+  };
+  const wantsAds = opts.budget !== undefined;
+  const group = adGroupFor(opts, "");
+  const estimate = wantsAds ? reachArgv(group, "meta") : undefined;
+  const [acct, product, preferences, socialParsed, reachParsed] = await Promise.all([
+    identity(env),
+    record(["products", "get", opts.product]),
+    record(["accounts", "preferences"]),
+    wantsAds ? run(["social-accounts", "list"], env) : undefined,
+    estimate ? run(estimate, env) : undefined,
+  ]);
+  const social = socialParsed?.parsed.ok && socialParsed.parsed.payload.kind === "page" ? socialParsed.parsed.payload.rows : undefined;
+  let reach: Reach | undefined;
+  if (reachParsed) {
+    const r = reachParsed.parsed;
+    if (!r.ok) reach = { error: r.error.message };
+    else if ("record" in r.payload) reach = { lower: typeof r.payload.record.users_lower_bound === "number" ? r.payload.record.users_lower_bound : undefined, upper: typeof r.payload.record.users_upper_bound === "number" ? r.payload.record.users_upper_bound : undefined };
+  }
+  return { product, preferences, social, reach, accountTitle: acct?.title, accountId: acct?.id, mode, cap: live && wantsAds ? adCapFrom() : undefined };
+}
+
+/** Runs the plan's steps in order, feeding each result into the next. Stops at the first failure. */
+async function runLaunch(plan: LaunchPlan, env: NodeJS.ProcessEnv, onStep?: (key: StepKey) => void): Promise<{ results: Partial<Record<StepKey, Rec>>; failed?: { step: StepKey; message: string; code: string } }> {
+  const results: Partial<Record<StepKey, Rec>> = {};
+  for (const step of plan.steps) {
+    if (step.skipped) continue;
+    onStep?.(step.key);
+    const { parsed } = await run(substitute(step.argv, results), env);
+    if (!parsed.ok) return { results, failed: { step: step.key, message: parsed.error.message.split("\n")[0], code: parsed.error.code } };
+    results[step.key] = "record" in parsed.payload ? parsed.payload.record : {};
+  }
+  return { results };
+}
+
+/** `wv gtm launch` in a terminal: the card, one typed approval for the whole sequence, then the run. */
+async function launchTerminal(argvIn: string[], theme: Theme, mode: Mode, env: NodeJS.ProcessEnv, planOnly: boolean): Promise<Outcome> {
+  const split = splitApprove(argvIn);
+  const yesFlag = split.argv.includes("--yes");
+  const argv = launchArgvWithKey(split.argv.filter((a) => a !== "--yes"));
+  const parsed = parseLaunchArgs(argv);
+  if (!parsed.opts) {
+    print(errorView({ code: "VALIDATION_ERROR", message: parsed.error ?? "" }, theme));
+    return { code: 2 };
+  }
+  if (split.token !== undefined) {
+    const verdict = checkApproval(split.token, argv, mode, approveSecret());
+    if (verdict !== "ok") {
+      print(errorView({ code: verdict === "expired" ? "APPROVAL_EXPIRED" : "APPROVAL_INVALID", message: verdict === "expired" ? copy.agent.approvalExpired : copy.agent.approvalInvalid }, theme));
+      return { code: 2 };
+    }
+  }
+  const approved = yesFlag || split.token !== undefined;
+  const live = mode !== "sandbox" && !planOnly;
+  const spin = spinner(copy.spinner.launch, theme);
+  const reads = await launchReads(parsed.opts, env, mode, live).finally(() => spin.stop());
+  const plan = buildLaunch(argv, parsed.opts, reads);
+  if (planOnly) {
+    print(launchView(plan, theme, { planOnly: true }));
+    return { code: 0 };
+  }
+  if (plan.blockers.length) {
+    print(launchView(plan, theme));
+    return { code: 2 };
+  }
+  if (!approved) {
+    print(launchView(plan, theme));
+    const budget = live ? plan.opts.budget : undefined;
+    const shown = budget !== undefined ? money(budget, plan.currency).replace(/^[^\d]+/, "") : "";
+    const accept = budget !== undefined ? { test: amountMatcher(budget), hint: copy.confirm.amountNo(shown) } : undefined;
+    const timeoutSeconds = live ? timeoutFrom() : undefined;
+    const answer = await prompt(budget !== undefined ? copy.launch.typeBudget(shown) : copy.confirm.question, theme, { timeoutMs: timeoutSeconds ? timeoutSeconds * 1000 : undefined, accept });
+    if (answer !== "yes") {
+      print([" " + (answer === "timeout" && timeoutSeconds ? copy.confirm.expired(timeoutSeconds) : copy.confirm.aborted)]);
+      return { code: 130 };
+    }
+    print([""]);
+  }
+  const stepSpin = spinner("", theme);
+  const run0 = await runLaunch(plan, env, (k) => stepSpin.update(copy.spinner.launchStep(copy.launch.stepLabels[k]))).finally(() => stepSpin.stop());
+  print(launchDoneView(plan, run0.results, run0.failed, theme));
+  return { code: run0.failed ? 1 : 0, group: "gtm" };
+}
+
+/** `wv gtm launch` in a pipe: one envelope for the whole sequence, one rerun, then the results as data. */
+async function launchPiped(argvIn: string[], mode: Mode, env: NodeJS.ProcessEnv, planOnly: boolean): Promise<never> {
+  const split = splitApprove(argvIn);
+  const yesFlag = split.argv.includes("--yes");
+  const argv = launchArgvWithKey(split.argv.filter((a) => a !== "--yes"));
+  const parsed = parseLaunchArgs(argv);
+  if (!parsed.opts) emit(wvErrorEnvelope(argv, mode, { code: "VALIDATION_ERROR", message: parsed.error ?? "" }), 2);
+  const opts = parsed.opts!;
+  if (split.token !== undefined && !planOnly) {
+    const verdict = checkApproval(split.token, argv, mode, approveSecret());
+    if (verdict !== "ok") emit(approvalEnvelope(argv, mode, verdict), 2);
+  }
+  const approved = yesFlag || split.token !== undefined;
+  const live = mode !== "sandbox" && !planOnly;
+  const plan = buildLaunch(argv, opts, await launchReads(opts, env, mode, live));
+  const data = launchData(plan);
+  if (planOnly) emit(planEnvelope(argv, mode, data), 0);
+  if (plan.blockers.length) emit(envelopeWith(argv, mode, { ok: false, error: { code: "LAUNCH_BLOCKED", message: copy.launch.blockedMessage, hint: plan.blockers.join(" ") }, plan: data }), 2);
+  if (!approved) {
+    const ttlSeconds = approveTtlFrom();
+    emit(confirmationEnvelope(argv, mode, data, { token: mintApproval(argv, mode, approveSecret(), Math.floor(Date.now() / 1000) + ttlSeconds), ttlSeconds }), 2);
+  }
+  const r = await runLaunch(plan, env);
+  const results: Rec = {};
+  for (const [k, v] of Object.entries(r.results)) results[k] = { id: v?.id, code: v?.code, status: v?.status, purchase_url: v?.purchase_url };
+  const body: Omit<AgentEnvelope, "meta"> & Rec = r.failed
+    ? { ok: false, error: { code: r.failed.code, message: r.failed.message, hint: copy.launch.resume }, results, failed: r.failed.step, rerun: ["wv", ...argv, "--yes"] }
+    : { ok: true, results, next: doneChecksData(plan, r.results) };
+  return emit(envelopeWith(argv, mode, body), r.failed ? agentExitCode(1, JSON.stringify(r.failed)) : 0);
+}
+
+const doneChecksData = (plan: LaunchPlan, results: Partial<Record<StepKey, Rec>>) => doneChecks(plan, results).map((c) => ({ what: c.label, run: c.argv }));
+
+const envelopeWith = (argv: string[], mode: Mode, body: Omit<AgentEnvelope, "meta"> & Rec): AgentEnvelope => ({ ...body, meta: { command: argv.slice(0, 2).join(" "), wrapper: "wv", mode } });
 
 /** wv screens that have a JSON face: `--format json`, or any pipe. */
 const DATA_SCREENS = new Set(["doctor", "gtm"]);
@@ -327,6 +459,7 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
     return { code: 0 };
   }
   if (group === "home") return home(theme, mode);
+  if (group === "gtm" && verb === "launch") return launchTerminal(argv, theme, mode, env, !!opts.plan);
   if (group === "gtm") return gtm(theme, mode);
   if (group === "doctor") return doctor(theme, mode);
   if (group === "sandbox") {

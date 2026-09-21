@@ -1,0 +1,32 @@
+ ▌ Launch a product                                         writes to production
+
+   wv gtm launch prod_iQ2Zub6GFQS5Q --budget 40 --creative file_x1
+   --idempotency-key 5b2c1d6e-0000-4000-8000-000000000002
+
+   product     Hypermotion  prod_iQ2Zub6GFQS5Q
+   spend       $40.00/day · $1,200.00 over 30 days · no end date
+   reach       1.5M–1.8M people on meta
+   pays from   the account's ads payment method
+   runs under  Hypermotion (facebook) @hypermotion
+   cap         $2,000.00 committed spend per plan from wv
+   from        Hypermotion  biz_VraUMckluH8dzV
+
+ ── Steps ──────────────────────────────────────────────────────────────────────
+   1  promo code     LAUNCH20 · 20% off · new customers · 7 days
+                     runs  whop promo-codes create --account_id biz_VraUMckluH…
+   2  checkout link  Creator — 1,000 credits · $29.00/mo · tagged with the
+                     campaign
+                     runs  whop checkout-configurations create --account_id bi…
+   3  campaign       Meta · sales · budget on the ad group
+                     runs  whop ad-campaigns create --title 'Launch · Hypermot…
+   4  ad             1 creative · US · ages 25–44 · destination is the checkout
+                     link
+                     runs  whop ads create --title 'Launch · Hypermotion · v1'…
+
+   4 writes run in order against production, each with its own idempotency key.
+   A step that fails stops the rest; what was created stays, and the card names
+   it.
+
+ every argv  wv gtm launch prod_iQ2Zub6GFQS5Q --budget 40 --creative file_x1
+             --idempotency-key 5b2c1d6e-0000-4000-8000-000000000002 --plan | cat
+

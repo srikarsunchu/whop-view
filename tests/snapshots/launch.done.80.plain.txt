@@ -1,0 +1,15 @@
+ ▌ Launched
+
+   promo code     LAUNCH20  promo_x1  active
+   checkout link  chk_x1  https://whop.com/checkout/chk_x1
+   campaign       adcamp_x1  paused
+   ad             ad_x1  in_review
+
+ promo  whop promo-codes get promo_x1 --format json
+ checkout  open https://whop.com/checkout/chk_x1
+ campaign  whop ad-campaigns get adcamp_x1 --format json
+ ad  whop ads get ad_x1 --format json
+ spend tomorrow  wv stats get ad_delivery --last 1d --source 'whop:adcamp_x1:*'
+                 --metric spend --format json
+ the funnel  wv gtm
+

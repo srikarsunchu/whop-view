@@ -40,10 +40,14 @@ case "$1 $2" in
   "auth status") fx auth.status.json ;;
   "ledgers report") fx ledgers.report.json ;;
   "payouts methods") fx "\${WV_FAKE_METHODS:-payouts.methods.limits.json}" ;;
-  "accounts preferences") fx accounts.preferences.json ;;
-  "social-accounts list") fx social-accounts.list.json ;;
+  "accounts preferences") [ -n "$WV_FAKE_READY" ] && { echo '{"ok":true,"data":{"ads_payment_methods":[{"id":"pm_1","brand":"visa","last4":"4242"}],"ads_reporting_currency":"usd","economic_intelligence":true},"meta":{"command":"accounts preferences","duration":"1ms"}}'; exit 0; }; fx accounts.preferences.json ;;
+  "social-accounts list") [ -n "$WV_FAKE_READY" ] && { echo '{"ok":true,"data":{"data":[{"id":"sacc_1","platform":"facebook","name":"Hypermotion","username":"hypermotion"}],"page_info":{"start_cursor":null,"end_cursor":null,"has_next_page":false,"has_previous_page":false}},"meta":{"command":"social-accounts list","duration":"1ms"}}'; exit 0; }; fx social-accounts.list.json ;;
+  "promo-codes create") echo '{"ok":true,"data":{"id":"promo_1","code":"LAUNCH20","status":"active"},"meta":{"command":"promo-codes create","duration":"1ms"}}'; exit 0 ;;
+  "checkout-configurations create") echo '{"ok":true,"data":{"id":"chk_1","purchase_url":"https://whop.com/checkout/chk_1"},"meta":{"command":"checkout-configurations create","duration":"1ms"}}'; exit 0 ;;
+  "ad-campaigns create") [ -n "$WV_FAKE_CAMPAIGN_FAILS" ] && { echo '{"ok":false,"error":{"code":"HTTP_422","message":"No ads payment method"},"meta":{"command":"ad-campaigns create","duration":"1ms"}}'; exit 1; }; echo '{"ok":true,"data":{"id":"adcamp_1","status":"paused"},"meta":{"command":"ad-campaigns create","duration":"1ms"}}'; exit 0 ;;
+  "ads create") echo '{"ok":true,"data":{"id":"ad_1","status":"in_review"},"meta":{"command":"ads create","duration":"1ms"}}'; exit 0 ;;
   "ad-groups estimate_reach") echo '{"ok":false,"error":{"code":"HTTP_400","message":"no estimate"},"meta":{"command":"ad-groups estimate_reach","duration":"1ms"}}'; exit 1 ;;
-  "payouts create"|"products update"|"products frobnicate"|"ads create") echo '{"ok":true,"data":{"id":"fake_1"},"meta":{"command":"'"$1 $2"'","duration":"1ms"}}'; exit 0 ;;
+  "payouts create"|"products update"|"products frobnicate") echo '{"ok":true,"data":{"id":"fake_1"},"meta":{"command":"'"$1 $2"'","duration":"1ms"}}'; exit 0 ;;
 esac
 echo '{"code":"COMMAND_NOT_FOUND","message":"nope"}'
 exit 1
@@ -350,4 +354,75 @@ test("agent: the index carries every verb with its kind, and --format json is th
   const group = wv(["agent", "nope", "--format", "json"], env);
   assert.equal(group.status, 2);
   assert.equal(envelopeOf(group).error?.code, "COMMAND_NOT_FOUND");
+});
+
+// `wv gtm launch`: four writes as one plan, one approval, one rerun, results fed forward.
+const LAUNCH = ["gtm", "launch", "prod_iQ2Zub6GFQS5Q", "--budget", "40", "--creative", "file_a", "--idempotency-key", "base"];
+// $40 a day commits $1,200 over 30 days, over the default $500 ad cap; these tests are about the steps, so the cap is off.
+const launchEnv = (extra: NodeJS.ProcessEnv = {}) => gateEnv({ WV_AD_CAP: "none", ...extra });
+
+test("launch: --plan is the four steps as data, keys derived from one base, later steps referencing earlier results", () => {
+  const r = wv([...LAUNCH, "--plan"], launchEnv({ WV_FAKE_READY: "1" }));
+  assert.equal(r.status, 0);
+  const e = envelopeOf(r);
+  const plan = e.plan as { steps: { key: string; command: string; argv: string[]; skipped?: string }[]; blockers: string[]; commitment: { total: number }; product: { planId: string } };
+  assert.deepEqual(plan.steps.map((s) => s.key), ["promo", "checkout", "campaign", "ad"]);
+  assert.deepEqual(plan.blockers, []);
+  assert.equal(plan.commitment.total, 1200);
+  assert.equal(plan.product.planId, "plan_ozEZmitgc8tjB");
+  for (const s of plan.steps) assert.ok(s.argv.includes(`base-${s.key}`), `${s.key} carries its own key`);
+  assert.ok(plan.steps[3].argv.includes("{checkout.purchase_url}"), "the ad's destination is the checkout link the plan creates");
+  assert.match(plan.steps[3].argv.find((a) => a.startsWith("{\"ad_campaign_id\"")) ?? "", /\{campaign\.id\}/);
+  assert.equal(wroteTo(r, "promo-codes create"), false);
+});
+
+test("launch: without a page or a payment method the ad steps block the launch; without --budget they are skipped and it proceeds", () => {
+  const blocked = wv(LAUNCH, gateEnv());
+  assert.equal(blocked.status, 2);
+  const e = envelopeOf(blocked);
+  assert.equal(e.error?.code, "LAUNCH_BLOCKED");
+  assert.equal(e.rerun, undefined);
+  assert.equal((e.plan as { blockers: string[] }).blockers.length, 3, "no page, no payment method, and the default $500 cap against a $1,200 commitment");
+  assert.equal((envelopeOf(wv(LAUNCH, launchEnv())).plan as { blockers: string[] }).blockers.length, 2);
+  const promoOnly = envelopeOf(wv(["gtm", "launch", "prod_iQ2Zub6GFQS5Q"], gateEnv()));
+  assert.equal(promoOnly.error?.code, "CONFIRMATION_REQUIRED");
+  const steps = (promoOnly.plan as { steps: { key: string; skipped?: string }[] }).steps;
+  assert.deepEqual(steps.filter((s) => !s.skipped).map((s) => s.key), ["promo", "checkout"]);
+  assert.equal(promoOnly.rerun?.at(-2), "--approve");
+});
+
+test("launch: the approved rerun runs the steps in order, feeding ids forward, and reports what it made", () => {
+  const env = launchEnv({ WV_FAKE_READY: "1" });
+  const asked = envelopeOf(wv(LAUNCH, env));
+  assert.equal(asked.error?.code, "CONFIRMATION_REQUIRED");
+  const ran = wv(asked.rerun!.slice(1), env);
+  assert.equal(ran.status, 0, ran.stdout + ran.stderr);
+  const done = envelopeOf(ran) as ReturnType<typeof envelopeOf> & { results: Record<string, { id: string; purchase_url?: string }>; next: { what: string; run: string[] }[] };
+  assert.equal(done.ok, true);
+  assert.deepEqual(Object.keys(done.results), ["promo", "checkout", "campaign", "ad"]);
+  assert.equal(done.results.checkout.purchase_url, "https://whop.com/checkout/chk_1");
+  const args = ran.stderr.split("\n").filter((l) => l.startsWith("ARGS: ")).map((l) => l.slice(6));
+  const order = args.filter((a) => / create /.test(a)).map((a) => a.split(" ").slice(0, 2).join(" "));
+  assert.deepEqual(order, ["promo-codes create", "checkout-configurations create", "ad-campaigns create", "ads create"]);
+  const ad = args.find((a) => a.startsWith("ads create"))!;
+  assert.match(ad, /--url https:\/\/whop\.com\/checkout\/chk_1 /, "the checkout link fed the ad");
+  assert.match(ad, /"ad_campaign_id":"adcamp_1"/, "the campaign id fed the ad group");
+  assert.match(ad, /--idempotency-key base-ad/);
+  assert.ok(done.next.some((n) => n.run.join(" ").includes("ad-campaigns get adcamp_1")), "done-when names the ids it made");
+  // Approve the same plan against a different budget: refused.
+  const edited = wv(asked.rerun!.slice(1).map((a) => (a === "40" ? "400" : a)), env);
+  assert.equal(envelopeOf(edited).error?.code, "APPROVAL_INVALID");
+});
+
+test("launch: a step that fails stops the run and names what was made and what was not", () => {
+  const env = launchEnv({ WV_FAKE_READY: "1", WV_FAKE_CAMPAIGN_FAILS: "1" });
+  const r = wv([...LAUNCH, "--yes"], env);
+  assert.equal(r.status, 3, "the failing step's code decides the exit");
+  const e = envelopeOf(r) as ReturnType<typeof envelopeOf> & { results: Record<string, unknown>; failed: string };
+  assert.equal(e.ok, false);
+  assert.equal(e.error?.code, "HTTP_422");
+  assert.deepEqual(Object.keys(e.results), ["promo", "checkout"]);
+  assert.equal(e.failed, "campaign");
+  assert.equal(wroteTo(r, "ads create"), false, "nothing after the failure runs");
+  assert.ok(e.rerun?.includes("--idempotency-key"), "the resume carries the same keys");
 });

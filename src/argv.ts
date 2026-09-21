@@ -7,7 +7,7 @@ const PLACEHOLDER = /^<[a-z_]+>$/;
 /** POSIX single-quoting. Product titles and notes are user text and will land in a command eventually. */
 export function shellQuote(arg: string): string {
   if (arg === "") return "''";
-  if (SAFE.test(arg) || PLACEHOLDER.test(arg)) return arg;
+  if (SAFE.test(arg) || PLACEHOLDER.test(arg) || arg === "|") return arg;
   return "'" + arg.replace(/'/g, "'\\''") + "'";
 }
 

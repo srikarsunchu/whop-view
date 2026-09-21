@@ -1,0 +1,15 @@
+ [32m▌[39m [1mLaunched[22m
+
+   [2mpromo code   [22m  [32mLAUNCH20  promo_x1  active[39m
+   [2mcheckout link[22m  [32mchk_x1  https://whop.com/checkout/chk_x1[39m
+   [2mcampaign     [22m  [32madcamp_x1  paused[39m
+   [2mad           [22m  [32mad_x1  in_review[39m
+
+ [2mpromo[22m  [2mwhop promo-codes get promo_x1 --format json[22m
+ [2mcheckout[22m  [2mopen https://whop.com/checkout/chk_x1[22m
+ [2mcampaign[22m  [2mwhop ad-campaigns get adcamp_x1 --format json[22m
+ [2mad[22m  [2mwhop ads get ad_x1 --format json[22m
+ [2mspend tomorrow[22m  [2mwv stats get ad_delivery --last 1d --source 'whop:adcamp_x1:*'[22m
+                 [2m--metric spend --format json[22m
+ [2mthe funnel[22m  [2mwv gtm[22m
+

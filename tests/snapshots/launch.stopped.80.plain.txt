@@ -1,0 +1,14 @@
+ ▌ Stopped
+
+   promo code     LAUNCH20  promo_x1  active
+   checkout link  chk_x1  https://whop.com/checkout/chk_x1
+   campaign       failed · No ads payment method
+   ad             not run
+
+   Rerun the same command to resume: every step carries its idempotency key, so
+   the finished ones return what they made.
+
+ promo  whop promo-codes get promo_x1 --format json
+ checkout  open https://whop.com/checkout/chk_x1
+ the funnel  wv gtm
+
