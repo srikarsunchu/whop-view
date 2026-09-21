@@ -176,11 +176,25 @@ Nothing new. `wv` execs `whop` with the original argv whenever any of these hold
 
 `wv products list | cat` is byte-identical to `whop products list`. There is a test for it.
 
+### `home`
+
+```
+ Frame › biz_VraUMckluH8dzV › sunchusrikar · oauth › API 2026-09-15 › $18.56 available
+
+ Net revenue · 7d  $9.28  ▁▁█▁▁▁▁
+                   Sep 14 to Sep 20
+
+ auth status · ledgers report --report_type balance_summary · stats get net_revenue --from 2026-09-14 …
+```
+
+![home](demo/home.gif)
+
+Three commands, one screen. The first line is a status line: account, profile and auth method, API version, balance. The footer names every command that produced it.
+
 ## Other views
 
 - `wv` alone renders the 51 groups the way `whop --help` orders them, two columns at 120 and one at 80.
 - `wv <group>` renders that group's verbs.
-- `wv home` renders identity, balance, and a seven-day net revenue sparkline from three commands, with the commands in the footer.
 - `--width N` overrides the terminal width. `NO_COLOR` strips every escape.
 
 ## How it generalizes

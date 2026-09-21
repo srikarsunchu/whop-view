@@ -4,4 +4,7 @@
  [1mNet revenue · 7d[22m  $18.56  █▁▁█▁▁▁
                    [2mSep 12 to Sep 18[22m
 
- [2mauth status · ledgers report --report_type balance_summary · stats get net_rev…[22m
+ [2mjson[22m  [2mwhop auth status --format json[22m
+ [2m    [22m  [2mwhop ledgers report --report_type balance_summary --format json[22m
+ [2m    [22m  [2mwhop stats get net_revenue --from 2026-09-12 --to 2026-09-18 --interval[22m
+       [2mday --format json[22m

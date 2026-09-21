@@ -2,7 +2,7 @@
 
  [2mkey                                 [22m  [2mname                        [22m  [2munit[22m
  account_balance                       Total balance                 currency
- [2mad_delivery                         [22m  Ad delivery                   currency
+ ad_delivery                           Ad delivery                   currency
  ad_spend                              Ad spend                      currency
  affiliate_fees                        Affiliate fees                currency
  annual_recurring_revenue              ARR                           currency
@@ -28,7 +28,7 @@
  disputes                              Disputes                      count
  events                                Events                        currency
  fees                                  Fees                          currency
- [2mgross_earnings                      [22m  Gross earnings                currency
+ gross_earnings                        Gross earnings                currency
  gross_revenue                         Gross revenue                 currency
  gross_transaction_value               GMV                           currency
  market_prices                         Market prices                 currency
@@ -81,13 +81,13 @@
  swap_markup_revenue                   Swap markup revenue           currency
  total_markup_revenue                  Total markup revenue          currency
  total_net_earnings                    Total net earnings            currency
- [2mtotal_refunded                      [22m  Total refunded                currency
+ total_refunded                        Total refunded                currency
  traffic_events                        Traffic events                count
  traffic_people                        Traffic people                count
  transfer_count                        Transfer count                count
  transfer_markup_revenue               Transfer markup revenue       currency
  trial_conversion_rate                 Trial conversion rate         percent
- [2musers_breakdown                     [22m  Users breakdown               count
+ users_breakdown                       Users breakdown               count
  users_growth                          Active members                count
  whop_processing_fees                  Whop processing fees          currency
  withdrawal_markup_revenue             Withdrawal markup revenue     currency

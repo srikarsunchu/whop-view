@@ -15,9 +15,8 @@
    [2mupdated[22m  Sep 16, 2026 00:06 UTC · 4d ago
 
  [2m── [22m[1mRelations[22m[2m ──────────────────────────────────────────────────────────────────[22m
-   [2maccount           [22m  Hypermotion  biz_VraUMckluH8dzV
-   [2mowner user        [22m  sri @designedbysri  user_ICLAwIXM9zFfz
-   [2mmarketplace status[22m  [2mnot_available[22m
+   [2maccount   [22m  Hypermotion  biz_VraUMckluH8dzV
+   [2mowner user[22m  sri @designedbysri  user_ICLAwIXM9zFfz
 
  [2m── [22m[1mDetails[22m[2m ────────────────────────────────────────────────────────────────────[22m
    [2mheadline                   [22m  Words, into motion.
@@ -32,5 +31,6 @@
    [2mglobal affiliate status    [22m  enabled
    [2mmember affiliate percentage[22m  0
    [2mmember affiliate status    [22m  disabled
+   [2mmarketplace status         [22m  not_available
 
  [2mjson[22m  [2mwhop products get prod_iQ2Zub6GFQS5Q --format json[22m

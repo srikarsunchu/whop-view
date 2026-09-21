@@ -48,7 +48,8 @@ export function homeView(input: HomeInput, theme: Theme): string[] {
   out.push(" " + paint(theme, "accent", title) + "  " + (first ? first[0] + "  " + first[1] : ""));
   if (second) out.push(" " + " ".repeat(width(title) + 2) + paint(theme, "muted", second[0] + (second[1] ? "  " + second[1] : "")));
   out.push("");
-  out.push(...footer([input.commands.join(" · ")], theme));
+  // One teaching line per command, so none of the three is ever truncated away.
+  out.push(...footer(input.commands.map((c, i): [string, string] => [i === 0 ? copy.list.json : " ".repeat(copy.list.json.length), `whop ${c} --format json`]), theme));
   return out;
 }
 

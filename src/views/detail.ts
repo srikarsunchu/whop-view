@@ -1,5 +1,5 @@
 import type { Rec } from "../envelope.ts";
-import { infer, labelFor, type Cell } from "../infer.ts";
+import { ID_RE, infer, labelFor, type Cell } from "../infer.ts";
 import type { Hints } from "../hints.ts";
 import { kv, type KvRow, type KvSection } from "../primitives/kv.ts";
 import { footer } from "../primitives/footer.ts";
@@ -22,7 +22,7 @@ export function detailView(input: DetailInput, theme: Theme): string[] {
   const primaryKey = hints.primary ?? ["title", "name", "key"].find((k) => typeof record[k] === "string");
   const raw = primaryKey && typeof record[primaryKey] === "string" ? (record[primaryKey] as string) : "";
   // An id is not a title. Fall back to the resource noun and let the id show in the header.
-  const title = /^[a-z]{2,5}_[A-Za-z0-9]{8,}$/.test(raw) ? "" : raw;
+  const title = ID_RE.test(raw) ? "" : raw;
   const id = typeof record.id === "string" ? record.id : "";
 
   for (const [key, value] of Object.entries(record)) {
@@ -39,8 +39,8 @@ export function detailView(input: DetailInput, theme: Theme): string[] {
   out.push(" " + head);
   out.push("");
   const kvSections: KvSection[] = (Object.keys(sections) as (keyof typeof sections)[]).map((k) => ({ title: copy.detail.sections[k], rows: sections[k] }));
-  out.push(...kv(kvSections, theme));
-  out.push("");
+  const body = kv(kvSections, theme);
+  if (body.length) out.push(...body, "");
   out.push(...footer([[copy.list.json, ["whop", ...argv, "--format", "json"].join(" ")]], theme));
   return out;
 }

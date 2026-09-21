@@ -1,7 +1,7 @@
 import type { WhopError } from "../envelope.ts";
 import { callout } from "../primitives/callout.ts";
 import { paint, type Theme } from "../tokens.ts";
-import { padEnd, width } from "../ansi.ts";
+import { padEnd, width, wrap } from "../ansi.ts";
 import { copy } from "../copy.ts";
 import { rule } from "../primitives/rule.ts";
 
@@ -42,7 +42,8 @@ export function errorView(error: WhopError, theme: Theme): string[] {
   const tag = error.durationMs != null ? `${error.durationMs}ms` : undefined;
   if (gated) {
     // omp's "update available" band: dashed rule, title, one line, dashed rule.
-    return [rule(theme, undefined, "warn", "╌"), " " + paint(theme, "warn", title), ...lines.map((l) => " " + l), rule(theme, undefined, "warn", "╌")];
+    const body = lines.flatMap((l) => wrap(l, theme.width - 1)).map((l) => " " + l);
+    return [rule(theme, undefined, "warn", "╌"), ...wrap(title, theme.width - 1).map((l) => " " + paint(theme, "warn", l)), ...body, rule(theme, undefined, "warn", "╌")];
   }
   return callout("bad", title, lines, theme, tag);
 }

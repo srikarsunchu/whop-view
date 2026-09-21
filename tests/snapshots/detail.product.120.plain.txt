@@ -15,9 +15,8 @@
    updated  Sep 16, 2026 00:06 UTC · 4d ago
 
  ── Relations ──────────────────────────────────────────────────────────────────────────────────────────────────────────
-   account             Hypermotion  biz_VraUMckluH8dzV
-   owner user          sri @designedbysri  user_ICLAwIXM9zFfz
-   marketplace status  not_available
+   account     Hypermotion  biz_VraUMckluH8dzV
+   owner user  sri @designedbysri  user_ICLAwIXM9zFfz
 
  ── Details ────────────────────────────────────────────────────────────────────────────────────────────────────────────
    headline                     Words, into motion.
@@ -30,5 +29,6 @@
    global affiliate status      enabled
    member affiliate percentage  0
    member affiliate status      disabled
+   marketplace status           not_available
 
  json  whop products get prod_iQ2Zub6GFQS5Q --format json

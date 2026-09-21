@@ -3,4 +3,6 @@
  Net revenue · 7d  $18.56  █▁▁█▁▁▁
                    Sep 12 to Sep 18
 
- auth status · ledgers report --report_type balance_summary · stats get net_revenue --from 2026-09-12 --to 2026-09-18 -…
+ json  whop auth status --format json
+       whop ledgers report --report_type balance_summary --format json
+       whop stats get net_revenue --from 2026-09-12 --to 2026-09-18 --interval day --format json

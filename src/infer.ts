@@ -26,7 +26,9 @@ export const HIDDEN = new Set([
   "last_ip", "ip_address", "user_agent", "phone", "phone_number", "phones", "icons", "issuer_identification_number",
 ]);
 
-const ID_RE = /^[a-z]{2,5}_[A-Za-z0-9]{8,}$/;
+/** Whop ids: short prefix, underscore, 8+ mixed characters with at least one digit or capital. The
+ *  capital-or-digit requirement keeps snake_case words like `tax_behavior` from reading as ids. */
+export const ID_RE = /^[a-z]{2,5}_(?=[a-z]*[A-Z0-9])[A-Za-z0-9]{8,}$/;
 /** Credentials never render, in any view. `hasSecret` is a boolean and does not match. */
 const SECRET_RE = /(^|_)(token|secret|password|private_key|client_secret)$/;
 const ISO_RE = /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
@@ -39,7 +41,15 @@ const isEmpty = (v: unknown) => v == null || v === "" || (Array.isArray(v) && v.
 const cell = (kind: Kind, short: string, long = short, role: Role = "text", align: "left" | "right" = "left", extra?: [string, string][]): Cell => ({ kind, short, long, role, align, extra });
 
 export function labelFor(key: string, hints: Hints): string {
-  return hints.labels?.[key] ?? key.replace(/_at$/, "").replace(/_id$/, "").replace(/_/g, " ");
+  return (
+    hints.labels?.[key] ??
+    key
+      .replace(/_at$/, "")
+      .replace(/_id$/, "")
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .toLowerCase()
+      .replace(/_/g, " ")
+  );
 }
 
 export function summarize(v: Rec): string {

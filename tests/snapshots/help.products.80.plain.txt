@@ -1,4 +1,4 @@
- whop products — The things you sell. Each o…  type wv products <command> --help
+ whop products — The things you sell. Each owns plans and a store page.
 
  ── COMMANDS ───────────────────────────────────────────────────────────────────
    create     Create Product

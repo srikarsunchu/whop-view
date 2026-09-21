@@ -1,8 +1,8 @@
  auth status
 
  ── Status ─────────────────────────────────────────────────────────────────────
-   loggedIn   yes
-   hasSecret  yes
+   logged in   yes
+   has secret  yes
 
  ── Relations ──────────────────────────────────────────────────────────────────
    account  Frame  biz_VraUMckluH8dzV

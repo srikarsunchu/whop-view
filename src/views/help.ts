@@ -42,11 +42,18 @@ export function parseHelp(text: string): ParsedHelp {
 
 export function helpView(parsed: ParsedHelp, theme: Theme, group?: string): string[] {
   const out: string[] = [];
+  // Header: headline, then the API version, then the hint. Each part is dropped, right to left,
+  // before the headline itself is ever truncated.
   const hint = group ? copy.help.groupHint(group) : copy.help.hint;
-  const room = theme.width - 1 - width(hint) - 2;
-  const left = paint(theme, "accent", truncate(parsed.headline, room)) + (parsed.api ? paint(theme, "muted", ` · ${copy.help.api} ${parsed.api}`) : "");
-  const gap = theme.width - 1 - width(left) - width(hint);
-  out.push(" " + left + " ".repeat(Math.max(2, gap)) + paint(theme, "muted", hint));
+  const api = parsed.api ? ` · ${copy.help.api} ${parsed.api}` : "";
+  const room = theme.width - 1;
+  let left = paint(theme, "accent", parsed.headline) + paint(theme, "muted", api);
+  let right = hint;
+  if (width(parsed.headline) + width(api) + 2 + width(hint) > room) right = "";
+  if (width(parsed.headline) + width(api) > room) left = paint(theme, "accent", parsed.headline);
+  if (width(parsed.headline) > room) left = paint(theme, "accent", truncate(parsed.headline, room));
+  const gap = room - width(left) - width(right);
+  out.push(" " + left + (right ? " ".repeat(Math.max(2, gap)) + paint(theme, "muted", right) : ""));
   out.push("");
 
   const nameW = Math.max(...parsed.groups.flatMap((g) => g.entries.map((e) => width(e.name))));
@@ -77,5 +84,30 @@ export function helpView(parsed: ParsedHelp, theme: Theme, group?: string): stri
   const L = flatten(leftBlocks);
   const R = flatten(rightBlocks);
   for (let i = 0; i < Math.max(L.length, R.length); i++) out.push(" " + padEnd(L[i] ?? "", colW) + " " + (R[i] ?? ""));
+  return out;
+}
+
+export interface HelpOption {
+  flag: string;
+  /** `<string>`, `<asc|desc>`, or undefined for a bare boolean flag. */
+  arg?: string;
+  desc: string;
+  required: boolean;
+}
+
+/** Parses the `Options:` block of `whop <group> <verb> --help`. Global options are excluded. */
+export function parseOptions(text: string): HelpOption[] {
+  const out: HelpOption[] = [];
+  let inOptions = false;
+  for (const raw of text.split("\n")) {
+    if (/^Options:?\s*$/.test(raw)) {
+      inOptions = true;
+      continue;
+    }
+    if (/^\S/.test(raw)) inOptions = false;
+    if (!inOptions) continue;
+    const m = /^\s{2,}(--[a-z][\w-]*)(?:\s+(<[^>]+>))?\s{2,}(.*)$/.exec(raw);
+    if (m) out.push({ flag: m[1], arg: m[2], desc: m[3].trim(), required: /\(required\)/.test(m[3]) });
+  }
   return out;
 }

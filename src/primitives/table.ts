@@ -7,7 +7,7 @@ export interface TableColumn {
   align: "left" | "right";
   /** Lower is kept longer under width pressure. 0 never drops. */
   priority: number;
-  /** Cap in columns. Longer cells truncate. Applied before any column is dropped. */
+  /** Cap in columns, applied only once the table is under width pressure. Longer cells truncate. */
   max?: number;
 }
 
@@ -25,15 +25,17 @@ export interface TableResult {
 
 export function table(columns: TableColumn[], rows: Record<string, TableCell>[], theme: Theme): TableResult {
   let cols = [...columns];
-  const natural = () => cols.map((c) => Math.min(c.max ?? Infinity, Math.max(width(c.label), ...rows.map((r) => width(r[c.key]?.text ?? "")))));
+  const natural = (capped: boolean) => cols.map((c) => Math.min(capped ? (c.max ?? Infinity) : Infinity, Math.max(width(c.label), ...rows.map((r) => width(r[c.key]?.text ?? "")))));
   const total = (w: number[]) => w.reduce((a, b) => a + b, 0) + GUTTER * (w.length - 1) + 1;
 
-  let widths = natural();
+  // Room to spare: every cell shows in full, ids included.
+  let widths = natural(false);
+  if (total(widths) > theme.width) widths = natural(true);
   while (total(widths) > theme.width && cols.length > 1) {
     const droppable = cols.filter((c) => c.priority > 0).sort((a, b) => b.priority - a.priority)[0];
     if (!droppable) break;
     cols = cols.filter((c) => c !== droppable);
-    widths = natural();
+    widths = natural(true);
   }
   // Still too wide: shrink the widest left-aligned column (the primary is usually it).
   while (total(widths) > theme.width) {
