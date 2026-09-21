@@ -211,7 +211,7 @@ Bare ids in relations are looked up only if the hints say `resolve: true` for th
    speed      standard
    from       Hypermotion  biz_VraUMckluH8dzV
 
-   The Whop CLI has no sandbox or dry-run. This moves real money.
+   This runs against production. The Whop CLI has no dry-run. This moves real money.
 
  Run it? [y/N]
 ```
@@ -274,6 +274,7 @@ Three calls run in parallel: `auth status`, `ledgers report --report_type balanc
 - Keys ending in `token`, `secret`, `password`, or `private_key` never render. `apps get` returns a live preview JWT.
 - Payments carry a full billing address. It is hidden by hint. Emails and card display names stay, since a merchant looking at one payment needs them.
 - Nested objects without a name flatten two levels in detail, so `verification` shows `individual status  verified` instead of `2 fields`.
+- Whop's CLI docs say there is no sandbox. The API spec lists `sandbox-api.whop.com`, the binary supports `WHOP_API_BASE_URL`, and that host answers like production but rejects an OAuth token with 401. So: a sandbox exists, the CLI does not expose it, and there is no dry-run flag. The confirm view says "runs against production" rather than "no sandbox".
 - The API occasionally answers a valid `get` with an HTML page. That renders as "Not a JSON response" rather than a raw doctype.
 
 - `payments list` does not exist. Payments hints target `payments status <id>`. The payments feed is `ledgers list`.

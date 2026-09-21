@@ -7,5 +7,5 @@
    title       Frame Pro
    visibility  hidden
 
-   The Whop CLI has no sandbox or dry-run.
+   This runs against production. The Whop CLI has no dry-run.
 

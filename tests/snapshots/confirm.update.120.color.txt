@@ -6,5 +6,5 @@
    [2mtitle     [22m  Frame Pro
    [2mvisibility[22m  [2mhidden[22m
 
-   [2mThe Whop CLI has no sandbox or dry-run.[22m
+   [2mThis runs against production. The Whop CLI has no dry-run.[22m
 

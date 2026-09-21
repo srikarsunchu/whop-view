@@ -25,7 +25,7 @@ export const copy = {
   confirm: {
     title: (group: string, verb: string) => `${VERB_TITLES[verb] ?? titleVerb(verb)} ${GROUP_NOUNS[group] ?? group.replace(/-/g, " ")}`,
     badge: "writes to production",
-    warning: "The Whop CLI has no sandbox or dry-run.",
+    warning: "This runs against production. The Whop CLI has no dry-run.",
     money: "This moves real money.",
     question: "Run it?",
     yesNo: "[y/N]",

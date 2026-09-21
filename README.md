@@ -8,7 +8,7 @@ The design is in [VIEWS.md](./VIEWS.md). This README shows it.
 
 ## Why
 
-The CLI shipped agent-first and it shows. Every command prints every field as TOON. In a terminal that TOON is syntax-colored and empty fields are folded away, which helps, but two products are still 69 lines with no columns, no alignment, and ISO timestamps. `--format md` prints `[object Object]` for nested fields. Errors are two lines. `payouts create` moves real money with no confirmation. Agents are fine with all of that. People are not. `wv` adds the people layer without touching the agent layer: one rendering system that every command group gets for free, driven by inference plus small hint files.
+The CLI shipped agent-first and it shows. Every command prints every field as TOON. In a terminal that TOON is syntax-colored and empty fields are folded away, which helps, but two products are still 69 lines with no columns, no alignment, and ISO timestamps. `--format md` prints `[object Object]` for nested fields. Errors are two lines. `payouts create` moves real money with no confirmation and no dry-run flag. A sandbox API host exists, but the CLI only reaches it through `WHOP_API_BASE_URL` with a separate sandbox key, and Whop's own CLI docs say there is no sandbox mode. Agents are fine with all of that. People are not. `wv` adds the people layer without touching the agent layer: one rendering system that every command group gets for free, driven by inference plus small hint files.
 
 ## Install
 
@@ -125,7 +125,7 @@ After:
    speed             standard
    from              Hypermotion  biz_VraUMckluH8dzV
 
-   The Whop CLI has no sandbox or dry-run. This moves real money.
+   This runs against production. The Whop CLI has no dry-run. This moves real money.
 
  Run it? [y/N]
 ```

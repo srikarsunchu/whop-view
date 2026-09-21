@@ -7,5 +7,5 @@
    speed             standard
    from              Hypermotion  biz_VraUMckluH8dzV
 
-   The Whop CLI has no sandbox or dry-run. This moves real money.
+   This runs against production. The Whop CLI has no dry-run. This moves real money.
 
