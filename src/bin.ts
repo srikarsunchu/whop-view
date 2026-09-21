@@ -580,6 +580,8 @@ async function followLogs(argv: string[], theme: Theme, env: NodeJS.ProcessEnv):
     let first = true;
     while (!stopped) {
       const { parsed } = await run(pollArgv(argv, after), env);
+      // Ctrl-C reaches the child `whop` too, so a poll in flight comes back empty. That is the stop, not an error.
+      if (stopped) break;
       if (!parsed.ok) {
         print(errorView(parsed.error, theme));
         return { code: 1 };

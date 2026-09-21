@@ -124,6 +124,31 @@ Fixtures: `auth.list`, `permissions.check`, `verifications.list`, `payouts.metho
 
 When rendering, the runner spawns `whop <argv> --format json --full-output` with stdio piped, parses stdout once, and renders. stderr from `whop` passes through unchanged. Exit code is `whop`'s exit code.
 
+Rule 1 has one exception, the agent gate below: a write in a pipe is not passed through until it carries `--yes`.
+
+## Agent gate
+
+`src/agent.ts`. Without a terminal there is nobody to type the amount back, and until 2026-09-21 that meant a pipe got *less* protection than a person: `wv payouts create … | cat` exec'd `whop` and the money moved. Now `main` hands every non-TTY argv to `agentMain`, which runs the same gate the terminal runs and answers in whop's own envelope shape on stdout.
+
+```
+{ "ok": false,
+  "error": { "code": "CONFIRMATION_REQUIRED", "message": "whop payouts create … writes to production. wv did not run it.", "hint": "…" },
+  "plan":  { "kind": "write", "command": "whop payouts create …", "account": {…}, "money": {…}, "balance": {…}, "cap": 500, "limit": {…} },
+  "rerun": ["wv", "payouts", "create", …, "--yes"],
+  "meta":  { "command": "payouts create", "wrapper": "wv", "mode": "production" } }
+```
+
+The protocol is two calls. The first, without `--yes`, exits 2 with the plan and the `rerun`. The agent shows the plan to the person; the second call is `rerun`, and it execs `whop` with `--yes` stripped, since `whop` rejects the flag. Rules:
+
+- Gated: `isWrite(group, verb)` or `isAdPlan(group, verb)`, no `--yes`, `WV_RAW` unset, and none of `--schema`, `--help`, `-h`, `--llms`, `--llms-full`, `--version`, `-v`, which print inside `whop` without running anything. `--format`, `--filter-output`, `--full-output`, and `--token-*` do not lift the gate: an agent adds `--format json` to everything, and a write with a format flag is still a write.
+- `plan` is `moneyPlan(ConfirmInput)` or `adPlan(AdPlanInput)`: the card's data with the theme, the hints, and the prompt timeout left out. The ad plan carries `commitment` (`total`, `days`, `openEnded`) so the agent sees the number the cap is checked against.
+- Refusals are the same envelope with no `rerun`, exit 2: `WHOP_LIMIT` (Whop's `error_message` verbatim), `WV_CAP` (hint names `WV_PAYOUT_CAP`), `INSUFFICIENT_BALANCE`, `WV_AD_CAP` (hint names `WV_AD_CAP` and the end-date fix). Order and sandbox behavior match the terminal: Whop's limit first, and sandbox mode skips all three.
+- `--plan` prints `{ ok: true, plan, meta }` and exits 0 for every write, not only ads. Nothing runs.
+- A wv refusal that happens before any `whop` call uses the same envelope, exit 2: `BAD_PRESET` and `EVENTS_RANGE` from the date presets, `JSON_FLAGS` from `@file` and dotted flags. Until this change those were one line on stderr.
+- Reads, `WV_RAW`, and the own-terminal commands exec `whop` exactly as before; the byte-identity test still holds.
+
+`moneyGateFor` in `bin.ts` is the shared gather-and-decide step for both faces: identity, the balance in the payout's currency, the saved method, Whop's live limit, and the refusal reason. `adPlanFor` already was. Tests run the pipe against a fake `whop` that answers the gate's reads from fixtures (`tests/passthrough.test.ts`), one test per envelope.
+
 ## Envelope shapes
 
 Captured from the real CLI. With `--full-output`:
@@ -405,7 +430,7 @@ The first line is a breadcrumb status line in the style of omp's bar: account, i
 
 `apps logs <id>` (`src/views/logs.ts`). The API answers newest first, keeps seven days, and gives an entry no id: `app_id`, `app_build_id`, `request_id`, `created_at`, `source` (console, exception, request), `level` (log, debug, info, warn, error), `message`, and for requests `request_method`, `request_path`, `response_status`; `truncated` marks a cut message. The view is a tail, oldest first, one entry per line: `HH:MM:SS` in UTC muted, the level padded to five and painted (error `bad`, warn `warn`, debug `muted`, an exception `bad` whatever its level), the request part in `accent`, then the message wrapped under a hanging indent, with an ellipsis when `truncated`. The footer teaches the command and the same command with `--follow`.
 
-**Follow.** `--follow` or `-f` is wv's flag, stripped in `ownFlags`, so a pipe never sees it and `whop apps logs` runs once there. In a TTY `followLogs` in `bin.ts` prints `followHeader` (app, the `--level` and `--query` filters if any, `following · every 3s`, `ctrl-c stops`, the agent command), then loops: `run(pollArgv(argv, after))`, `newEntries(seen, rows, limit)` keyed on request id, time, and message, print each with `logLines`, remember `newest(rows)` as the next `--created_after`, sleep. The first page is history and shows its last twenty; later pages show everything unseen. `pollArgv` replaces an existing `--created_after`, so a person's own window still bounds the first poll. Ctrl-C sets a flag and wakes the sleep; the loop prints `stopped · N lines` and exits 0. An API error is printed once and stops the loop with exit 1. `WV_FOLLOW_MS` sets the interval in milliseconds, default 3000; tests and demos use it. Fixture `apps.logs` is this account's empty page; `LOG_ROWS` in `tests/render.ts` are entries in the reference shape, since the hosted app here has never logged.
+**Follow.** `--follow` or `-f` is wv's flag, stripped in `ownFlags`, so a pipe never sees it and `whop apps logs` runs once there. In a TTY `followLogs` in `bin.ts` prints `followHeader` (app, the `--level` and `--query` filters if any, `following · every 3s`, `ctrl-c stops`, the agent command), then loops: `run(pollArgv(argv, after))`, `newEntries(seen, rows, limit)` keyed on request id, time, and message, print each with `logLines`, remember `newest(rows)` as the next `--created_after`, sleep. The first page is history and shows its last twenty; later pages show everything unseen. `pollArgv` replaces an existing `--created_after`, so a person's own window still bounds the first poll. Ctrl-C sets a flag and wakes the sleep; the loop prints `stopped · N lines` and exits 0. The terminal sends the interrupt to the child `whop` as well, so a poll in flight comes back as an empty response: the loop checks the flag before it reads the result, and that case is the stop, not an error (found by the `logs-follow` tape, whose first take ended in `Whop returned an error · Empty response`). An API error is printed once and stops the loop with exit 1. `WV_FOLLOW_MS` sets the interval in milliseconds, default 3000; tests and demos use it. Fixture `apps.logs` is this account's empty page; `LOG_ROWS` in `tests/render.ts` are entries in the reference shape, since the hosted app here has never logged.
 
 ## Session
 
@@ -486,6 +511,9 @@ Four patterns from the oh-my-pi TUI, reproduced in the plain renderer with no de
 - Every verb under a money group was gated, so `wv cards transactions` and `wv payouts methods` asked for consent to read. `MONEY_READ_VERBS` in `status.ts` names the reads.
 - `accounts reserves` and `verifications list` answer `{ data: [] }` with no `page_info`. They classify as a page already; the header said `accounts · 0` and `No accounts yet.` until the list took a noun.
 - `recommended-actions` is gone from the CLI; `economic-intelligence` replaced it, and this account gets `HTTP_403` there. `error.gated` captures that.
+- `whop` rejects `--yes` with `Unknown flag: --yes`. It is wv's flag alone. Until 2026-09-21 a pipe passed it through, so `wv payouts create … --yes | cat` failed inside `whop` while the same command in a terminal ran; the agent gate strips it before the exec.
+- whop's `--filter-output` on a page payload is a slice, `data[0,N].field`. `data[*].field` and `data[0].field` return an empty array, and two filters on one slice keep only the last, so `data[0,2].title,data[0,2].id` yields ids alone. Top-level keys on a record filter as expected. Probed on 2026-09-21 against 0.18.2.
+- The passthrough rule that `--format` lifts wv out of the way is wrong for writes in a pipe, since an agent adds `--format json` to every command. The gate keeps writes with `--format`, `--filter-output`, `--full-output`, or `--token-*`; only the flags that never execute (`--schema`, `--help`, `--llms`, `--version`) pass through.
 
 ## Tests
 
