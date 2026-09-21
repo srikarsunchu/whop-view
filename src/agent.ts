@@ -136,3 +136,30 @@ export function adRefusedEnvelope(input: AdPlanInput): AgentEnvelope {
 export function wvErrorEnvelope(argv: string[], mode: Mode, error: { code: string; message: string; hint?: string }): AgentEnvelope {
   return envelope(argv, mode, { ok: false, error });
 }
+
+/**
+ * Exit codes for a pipe. `whop` exits 1 for every failure, so a script cannot branch without parsing the body.
+ * wv reads the code out of the bytes it already forwarded and maps: 2 refused by wv (the gate above), 3 a bad
+ * request, 4 not allowed, 5 not found, else whop's own status. `WV_EXIT=whop` keeps whop's status.
+ */
+export const EXIT_CODES: Record<string, number> = {
+  VALIDATION_ERROR: 3,
+  HTTP_400: 3,
+  HTTP_422: 3,
+  HTTP_401: 4,
+  HTTP_403: 4,
+  HTTP_404: 5,
+  COMMAND_NOT_FOUND: 5,
+};
+
+/** The error code in whop's output, in any of its formats: `"code": "X"` (json), `code: X` (toon, yaml), `**code**` is not one. */
+export function errorCodeIn(text: string): string | undefined {
+  const m = /"code"\s*:\s*"([A-Z][A-Z0-9_]*)"/.exec(text) ?? /^\s*code:\s*"?([A-Z][A-Z0-9_]*)"?\s*$/m.exec(text);
+  return m?.[1];
+}
+
+export function agentExitCode(whopStatus: number, stdout: string, env: NodeJS.ProcessEnv = process.env): number {
+  if (whopStatus === 0 || env.WV_EXIT === "whop") return whopStatus;
+  const code = errorCodeIn(stdout);
+  return (code && EXIT_CODES[code]) || whopStatus;
+}

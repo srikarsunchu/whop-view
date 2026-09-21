@@ -90,10 +90,21 @@ test("piped stdout: keys stay on their own side, from the shell and from the con
   assert.match(shell.stderr, /KEY: unset$/m);
 });
 
-test("piped stdout: failure exit codes are preserved", () => {
+test("piped stdout: whop's single failure code becomes one an agent can branch on, bytes untouched", () => {
   const fake = fakeWhop();
-  const r = wv(["prodcts", "list"], { WV_WHOP_BIN: fake });
-  assert.equal(r.status, 1);
+  const r = wv(["prodcts", "list"], { WV_WHOP_BIN: fake, WV_EXIT: "" });
+  assert.equal(r.status, 5, "COMMAND_NOT_FOUND is 5");
+  assert.equal(r.stdout, '{"code":"COMMAND_NOT_FOUND","message":"nope"}\n');
+  const kept = wv(["prodcts", "list"], { WV_WHOP_BIN: fake, WV_EXIT: "whop" });
+  assert.equal(kept.status, 1, "WV_EXIT=whop keeps whop's status");
+  assert.equal(kept.stdout, r.stdout);
+});
+
+test("live: exit codes on the real whop", { skip: !process.env.WV_LIVE }, () => {
+  assert.equal(wv(["stats", "get", "--format", "json"], { WV_EXIT: "" }).status, 3, "VALIDATION_ERROR");
+  assert.equal(wv(["economic-intelligence", "list"], { WV_EXIT: "" }).status, 4, "HTTP_403");
+  assert.equal(wv(["prodcts", "list"], { WV_EXIT: "" }).status, 5, "COMMAND_NOT_FOUND");
+  assert.equal(wv(["products", "get", "prod_doesnotexist", "--format", "json"], { WV_EXIT: "" }).status, 5, "HTTP_404");
 });
 
 test("missing whop binary exits 127 with a one-line message", () => {

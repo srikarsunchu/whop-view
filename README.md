@@ -364,6 +364,14 @@ Eight gaps a developer or software seller hits in the Whop CLI, and where each l
 7. **JSON flags for humans**: shipped. Dotted paths, repeated flags, and `@file` assemble to the JSON flag; the round trip is tested.
 8. **Feature gate errors**: shipped. Three gates mapped, an unknown gate says so.
 
+Then five for the agent, since the CLI shipped agent-first and its agent layer still had holes:
+
+9. **A footer that works**: shipped. The list footer taught a `--filter-output` that returns `{}` on the real CLI; it now teaches the slice form that works.
+10. **The gate without a terminal**: shipped. A write in a pipe was passed straight to `whop`, so an agent had less protection than a person. It now gets the same gate as JSON: `CONFIRMATION_REQUIRED` with the plan and a `rerun`, refusals with no `rerun`, `--plan` for the plan alone.
+11. **Screens as data**: shipped. `wv doctor --format json` and `wv gtm --format json`, or either in a pipe.
+12. **A manifest between `--llms` and `--llms-full`**: shipped. `wv agent <group>`, one Markdown page per group from `--schema`, and the whop-gtm skill's command reference is generated from it.
+13. **Exit codes**: shipped. `whop` exits 1 for every failure; in a pipe `wv` maps the code in the body to 3, 4, or 5 and leaves the bytes alone. `WV_EXIT=whop` keeps whop's.
+
 ## What agents see
 
 Reads: nothing new. `wv` execs `whop` with the original argv whenever any of these hold:
@@ -387,6 +395,18 @@ $ wv payouts create --amount 5 --payout_method_id potk_x | cat
   "meta": { "command": "payouts create", "wrapper": "wv", "mode": "production" }
 }
 ```
+
+Exit codes: `whop` exits 1 for every failure, so a script cannot branch without parsing the body. In a pipe `wv` reads the error code out of the bytes it already forwarded and maps it; stdout stays byte-identical. `WV_EXIT=whop` keeps whop's status.
+
+| exit | meaning | whop codes |
+|---|---|---|
+| 0 | ok | |
+| 1 | anything else | `UNKNOWN`, `NOT_JSON`, and whatever whop returns 1 for |
+| 2 | refused by wv, nothing ran | `CONFIRMATION_REQUIRED`, `WHOP_LIMIT`, `WV_CAP`, `INSUFFICIENT_BALANCE`, `WV_AD_CAP`, `BAD_PRESET`, `EVENTS_RANGE`, `JSON_FLAGS`, `NEEDS_TERMINAL` |
+| 3 | bad request | `VALIDATION_ERROR`, `HTTP_400`, `HTTP_422` |
+| 4 | not allowed | `HTTP_401`, `HTTP_403` |
+| 5 | not found | `HTTP_404`, `COMMAND_NOT_FOUND` |
+| 127 | `whop` is not on PATH | |
 
 Screens: `wv doctor --format json` and `wv gtm --format json` return the data behind the screen, and a pipe gets the same without the flag. Doctor is `{ ok, blocking, checks: [{ key, level, detail, fix, blocking }] }` with exit 1 on a blocking failure, so an agent's preflight is one call. GTM is every read the screen made, the people summary, and the launch gaps with their fixes. Other wv screens in a pipe answer `NEEDS_TERMINAL`, exit 2.
 

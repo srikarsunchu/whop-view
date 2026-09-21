@@ -2,7 +2,7 @@
 // wv: human view layer for the Whop CLI. Renders when a person is looking, execs `whop` otherwise.
 import { realpathSync } from "node:fs";
 import { makeTheme, type Theme } from "./tokens.ts";
-import { cachedHelpText, helpText, modeFrom, schema, passthrough, run, sandboxKey, sandboxUrl, shouldPassthrough, whopEnv, type Mode } from "./runner.ts";
+import { cachedHelpText, helpText, modeFrom, schema, passthrough, passthroughPiped, run, sandboxKey, sandboxUrl, shouldPassthrough, whopEnv, type Mode } from "./runner.ts";
 import { configPath, maskKey, saveSandboxKey } from "./config.ts";
 import { sandboxMissingKeyView, sandboxSavedView, sandboxStatusView } from "./views/sandbox.ts";
 import { ask } from "./primitives/prompt.ts";
@@ -13,7 +13,7 @@ import { exitCodeFor, licenseView, verdict } from "./views/license.ts";
 import { followHeader, followIntervalMs, followStopped, logLines, logsView, newEntries, newest, pollArgv } from "./views/logs.ts";
 import { hintsFor } from "./hints.ts";
 import { isWrite, MONEY_GROUPS } from "./status.ts";
-import { adPlan, adRefusedEnvelope, agentGated, confirmationEnvelope, moneyPlan, planEnvelope, refusedEnvelope, serialize, wvErrorEnvelope, type AgentEnvelope } from "./agent.ts";
+import { adPlan, adRefusedEnvelope, agentExitCode, agentGated, confirmationEnvelope, moneyPlan, planEnvelope, refusedEnvelope, serialize, wvErrorEnvelope, type AgentEnvelope } from "./agent.ts";
 import { teach } from "./argv.ts";
 import { daysAgo, isoDay } from "./format.ts";
 import { copy } from "./copy.ts";
@@ -172,7 +172,8 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
     if (gate.refusal) emit(refusedEnvelope({ ...gate.input, reason: gate.refusal }), 2);
     emit(confirmationEnvelope(args, mode, moneyPlan(gate.input)), 2);
   }
-  passthrough(argv0IsCheck(args) ? ["memberships", "get", ...args.slice(2)] : args, env);
+  // Bytes go through untouched; only the exit status is mapped, from the code in the bytes.
+  return passthroughPiped(argv0IsCheck(args) ? ["memberships", "get", ...args.slice(2)] : args, env, agentExitCode);
 }
 
 /**

@@ -151,6 +151,20 @@ The protocol is two calls. The first, without `--yes`, exits 2 with the plan and
 
 `moneyGateFor` in `bin.ts` is the shared gather-and-decide step for both faces: identity, the balance in the payout's currency, the saved method, Whop's live limit, and the refusal reason. `adPlanFor` already was. Tests run the pipe against a fake `whop` that answers the gate's reads from fixtures (`tests/passthrough.test.ts`), one test per envelope.
 
+### Exit codes
+
+`whop` exits 1 for every failure. A pipe through wv gets a code a script can branch on, from `agentExitCode` in `src/agent.ts`: the runner's `passthroughPiped` forwards whop's stdout byte for byte as it arrives, keeps the last 64 KB, and on a non-zero status reads the error code out of it (`"code": "X"` in json, `code: X` in toon and yaml; lowercase codes inside `fieldErrors` never match) and maps it. The bytes are never changed; the byte-identity test still holds, and a status of 0 is never touched. `WV_EXIT=whop` keeps whop's status.
+
+| exit | meaning | codes |
+|---|---|---|
+| 2 | refused by wv, nothing ran | every wv code above |
+| 3 | bad request | `VALIDATION_ERROR`, `HTTP_400`, `HTTP_422` |
+| 4 | not allowed | `HTTP_401`, `HTTP_403` |
+| 5 | not found | `HTTP_404`, `COMMAND_NOT_FOUND` |
+| else | whop's own status | `UNKNOWN` (unknown flag), `NOT_JSON`, 127 for no `whop` on PATH |
+
+In a terminal nothing changes: the rendered error view and whop's status, as before.
+
 ## Agent manifest
 
 `wv agent [group]` (`src/views/manifest.ts`) is the tier between `whop --llms` (16 KB, a command list with no flags) and `whop --llms-full` (338 KB, every flag of every command). One Markdown page per group, plain, no color, no width, the same in a pipe and a terminal. `bin.ts` reads the group list from the root help, the verbs from the group's help (both through the one-day help cache), and each verb's flags from `--schema` through the runner's schema cache, so a warm page costs no `whop` calls.

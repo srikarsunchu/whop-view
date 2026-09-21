@@ -80,6 +80,29 @@ export function passthrough(argv: string[], env: NodeJS.ProcessEnv = process.env
   process.exit(r.status ?? 1);
 }
 
+/** How much of the child's stdout to keep for the exit code. Error envelopes are small; a page is not needed. */
+const TAIL_BYTES = 64 * 1024;
+
+/**
+ * Exec whop for a pipe: stdout is forwarded byte for byte as it arrives, and the exit code is `decide(status, tail)`
+ * over whop's status and the last `TAIL_BYTES` of what it printed. stdin and stderr are inherited. Never returns.
+ */
+export function passthroughPiped(argv: string[], env: NodeJS.ProcessEnv, decide: (status: number, tail: string) => number): Promise<never> {
+  return new Promise(() => {
+    const child = spawn(WHOP, argv, { stdio: ["inherit", "pipe", "inherit"], env });
+    let tail = "";
+    child.stdout.on("data", (d: Buffer) => {
+      process.stdout.write(d);
+      tail = (tail + d.toString("utf8")).slice(-TAIL_BYTES);
+    });
+    child.on("error", (e: NodeJS.ErrnoException) => {
+      process.stderr.write(`wv: could not run ${WHOP}: ${e.message}\n`);
+      process.exit(127);
+    });
+    child.on("close", (status) => process.exit(decide(status ?? 1, tail)));
+  });
+}
+
 export interface RunResult {
   parsed: Parsed;
   code: number;
