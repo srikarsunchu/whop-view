@@ -151,6 +151,57 @@ wv economic-intelligence update reca_x --status superseded --reason "wrong audie
 
 Done when: the six reads returned `totals` for the same seven-day window and the person has seen them next to last week's; `wv economic-intelligence list --status ready --format json` has at least one recommendation, and each one the person approved is `executed` and each one they rejected is `superseded` with a `--reason`; `wv gtm --format json` returns `gaps: []`, or every remaining gap has been shown with its fix. A recommendation that would spend more than the person named as the budget is reported, not executed. Nothing in this playbook writes except the `update`, so the report itself can run unattended and on a schedule.
 
+## Decide: the rubric
+
+The measure and decide stages are where money is saved or wasted, and where an agent is most tempted to act on one day of data. The numbers below are Meta's own learning-phase mechanics and the margins the product's price implies; the person can override any of them by naming a target.
+
+**Set the target before the first read.** Cost per result must land under what one sale is worth: for a one-time plan, the price times the margin the person names (default 50%); for a renewal, the first payment plus one more period, times that margin. Write the number down in the plan (`--primary-text` or the campaign title is fine) so every later read compares against it, not against a feeling.
+
+**Read one thing.** `wv stats get ad_delivery --last 3d --source "whop:<campaign>:*" --group_by source --breakdown_by metric --format json` returns spend, impressions, and clicks per ad group with whole-window `data.totals`; `wv ad-campaigns list --format json` carries `spend`, `results`, `cost_per_result`, `return_on_ad_spend`, and `delivery_status` per campaign. Group by one segment deeper than the filter (`whop:<campaign>:*` gives groups, `whop:<campaign>:<group>:*` gives ads). Only `whop:*` paths report delivery; a `utm_source` root returns nothing.
+
+**Do not judge early.** Three full days and fifty results per ad group, whichever is later. Under that, the only decisions are "is it delivering at all" (`delivery_status`, spend above zero within 24 hours) and "is it rejected" (`ads get` status; Meta review, fix the creative or copy, do not touch the budget).
+
+| what the read says | decision | how |
+|---|---|---|
+| no spend after 24 hours | delivery problem, not performance | check `ads get` status (in review, rejected), the page under `social-accounts list`, and the payment method under `accounts preferences`; `wv doctor` covers all three |
+| cost per result over 2× target after the minimum sample | losing | `wv ad-groups pause <id>`, report the ranking first |
+| cost per result between target and 2× target | inconclusive | leave it another three days; change nothing |
+| cost per result under target, results still climbing | winning | `wv ads duplicate <id>` into a new group with a fresh audience band, or raise the group budget by at most 20% a day; never both on the same day |
+| results flat while spend climbs, impressions per person rising | creative fatigue | new creative in a duplicated ad; do not edit the running one, an edit resets Meta's learning |
+| `return_on_ad_spend` under 1 for a week with the sample met | the offer, not the ad | change the promo or the landing page before spending more; pause everything until the person decides |
+
+**Rules that hold regardless.** One change per campaign per day. Never edit a delivering ad's creative or targeting; duplicate and let the old one run out. Pause, do not delete, so the numbers stay readable next week. Budget moves are 20% steps. A pause needs a plain yes; a duplicate carries the group's budget into the plan and gets the money prompt. When Whop's recommender (`economic-intelligence list --status ready`) disagrees with this table, show the person both and let them pick; approve with `--status executed`, reject with `--status superseded --reason`.
+
+## When it fails
+
+Every failure is one of these. The exit code says which family; the `code` in the body says which row. On any 4 or 5, run `wv doctor --format json` before retrying anything.
+
+| exit | code and message | what it means | what to do |
+|---|---|---|---|
+| 2 | `CONFIRMATION_REQUIRED` | not a failure: the plan is ready | show `plan`, get a yes, run `rerun` unchanged |
+| 2 | `LAUNCH_BLOCKED` | a launch step cannot run | every reason is in `plan.blockers` and `hint`; fix them, plan again |
+| 2 | `WHOP_LIMIT` · "Please complete identity verification…" | Whop refuses the payout, in its words | `whop verifications create --account_id <biz>`, then the dashboard; nothing to retry |
+| 2 | `WV_CAP`, `WV_AD_CAP` | over wv's per-write cap | report the amount and the cap; the person raises `WV_PAYOUT_CAP` or `WV_AD_CAP` for one shell, or lowers the amount, or sets an end date so an ad's commitment is real |
+| 2 | `INSUFFICIENT_BALANCE` | the ledger cannot cover it | report; `wv ledgers report --report_type balance_summary --format json` for the number |
+| 2 | `APPROVAL_INVALID`, `APPROVAL_EXPIRED` | the rerun was edited, is over ten minutes old, or came from another machine | run the command without `--approve` for a fresh plan; never add `--yes` |
+| 2 | `BAD_PRESET`, `EVENTS_RANGE` | a date flag wv refused | `--last 7d`, `--this month`, `--last month`; `events list` spans at most 30 days |
+| 2 | `JSON_FLAGS` | an `@file` is missing or not JSON | fix the path or the file |
+| 2 | `NEEDS_TERMINAL` | a wv screen that only draws | `wv doctor` and `wv gtm` answer `--format json`; the rest need a person |
+| 3 | `VALIDATION_ERROR` · "expected string, received undefined" on `stats get` | `--from` and `--to` are required | use a preset through `wv` |
+| 3 | `HTTP_422` on `ads create` or `ad-groups create` | Meta refused the object | the message names the field; `wv agent ads` has the enum |
+| 3 | `HTTP_400` · "No Rain account found for this account." | card issuing is gated behind a Rain account | out of scope; tell the person |
+| 3 | `HTTP_400` · "Authenticate with an account-scoped credential…" | cashback rules need an API key, not OAuth | `whop login --method api-key` |
+| 3 | `UNKNOWN` · "Unknown flag: --yes" or "--approve" | the command ran through `whop`, not `wv` | rerun it as `wv …`; `whop` does not know wv's flags |
+| 4 | `HTTP_403` · "You don't have access to Economic Intelligence yet." | the preference is off | `wv accounts update-preferences --economic_intelligence true` |
+| 4 | `HTTP_403` · "OAuth token is not authorized for the developer:manage_webhook scope" | webhooks need an API-key profile | `whop login --method api-key --apiKey whop_…` |
+| 4 | `HTTP_403` · "This endpoint requires Whop internal access" | `experiments` is internal-only | stop; nothing a seller can do |
+| 4 | `HTTP_401` · "Authentication failed" in sandbox mode | wrong or missing sandbox key | `wv sandbox status`; the key lives in wv's config, never the shell's production key |
+| 5 | `HTTP_404` · "Resource not found", "Membership not found" | wrong id, or an id from another account | check the id with the group's `list`; add `--account_id <biz>` when the account is not the active one |
+| 5 | `COMMAND_NOT_FOUND` | a typo | `cta.commands` in the body carries the suggestion; `wv agent` lists every group |
+| 1 | anything else | whop's own status | read `message`; if it names Meta, it is the ad platform, and `wv doctor`'s `page` and `payment` checks are the first places to look |
+
+Two ad failures are not envelopes at all. `estimate_reach` answering "No Meta ad account available for reach estimates" means no page is connected with the `advertise` scope; `social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>` returns a URL the person opens. An ad that stays `in_review` for more than a day, or turns `rejected`, is Meta's review, not Whop's; the fix is the creative or the copy, and the budget is not the problem.
+
 ## Command reference
 
 Every flag, its type, and whether a verb writes or moves money comes from `wv agent <group>`, which reads `--schema` live and so cannot drift. The block below is the map, regenerated by `pnpm skill`.
