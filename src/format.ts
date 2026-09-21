@@ -36,17 +36,20 @@ export function relative(iso: string | number | null | undefined): string {
   const t = toMs(iso);
   if (!Number.isFinite(t)) return "—";
   const diff = now() - t;
-  const s = Math.round(diff / 1000);
+  // A date still ahead reads `in 25d`, so an expiry or a reset is never "just now".
+  const future = diff < 0;
+  const tag = (n: number, unit: string) => (future ? `in ${n}${unit}` : `${n}${unit} ago`);
+  const s = Math.round(Math.abs(diff) / 1000);
   if (s < 45) return "just now";
   const m = Math.round(s / 60);
-  if (m < 60) return `${m}m ago`;
+  if (m < 60) return tag(m, "m");
   const h = Math.round(m / 60);
-  if (h < 36) return `${h}h ago`;
+  if (h < 36) return tag(h, "h");
   const d = Math.round(h / 24);
-  if (d < 30) return `${d}d ago`;
+  if (d < 30) return tag(d, "d");
   const mo = Math.round(d / 30);
-  if (mo < 12) return `${mo}mo ago`;
-  return `${Math.round(mo / 12)}y ago`;
+  if (mo < 12) return tag(mo, "mo");
+  return tag(Math.round(mo / 12), "y");
 }
 
 export function shortDate(iso: string | number | null | undefined): string {

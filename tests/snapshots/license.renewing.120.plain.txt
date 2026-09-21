@@ -1,0 +1,11 @@
+ license  A1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6                                                                     valid
+
+   status      active
+   product     Hypermotion  prod_iQ2Zub6GFQS5Q
+   plan        Creator — 1,000 credits  plan_ozEZmitgc8tjB
+   expires     Oct 14, 2026 12:00 UTC · in 25d · cancels then
+   user        @adacustomer  user_3meX572iT5dAg
+   membership  mem_x1AbCdEfGh
+
+ json  whop memberships get A1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6 --format json --filter-output
+       status,product_id,plan_id,current_period_end,cancel_at_period_end,user_id,id

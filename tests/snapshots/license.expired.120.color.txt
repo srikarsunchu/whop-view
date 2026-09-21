@@ -1,0 +1,11 @@
+ [1mlicense[22m  [2mA1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6[22m                                                                   [31minvalid[39m
+
+   [2mstatus    [22m  [2mexpired[22m
+   [2mproduct   [22m  [2mprod_iQ2Zub6GFQS5Q[22m
+   [2mplan      [22m  [2mplan_ozEZmitgc8tjB[22m
+   [2mexpires   [22m  [31mSep 1, 2026 12:00 UTC · 18d ago[39m
+   [2muser      [22m  [2muser_3meX572iT5dAg[22m
+   [2mmembership[22m  [2mmem_x1AbCdEfGh[22m
+
+ [2mjson[22m  [2mwhop memberships get A1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6 --format json --filter-output[22m
+       [2mstatus,product_id,plan_id,current_period_end,cancel_at_period_end,user_id,id[22m

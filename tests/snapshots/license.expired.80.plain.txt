@@ -1,0 +1,13 @@
+ license  A1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6                           invalid
+
+   status      expired
+   product     prod_iQ2Zub6GFQS5Q
+   plan        plan_ozEZmitgc8tjB
+   expires     Sep 1, 2026 12:00 UTC · 18d ago
+   user        user_3meX572iT5dAg
+   membership  mem_x1AbCdEfGh
+
+ json  whop memberships get A1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6 --format json
+       --filter-output
+       status,product_id,plan_id,current_period_end,cancel_at_period_end,user_id
+       ,id

@@ -1,0 +1,11 @@
+ [1mlicense[22m  [2mA1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6[22m                                                                     [32mvalid[39m
+
+   [2mstatus    [22m  [32mactive[39m
+   [2mproduct   [22m  Hypermotion  prod_iQ2Zub6GFQS5Q
+   [2mplan      [22m  Creator — 1,000 credits  plan_ozEZmitgc8tjB
+   [2mexpires   [22m  [33mOct 14, 2026 12:00 UTC · in 25d · cancels then[39m
+   [2muser      [22m  @adacustomer  user_3meX572iT5dAg
+   [2mmembership[22m  [2mmem_x1AbCdEfGh[22m
+
+ [2mjson[22m  [2mwhop memberships get A1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6 --format json --filter-output[22m
+       [2mstatus,product_id,plan_id,current_period_end,cancel_at_period_end,user_id,id[22m

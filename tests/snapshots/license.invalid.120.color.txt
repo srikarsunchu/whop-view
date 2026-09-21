@@ -1,0 +1,6 @@
+ [1mlicense[22m  [2mABCD-1234-EFGH-5678[22m                                                                                   [31minvalid[39m
+
+ [31mNo membership carries this key.[39m
+
+ [2mjson[22m  [2mwhop memberships get ABCD-1234-EFGH-5678 --format json --filter-output[22m
+       [2mstatus,product_id,plan_id,current_period_end,cancel_at_period_end,user_id,id[22m

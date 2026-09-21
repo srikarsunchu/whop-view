@@ -1,0 +1,11 @@
+{
+  "ok": false,
+  "error": {
+    "code": "HTTP_404",
+    "message": "Membership not found"
+  },
+  "meta": {
+    "command": "memberships get",
+    "duration": "240ms"
+  }
+}

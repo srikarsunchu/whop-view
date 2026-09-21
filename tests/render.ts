@@ -19,6 +19,7 @@ import { doctorView, DOCTOR_ACTIONS, type DoctorInput } from "../src/views/docto
 import { sandboxMissingKeyView, sandboxStatusView } from "../src/views/sandbox.ts";
 import { followHeader, followStopped, logLines, logsView } from "../src/views/logs.ts";
 import { webhookTestView } from "../src/views/webhook.ts";
+import { licenseView } from "../src/views/license.ts";
 import type { Rec } from "../src/envelope.ts";
 
 export const FIXTURES = join(import.meta.dirname, "fixtures");
@@ -171,6 +172,10 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "sandbox.status.nokey": (t) => sandboxStatusView({ url: "https://sandbox-api.whop.com/api/v1", urlSource: "default", keySource: "none", configPath: CONFIG_PATH, account: envelope("error.sandbox_oauth") }, t),
   "sandbox.status.badkey": (t) => sandboxStatusView({ url: "http://localhost:9", urlSource: "env", key: "whop_wrong_key_abcdef1234", keySource: "env", configPath: CONFIG_PATH, account: envelope("error.sandbox_oauth") }, t),
   "sandbox.missing_key": (t) => sandboxMissingKeyView(CONFIG_PATH, t),
+  "license.valid": (t) => licenseView({ key: "mem_kfT4Jl8Pb8DlWE", membership: envelope("memberships.get"), argv: ["memberships", "get", "mem_kfT4Jl8Pb8DlWE"] }, t),
+  "license.renewing": (t) => licenseView({ key: "A1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6", membership: synth({ id: "mem_x1AbCdEfGh", status: "active", license_key: "A1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6", product: { id: "prod_iQ2Zub6GFQS5Q", title: "Hypermotion" }, plan: { id: "plan_ozEZmitgc8tjB", title: "Creator — 1,000 credits" }, current_period_end: "2026-10-14T12:00:00Z", cancel_at_period_end: true, member: { id: "mber_x1AbCdEfGh", user: { id: "user_3meX572iT5dAg", username: "adacustomer" } } }), argv: ["memberships", "get", "A1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6"] }, t),
+  "license.expired": (t) => licenseView({ key: "A1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6", membership: synth({ id: "mem_x1AbCdEfGh", status: "expired", product_id: "prod_iQ2Zub6GFQS5Q", plan_id: "plan_ozEZmitgc8tjB", current_period_end: "2026-09-01T12:00:00Z", user_id: "user_3meX572iT5dAg" }), argv: ["memberships", "get", "A1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6"] }, t),
+  "license.invalid": (t) => licenseView({ key: "ABCD-1234-EFGH-5678", membership: envelope("error.license_404"), argv: ["memberships", "get", "ABCD-1234-EFGH-5678"] }, t),
   "list.deliveries": (t) => listView({ group: "webhooks", argv: ["webhooks", "deliveries", "hook_x1AbCdEfGh"], rows: DELIVERIES, page: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false }, hints: hintsFor("webhooks", "deliveries"), noun: "deliveries" }, t),
   "webhook.test": (t) => webhookTestView({ argv: ["webhooks", "test", "hook_x1AbCdEfGh", "--event", "payment.succeeded"], result: { status: 200, body: "OK", success: true }, delivery: synthPage([DELIVERIES[0]]), deliveryArgv: ["webhooks", "deliveries", "hook_x1AbCdEfGh", "--first", "1"] }, t),
   "webhook.test.failed": (t) => webhookTestView({ argv: ["webhooks", "test", "hook_x1AbCdEfGh", "--event", "membership.activated"], result: { status: 500, body: { error: "non_json", raw_body: "<html><body>Internal Server Error</body></html>" }, success: false }, delivery: synthPage([DELIVERIES[1]]), deliveryArgv: ["webhooks", "deliveries", "hook_x1AbCdEfGh", "--first", "1"] }, t),

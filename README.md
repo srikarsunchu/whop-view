@@ -407,6 +407,22 @@ A write verb inside the session gets the same confirmation, then hands the termi
 - `wv help` renders the 51 groups the way `whop --help` orders them, two columns at 120 and one at 80.
 - `wv <group>` renders that group's verbs.
 - `wv doctor` is the setup checklist above; it exits 1 when signing in, identity, or a sellable product is missing.
+- `wv memberships check <license_key>` says whether a software license key is good. The CLI has no license verb, but `memberships get` accepts a license key in place of the membership id, so the check is that call plus a verdict: `valid` in green when the membership is active, trialing, completed (a paid one-time purchase), or canceling (paid up to period end); `invalid` in red for expired, canceled, past due, paused, or a key nobody issued. Exit 0, 1, or 2 when Whop could not answer, so a build script or a license server can gate on it. The card shows status, product, plan, when it expires (or `never` for a one-time purchase), the user, and the membership id. In a pipe it is `whop memberships get <key>`.
+
+```
+ license  A1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6                            valid
+
+   status      active
+   product     Hypermotion  prod_iQ2Zub6GFQS5Q
+   plan        Creator — 1,000 credits  plan_ozEZmitgc8tjB
+   expires     Oct 14, 2026 12:00 UTC · in 25d · cancels then
+   user        @adacustomer  user_3meX572iT5dAg
+   membership  mem_x1AbCdEfGh
+
+ json  whop memberships get A1B2C3D4-E5F6G7H8-I9J0K1L2-M3N4O5P6 --format json
+       --filter-output status,product_id,plan_id,current_period_end,…
+```
+
 - `wv webhooks test <hook_id> --event payment.succeeded` sends Whop's sample payload and then fetches the newest delivery, so the round trip is one screen: whether the endpoint acknowledged, the response code and body, and the delivery's event, status, code, time, and age. Exit 1 when the endpoint did not answer 2xx. `wv webhooks deliveries <hook_id>` is a table of event, status, code, seconds, replay of, sent, id. Both need an API-key login; an OAuth login gets the 403 with the login as the fix.
 
 ```

@@ -8,6 +8,7 @@ import { sandboxMissingKeyView, sandboxSavedView, sandboxStatusView } from "./vi
 import { ask } from "./primitives/prompt.ts";
 import { resolveDates } from "./dates.ts";
 import { webhookTestView } from "./views/webhook.ts";
+import { exitCodeFor, licenseView, verdict } from "./views/license.ts";
 import { followHeader, followIntervalMs, followStopped, logLines, logsView, newEntries, newest, pollArgv } from "./views/logs.ts";
 import { hintsFor } from "./hints.ts";
 import { isWrite, MONEY_GROUPS } from "./status.ts";
@@ -116,7 +117,8 @@ async function main(argvIn: string[]) {
     process.exit(2);
   }
   // `--plan` never writes, so it is safe without a terminal and must never fall through to a real `whop` create.
-  if (shouldPassthrough(argv) && !plan) passthrough(argv, env);
+  // `memberships check <key>` is wv's verb over `memberships get <key>`; a pipe gets the get.
+  if (shouldPassthrough(argv) && !plan) passthrough(argv0IsCheck(argv) ? ["memberships", "get", ...argv.slice(2)] : argv, env);
 
   // Sandbox mode with no key: say so once, before anything runs, and offer to keep a key in wv's config.
   if (mode === "sandbox" && argv[0] !== "sandbox" && !sandboxKey().key) await offerSandboxKey(theme);
@@ -242,11 +244,29 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
   }
 
   if (group === "webhooks" && verb === "test") return webhookTest(args, theme, env);
+  if (argv0IsCheck(args)) return licenseCheck(args, theme, env);
 
   const spin = spinner(copy.spinner.running(args), theme);
   const { parsed, code } = await run(args, env);
   spin.stop();
   return { code, group, ...render(parsed, group, args, theme, opts) };
+}
+
+const argv0IsCheck = (argv: string[]) => argv[0] === "memberships" && argv[1] === "check";
+
+/** `memberships check <license_key>`: `memberships get` with the key, and a verdict. Exit 0 valid, 1 invalid, 2 unknown. */
+async function licenseCheck(args: string[], theme: Theme, env: NodeJS.ProcessEnv): Promise<Outcome> {
+  const key = args[2];
+  if (!key || key.startsWith("--")) {
+    print(errorView({ code: "VALIDATION_ERROR", message: copy.license.needsKey }, theme));
+    return { code: 2 };
+  }
+  const getArgv = ["memberships", "get", ...args.slice(2)];
+  const spin = spinner(copy.spinner.running(getArgv), theme);
+  const { parsed } = await run(getArgv, env);
+  spin.stop();
+  print(licenseView({ key, membership: parsed, argv: getArgv }, theme));
+  return { code: exitCodeFor(verdict(parsed)), group: "memberships", teach: teach(getArgv) };
 }
 
 /** `webhooks test <id> --event <e>`, then the newest delivery, so the round trip is one screen. */

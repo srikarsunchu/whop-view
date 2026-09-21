@@ -48,6 +48,8 @@ const CASES: [string, string[], NodeJS.ProcessEnv?][] = [
   ["error.webhooks_oauth", ["webhooks", "list"]],
   ["error.sandbox_oauth", ["accounts", "get", "me"], SANDBOX],
   ["apps.logs", ["apps", "logs", "app_HKnLpw6UGGEqk6"]],
+  // `memberships get` takes a membership id or a software license key; a key nobody issued is a 404.
+  ["error.license_404", ["memberships", "get", "ABCD-1234-EFGH-5678"]],
 ];
 
 // Fixtures are committed. Nothing a real person could be identified by survives recording:
