@@ -33,29 +33,27 @@ The bare CLI has no gate, no dry-run, no useful exit code, and no manifest that 
 | measure | `stats get ad_delivery` / `events` / `people` / `gross_revenue` / `trial_conversion_rate` / `churn_rate`, `exports create` | attribution unified under `whop:<campaign>:<group>:<ad>` source paths; ROAS and cost per result from your own pixel |
 | decide | `ad-campaigns pause` / `unpause`, `ads duplicate`, `ad-groups update`, `economic-intelligence create` / `list` / `update`, `webhooks create` | pause losers, clone winners, or hand the numbers to Whop's recommender and approve what comes back |
 
-## Preflight (read-only, run all of it first)
+## Preflight (read-only, one call)
 
 ```bash
-wv doctor --format json    # one call: signed in, identity, api key, pixel, meta page, ads payment, intelligence, products, webhooks; a `fix` per failing check
+wv doctor --format json
 ```
 
-Without `wv`, the same reads by hand:
+Nine checks, each with a `key`, a `level` (`ok`, `warn`, `fail`), a `detail` in Whop's words where Whop has any, a `fix` as the exact command when the CLI has one or a dashboard URL when it does not, and `blocking`. The envelope is `{ ok, blocking, checks: [...] }` and the exit code is 1 when a blocking check fails, so the branch is the status, not the body. In a terminal the same call is a screen; in a pipe it is the data, no flag needed.
 
-```bash
-whop auth status --format json                                   # who, which biz_
-whop accounts preferences --format json --filter-output ads_payment_methods,ads_reporting_currency,economic_intelligence
-whop social-accounts list --format json                          # empty → no page connected, ads will refuse
-whop people list --format json --filter-output 'data[0,50].first_source'   # all null → no pixel. Slice syntax: data[*] returns nothing
-whop ad-campaigns list --format json
-whop audiences list --format json
-```
+| key | what it reads | blocking | when red |
+|---|---|---|---|
+| `auth` | `auth status` | yes | not signed in → `whop login` |
+| `identity` | `payouts methods --include_limits`, the same limit the payout gate reads | yes | payouts blocked, in Whop's words → `whop verifications create --account_id <biz>` |
+| `apikey` | `auth list` and `permissions check` on the six scopes a seller needs | no | an OAuth login lacks `developer:manage_webhook` → `whop auth switch <saved api-key profile>`, or the login command plus the dashboard where a key is minted |
+| `pixel` | `people list --first 100`, anyone with a source | no | nobody attributed → `whop events validate_pixel` after the pixel is in the `<head>` of every funnel page |
+| `page` | `social-accounts list` | no | no Meta Business → `whop social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>`, which returns a URL the person opens |
+| `payment` | `accounts preferences` | no | no ads payment method → dashboard only |
+| `ei` | `accounts preferences` | no | Economic Intelligence off → `whop accounts update-preferences --economic_intelligence true` |
+| `products` | `products list`, a visible product with a plan | yes | nothing to buy → `whop products create --help` |
+| `webhooks` | `webhooks list` and the newest deliveries | no | no webhook, none delivered in 7 days, or the OAuth 403 → `whop webhooks create …`, `whop webhooks test <id> --event payment.succeeded`, or the API-key login |
 
-Fixes, each once:
-- No page: `whop social-accounts connect --platform meta_business --scopes advertise --redirect_url https://<your site>/connected` returns a URL the person opens.
-- No pixel: install it in the `<head>` of every funnel page (docs: developer/ads/pixel), then `whop events validate_pixel`.
-- No ads payment method: added in the dashboard, or fund the balance with `whop deposits create`.
-- Economic Intelligence off: `whop accounts update-preferences --economic_intelligence true`.
-- Webhooks need an API-key profile: `whop login --method api-key --apiKey whop_...`; an OAuth token lacks the scope.
+Which checks a playbook needs is in `wv agent <group>` under its prerequisites, and in the playbooks below: ads need `pixel`, `page`, and `payment`; payouts, cards, transfers, and swaps need `identity`; webhooks need `apikey`; the Monday report needs `ei`. Every fix is a one-time action, most of them the person's: run the `fix` when it is a command, show the URL when it is the dashboard, and rerun doctor before starting. Do not begin a playbook whose checks are red and hope the write explains itself later; the ad write would refuse in Whop's words at the last step instead of the first.
 
 ## Playbooks
 
