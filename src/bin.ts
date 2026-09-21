@@ -45,6 +45,7 @@ import { summaryView } from "./views/summary.ts";
 import { prompt } from "./primitives/prompt.ts";
 import { spinner } from "./primitives/spinner.ts";
 import { session } from "./tui/session.ts";
+import { serveMcp } from "./mcp.ts";
 import type { Parsed, Rec } from "./envelope.ts";
 
 const print = (lines: string[]) => process.stdout.write(lines.join("\n") + "\n");
@@ -118,6 +119,8 @@ export function timeoutFrom(env: NodeJS.ProcessEnv = process.env): number | unde
 }
 
 async function main(argvIn: string[]) {
+  // `wv --mcp`: the agent face as an MCP stdio server. Same gate, same envelopes, tools instead of argv.
+  if (argvIn[0] === "--mcp") return serveMcp();
   const own = ownFlags(argvIn);
   const { width, sandbox, plan, follow, all, md } = own;
   const theme = makeTheme({ width });
@@ -128,7 +131,7 @@ async function main(argvIn: string[]) {
   // whop's own write list, so the gate knows a verb the hand list has never heard of. Cached a day; empty is fine.
   if (own.argv.length >= 2 && !own.argv[1].startsWith("--")) loadWhopWrites(cachedLlmsFull());
   // No terminal: an agent or a script. Errors and the gate come back as JSON on stdout; everything else execs `whop`.
-  if (!process.stdout.isTTY) return agentMain(own.argv, dates, mode, env, plan, all, md);
+  if (!process.stdout.isTTY) return agentMain(own.argv, mode, env, plan, all, md);
   const json = assembleFor(dates.argv);
   const argv = json.argv;
 
@@ -152,35 +155,62 @@ async function main(argvIn: string[]) {
   process.exit((await execute(argv, theme, { mode, plan, follow, all })).code);
 }
 
-const emit = (e: AgentEnvelope, code: number): never => {
-  process.stdout.write(serialize(e));
-  process.exit(code);
-};
+/** What the pipe prints and exits with, or the `whop` exec it hands off. The MCP server consumes the same shape. */
+export interface TextReply {
+  kind: "text";
+  /** Exactly the bytes the pipe would print: a JSON envelope, a screen's data, or the manifest. */
+  text: string;
+  code: number;
+}
+export interface ExecReply {
+  kind: "exec";
+  /** The argv `whop` gets: wv's flags stripped, `memberships check` rewritten. */
+  argv: string[];
+  env: NodeJS.ProcessEnv;
+}
+export type AgentReply = TextReply | ExecReply;
+
+export interface AgentOptions {
+  mode: Mode;
+  env: NodeJS.ProcessEnv;
+  /** `--plan`: the plan alone, nothing runs. */
+  plan?: boolean;
+  /** `--all`: follow the cursor. */
+  all?: boolean;
+  /** `--md`: the report as Markdown. */
+  md?: boolean;
+}
+
+const textReply = (e: AgentEnvelope, code: number): TextReply => ({ kind: "text", text: serialize(e), code });
+const isRecipe = (argv: string[]) => (argv[0] === "gtm" && (argv[1] === "launch" || argv[1] === "winback")) || (argv[0] === "money" && argv[1] === "close") || (argv[0] === "support" && (argv[1] === "refund" || argv[1] === "dispute")) || (argv[0] === "dev" && argv[1] === "hook") || (argv[0] === "store" && (argv[1] === "price" || argv[1] === "publish"));
 
 /**
- * The pipe. A wv refusal (bad preset, bad `@file`) is a JSON envelope, exit 2. A write without `--yes` is
- * gated exactly as in a terminal, but the card is data and the prompt is exit 2 with `rerun`; `--plan` is
- * the data alone, exit 0. `--yes`, `WV_RAW`, and every read exec `whop` with the argv it expects.
+ * The agent face, pure. `argvIn` is wv argv with wv's own flags already split out by `ownFlags`. A wv refusal
+ * (bad preset, bad `@file`) is a JSON envelope, exit 2. A write without consent is gated exactly as in a
+ * terminal, but the card is data and the prompt is exit 2 with `rerun`; `--plan` is the data alone, exit 0.
+ * `--yes`, a valid `--approve`, `WV_RAW`, and every read hand back the `whop` argv to exec. The pipe streams
+ * that exec; the MCP server buffers it. Nothing here touches stdout or exits.
  */
-async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates>, mode: Mode, env: NodeJS.ProcessEnv, plan: boolean, all = false, md = false): Promise<never> {
-  if (dates.error) emit(wvErrorEnvelope(argvIn, mode, dates.error), 2);
+export async function agentReply(argvIn: string[], opts: AgentOptions): Promise<AgentReply> {
+  const { mode, env, plan = false, all = false, md = false } = opts;
+  const dates = resolveDates(argvIn);
+  if (dates.error) return textReply(wvErrorEnvelope(argvIn, mode, dates.error), 2);
   const json = assembleFor(dates.argv);
-  if (json.error) emit(wvErrorEnvelope(argvIn, mode, json.error), 2);
+  if (json.error) return textReply(wvErrorEnvelope(argvIn, mode, json.error), 2);
   const argv = json.argv;
   // The manifest is Markdown for a program; it prints the same in a pipe and a terminal.
   if (argv[0] === "agent") {
     const lines = await agentManifest(argv[1], wantsJson(argv));
-    if (!lines) emit(wvErrorEnvelope(argv, mode, { code: "COMMAND_NOT_FOUND", message: copy.manifest.unknownGroup(argv[1] ?? "") }), 2);
-    print(lines!);
-    process.exit(0);
+    if (!lines) return textReply(wvErrorEnvelope(argv, mode, { code: "COMMAND_NOT_FOUND", message: copy.manifest.unknownGroup(argv[1] ?? "") }), 2);
+    return { kind: "text", text: lines.join("\n") + "\n", code: 0 };
   }
-  if ((argv[0] === "gtm" && (argv[1] === "launch" || argv[1] === "winback")) || (argv[0] === "money" && argv[1] === "close") || (argv[0] === "support" && (argv[1] === "refund" || argv[1] === "dispute")) || (argv[0] === "dev" && argv[1] === "hook") || (argv[0] === "store" && (argv[1] === "price" || argv[1] === "publish"))) return recipePiped(argv, mode, env, plan);
-  if (argv[0] === "support" && argv[1] === "lookup") process.exit(await lookupJson(argv, mode, env));
-  if (argv[0] === "gtm" && argv[1] === "rank") process.exit(await rankJson(argv, mode, env));
-  if (argv[0] === "report") process.exit(await reportRun(makeTheme({}), env, mode, md ? "md" : "json"));
+  if (isRecipe(argv)) return recipeReply(argv, mode, env, plan);
+  if (argv[0] === "support" && argv[1] === "lookup") return lookupReply(argv, mode, env);
+  if (argv[0] === "gtm" && argv[1] === "rank") return rankReply(argv, mode, env);
+  if (argv[0] === "report") return reportReply(env, mode, md ? "md" : "json");
   // Two screens are data as well as pictures. The rest draw and need a terminal.
-  if (DATA_SCREENS.has(argv[0])) process.exit(await screenJson(argv[0], mode, env, argv));
-  if (OURS.has(argv[0])) emit(wvErrorEnvelope(argv, mode, { code: "NEEDS_TERMINAL", message: copy.agent.needsTerminal(argv[0]) }), 2);
+  if (DATA_SCREENS.has(argv[0])) return screenReply(argv[0], mode, env, argv);
+  if (OURS.has(argv[0])) return textReply(wvErrorEnvelope(argv, mode, { code: "NEEDS_TERMINAL", message: copy.agent.needsTerminal(argv[0]) }), 2);
   // `whop` rejects `--yes` and `--approve` as unknown flags. They are wv's, and they never reach the child.
   const { argv: unapproved, token } = splitApprove(argv);
   const args = unapproved.filter((a) => a !== "--yes");
@@ -188,7 +218,7 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
   let yes = unapproved.includes("--yes");
   if (token !== undefined && !plan) {
     const verdict = checkApproval(token, args, mode, approveSecret());
-    if (verdict !== "ok") emit(approvalEnvelope(args, mode, verdict), 2);
+    if (verdict !== "ok") return textReply(approvalEnvelope(args, mode, verdict), 2);
     yes = true;
   }
   if (!process.env.WV_RAW && agentGated(args) && (!yes || plan)) {
@@ -201,19 +231,27 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
     const approval = { token: mintApproval(planned, mode, approveSecret(), Math.floor(Date.now() / 1000) + ttlSeconds), ttlSeconds };
     if (isAdPlan(group, verb)) {
       const input = await adPlanFor(group, verb, planned, env, mode, plan);
-      if (plan) emit(planEnvelope(planned, mode, adPlan(input)), 0);
-      if (live && input.budget && input.cap != null && commitment(input.budget).total > input.cap) emit(adRefusedEnvelope(input), 2);
-      emit(confirmationEnvelope(planned, mode, adPlan(input), approval), 2);
+      if (plan) return textReply(planEnvelope(planned, mode, adPlan(input)), 0);
+      if (live && input.budget && input.cap != null && commitment(input.budget).total > input.cap) return textReply(adRefusedEnvelope(input), 2);
+      return textReply(confirmationEnvelope(planned, mode, adPlan(input), approval), 2);
     }
     const gate = await moneyGateFor(group, verb, planned, env, mode);
-    if (plan) emit(planEnvelope(planned, mode, moneyPlan(gate.input)), 0);
-    if (gate.refusal) emit(refusedEnvelope({ ...gate.input, reason: gate.refusal }), 2);
-    emit(confirmationEnvelope(planned, mode, moneyPlan(gate.input), approval), 2);
+    if (plan) return textReply(planEnvelope(planned, mode, moneyPlan(gate.input)), 0);
+    if (gate.refusal) return textReply(refusedEnvelope({ ...gate.input, reason: gate.refusal }), 2);
+    return textReply(confirmationEnvelope(planned, mode, moneyPlan(gate.input), approval), 2);
   }
   // `--all`: follow the cursor and stream every row, one JSON object per line, or one array with `--format json`.
-  if (all && argv.length >= 2) process.exit(await allPagesPiped(args, env));
+  if (all && argv.length >= 2) return allPagesReply(args, env);
+  return { kind: "exec", argv: argv0IsCheck(args) ? ["memberships", "get", ...args.slice(2)] : args, env };
+}
+
+/** The pipe: print the reply and exit, or exec `whop` with its stdout forwarded byte for byte. */
+async function agentMain(argvIn: string[], mode: Mode, env: NodeJS.ProcessEnv, plan: boolean, all = false, md = false): Promise<never> {
+  const r = await agentReply(argvIn, { mode, env, plan, all, md });
   // Bytes go through untouched; only the exit status is mapped, from the code in the bytes.
-  return passthroughPiped(argv0IsCheck(args) ? ["memberships", "get", ...args.slice(2)] : args, env, agentExitCode);
+  if (r.kind === "exec") return passthroughPiped(r.argv, r.env, agentExitCode);
+  process.stdout.write(r.text);
+  process.exit(r.code);
 }
 
 /**
@@ -406,25 +444,26 @@ async function recipeTerminal(argvIn: string[], theme: Theme, mode: Mode, env: N
 }
 
 /** A recipe in a pipe: one envelope for the whole sequence, one rerun, then the results as data. */
-async function recipePiped(argvIn: string[], mode: Mode, env: NodeJS.ProcessEnv, planOnly: boolean): Promise<never> {
+async function recipeReply(argvIn: string[], mode: Mode, env: NodeJS.ProcessEnv, planOnly: boolean): Promise<TextReply> {
+  const emit = textReply;
   const split = splitApprove(argvIn);
   const yesFlag = split.argv.includes("--yes");
   const argv = recipeArgvWithKey(split.argv.filter((a) => a !== "--yes"));
   if (split.token !== undefined && !planOnly) {
     const verdict = checkApproval(split.token, argv, mode, approveSecret());
-    if (verdict !== "ok") emit(approvalEnvelope(argv, mode, verdict), 2);
+    if (verdict !== "ok") return emit(approvalEnvelope(argv, mode, verdict), 2);
   }
   const approved = yesFlag || split.token !== undefined;
   const live = mode !== "sandbox" && !planOnly;
   const built = await buildRecipe(argv, env, mode, live);
-  if (!built.plan) emit(wvErrorEnvelope(argv, mode, { code: "VALIDATION_ERROR", message: built.error ?? "" }), 2);
+  if (!built.plan) return emit(wvErrorEnvelope(argv, mode, { code: "VALIDATION_ERROR", message: built.error ?? "" }), 2);
   const plan = built.plan!;
   const data = recipeData(plan);
-  if (planOnly) emit(planEnvelope(argv, mode, data), 0);
-  if (plan.blockers.length) emit(envelopeWith(argv, mode, { ok: false, error: { code: `${plan.name.toUpperCase()}_BLOCKED`, message: copy.recipe.blockedMessage(plan.name), hint: plan.blockers.join(" ") }, plan: data }), 2);
+  if (planOnly) return emit(planEnvelope(argv, mode, data), 0);
+  if (plan.blockers.length) return emit(envelopeWith(argv, mode, { ok: false, error: { code: `${plan.name.toUpperCase()}_BLOCKED`, message: copy.recipe.blockedMessage(plan.name), hint: plan.blockers.join(" ") }, plan: data }), 2);
   if (!approved) {
     const ttlSeconds = approveTtlFrom();
-    emit(confirmationEnvelope(argv, mode, data, { token: mintApproval(argv, mode, approveSecret(), Math.floor(Date.now() / 1000) + ttlSeconds), ttlSeconds }), 2);
+    return emit(confirmationEnvelope(argv, mode, data, { token: mintApproval(argv, mode, approveSecret(), Math.floor(Date.now() / 1000) + ttlSeconds), ttlSeconds }), 2);
   }
   const r = await runRecipe(plan, env);
   const results: Rec = {};
@@ -461,16 +500,14 @@ async function rank(argv: string[], theme: Theme, mode: Mode, env: NodeJS.Proces
   return { code: input.groups.ok ? 0 : 1, group: "gtm" };
 }
 
-async function rankJson(argv: string[], mode: Mode, env: NodeJS.ProcessEnv): Promise<number> {
+async function rankReply(argv: string[], mode: Mode, env: NodeJS.ProcessEnv): Promise<TextReply> {
   const clean = argv.filter((a, i) => !(a === "--format" || a.startsWith("--format=") || argv[i - 1] === "--format"));
   const input = await rankReads(clean, env, mode);
-  if ("error" in input) {
-    process.stdout.write(serialize(wvErrorEnvelope(clean, mode, { code: "VALIDATION_ERROR", message: input.error })));
-    return 2;
-  }
-  process.stdout.write(JSON.stringify({ ok: input.groups.ok, ...rankData(input), meta: { command: "gtm rank", wrapper: "wv", mode } }, null, 2) + "\n");
-  return input.groups.ok ? 0 : 1;
+  if ("error" in input) return textReply(wvErrorEnvelope(clean, mode, { code: "VALIDATION_ERROR", message: input.error }), 2);
+  return dataReply({ ok: input.groups.ok, ...rankData(input) }, "gtm rank", mode, input.groups.ok);
 }
+
+const rankJson = (argv: string[], mode: Mode, env: NodeJS.ProcessEnv) => rankReply(argv, mode, env).then(printReply);
 
 /**
  * `wv support lookup <key>`: resolve the key to a buyer, then read everything a ticket needs in parallel.
@@ -539,17 +576,15 @@ async function lookup(argv: string[], theme: Theme, mode: Mode, env: NodeJS.Proc
   return { code: input.user ? 0 : 1, group: "support" };
 }
 
-async function lookupJson(argv: string[], mode: Mode, env: NodeJS.ProcessEnv): Promise<number> {
+async function lookupReply(argv: string[], mode: Mode, env: NodeJS.ProcessEnv): Promise<TextReply> {
   const clean = argv.filter((a, i) => !(a === "--format" || a.startsWith("--format=") || argv[i - 1] === "--format"));
   const key = lookupKey(clean);
-  if (!key) {
-    process.stdout.write(serialize(wvErrorEnvelope(clean, mode, { code: "VALIDATION_ERROR", message: copy.support.needsKey })));
-    return 2;
-  }
+  if (!key) return textReply(wvErrorEnvelope(clean, mode, { code: "VALIDATION_ERROR", message: copy.support.needsKey }), 2);
   const input = await gatherLookup(key, env, mode);
-  process.stdout.write(JSON.stringify({ ...lookupData(input), meta: { command: "support lookup", wrapper: "wv", mode } }, null, 2) + "\n");
-  return input.user ? 0 : 1;
+  return dataReply(lookupData(input), "support lookup", mode, !!input.user);
 }
+
+const lookupJson = (argv: string[], mode: Mode, env: NodeJS.ProcessEnv) => lookupReply(argv, mode, env).then(printReply);
 
 /**
  * `wv report`: the brief. Six metrics over this week and last, then the four screens' reads in turn (each has its
@@ -587,11 +622,18 @@ async function gatherReport(theme: Theme, env: NodeJS.ProcessEnv, mode: Mode): P
 }
 
 async function reportRun(theme: Theme, env: NodeJS.ProcessEnv, mode: Mode, face: "tty" | "json" | "md"): Promise<number> {
+  if (face !== "tty") return printReply(await reportReply(env, mode, face));
   const input = await gatherReport(theme, env, mode);
-  if (face === "md") print(reportMarkdown(input));
-  else if (face === "json") process.stdout.write(JSON.stringify({ ...reportData(input), meta: { command: "report", wrapper: "wv", mode } }, null, 2) + "\n");
-  else print(reportView(input, theme));
+  print(reportView(input, theme));
   return reportData(input).ok ? 0 : 1;
+}
+
+/** The report as data or as Markdown, the two faces a pipe and the MCP server get. */
+async function reportReply(env: NodeJS.ProcessEnv, mode: Mode, face: "json" | "md"): Promise<TextReply> {
+  const input = await gatherReport(makeTheme({}), env, mode);
+  const ok = reportData(input).ok;
+  if (face === "md") return { kind: "text", text: reportMarkdown(input).join("\n") + "\n", code: ok ? 0 : 1 };
+  return dataReply(reportData(input), "report", mode, ok);
 }
 
 /** `wv store`: products, every plan, the active promo codes, and the checkout links, at once. */
@@ -643,45 +685,46 @@ async function devScreen(argv: string[], theme: Theme, mode: Mode): Promise<Outc
 const DATA_SCREENS = new Set(["doctor", "gtm", "money", "dev", "store", "setup"]);
 const wantsJson = (argv: string[]) => argv.some((a, i) => a === "--format=json" || (a === "--format" && argv[i + 1] === "json"));
 
-/** Prints a screen's data as JSON and returns the exit code the screen would have used. */
-async function screenJson(screen: string, mode: Mode, env: NodeJS.ProcessEnv, argv: string[] = []): Promise<number> {
-  const theme = makeTheme({});
-  if (screen === "setup") {
-    const input = await gatherDoctor(theme, env, mode);
-    const data = setupData(input);
-    process.stdout.write(JSON.stringify({ ...data, meta: { command: "setup", wrapper: "wv", mode } }, null, 2) + "\n");
-    return data.ok ? 0 : 1;
-  }
-  if (screen === "store") {
-    const input = await gatherStore(theme, env, mode);
-    const data = storeData(input);
-    process.stdout.write(JSON.stringify({ ...data, meta: { command: "store", wrapper: "wv", mode } }, null, 2) + "\n");
-    return data.ok ? 0 : 1;
-  }
-  if (screen === "dev") {
-    const input = await gatherDev(argv[1] && !argv[1].startsWith("--") ? argv[1] : undefined, theme, env, mode);
-    const data = devData(input);
-    process.stdout.write(JSON.stringify({ ...data, meta: { command: "dev", wrapper: "wv", mode } }, null, 2) + "\n");
-    return data.ok ? 0 : 1;
-  }
-  if (screen === "doctor") {
-    const input = await gatherDoctor(theme, env, mode);
-    const data = doctorData(input);
-    process.stdout.write(JSON.stringify({ ...data, meta: { command: "doctor", wrapper: "wv", mode } }, null, 2) + "\n");
-    return data.ok ? 0 : 1;
-  }
-  if (screen === "money") {
-    const input = await gatherMoney(theme, env, mode);
-    const data = moneyData(input);
-    process.stdout.write(JSON.stringify({ ...data, meta: { command: "money", wrapper: "wv", mode } }, null, 2) + "\n");
-    return data.ok ? 0 : 1;
-  }
-  const { input, failed } = await gatherGtm(theme, env, mode);
-  process.stdout.write(JSON.stringify({ ...gtmData(input), meta: { command: "gtm", wrapper: "wv", mode } }, null, 2) + "\n");
-  return failed ? 1 : 0;
+/** A screen's data with wv's meta, as the bytes a pipe prints, and the exit code the screen would have used. */
+function dataReply(data: object, command: string, mode: Mode, ok: unknown): TextReply {
+  return { kind: "text", text: JSON.stringify({ ...data, meta: { command, wrapper: "wv", mode } }, null, 2) + "\n", code: ok ? 0 : 1 };
 }
 
-/** `wv money`: identity, the usd balance plus one per saved-method currency, methods with limits, recent payouts, reserves, verifications. */
+const printReply = (r: TextReply): number => {
+  process.stdout.write(r.text);
+  return r.code;
+};
+
+/** A data screen as JSON. `argv` carries the screen's own arguments, such as the app id for `dev`. */
+async function screenReply(screen: string, mode: Mode, env: NodeJS.ProcessEnv, argv: string[] = []): Promise<TextReply> {
+  const theme = makeTheme({});
+  if (screen === "setup") {
+    const data = setupData(await gatherDoctor(theme, env, mode));
+    return dataReply(data, "setup", mode, data.ok);
+  }
+  if (screen === "store") {
+    const data = storeData(await gatherStore(theme, env, mode));
+    return dataReply(data, "store", mode, data.ok);
+  }
+  if (screen === "dev") {
+    const data = devData(await gatherDev(argv[1] && !argv[1].startsWith("--") ? argv[1] : undefined, theme, env, mode));
+    return dataReply(data, "dev", mode, data.ok);
+  }
+  if (screen === "doctor") {
+    const data = doctorData(await gatherDoctor(theme, env, mode));
+    return dataReply(data, "doctor", mode, data.ok);
+  }
+  if (screen === "money") {
+    const data = moneyData(await gatherMoney(theme, env, mode));
+    return dataReply(data, "money", mode, data.ok);
+  }
+  const { input, failed } = await gatherGtm(theme, env, mode);
+  return dataReply(gtmData(input), "gtm", mode, !failed);
+}
+
+/** Prints a screen's data as JSON and returns the exit code the screen would have used. */
+const screenJson = (screen: string, mode: Mode, env: NodeJS.ProcessEnv, argv: string[] = []) => screenReply(screen, mode, env, argv).then(printReply);
+
 async function gatherMoney(theme: Theme, env: NodeJS.ProcessEnv, mode: Mode): Promise<MoneyInput> {
   const spin = spinner(copy.spinner.moneyScreen, theme);
   const methodsCmd = ["payouts", "methods", "--include_limits"];
@@ -741,17 +784,18 @@ const wantsJsonArray = (argv: string[]) => argv.some((a, i) => a === "--format=j
  * `--format json` buffers into whop's own list shape with `page_info` closed. A failing page ends the stream
  * with whop's error envelope and its exit code, so a consumer sees where it stopped.
  */
-async function allPagesPiped(argv: string[], env: NodeJS.ProcessEnv): Promise<number> {
+async function allPagesReply(argv: string[], env: NodeJS.ProcessEnv): Promise<TextReply> {
   const asArray = wantsJsonArray(argv);
   const clean = argv.filter((a, i) => !(a === "--format" || a.startsWith("--format=") || (argv[i - 1] === "--format")));
   const r = await fetchAll(clean, env);
+  let text: string;
   if (asArray) {
-    process.stdout.write(JSON.stringify({ data: r.rows, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false }, pages: r.pages, ...(r.extra ?? {}), ...(r.last.ok ? {} : { error: r.last.error }) }, null, 2) + "\n");
+    text = JSON.stringify({ data: r.rows, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false }, pages: r.pages, ...(r.extra ?? {}), ...(r.last.ok ? {} : { error: r.last.error }) }, null, 2) + "\n";
   } else {
-    for (const row of r.rows) process.stdout.write(JSON.stringify(row) + "\n");
-    if (!r.last.ok) process.stdout.write(JSON.stringify({ ok: false, error: r.last.error, pages: r.pages }) + "\n");
+    text = r.rows.map((row) => JSON.stringify(row) + "\n").join("");
+    if (!r.last.ok) text += JSON.stringify({ ok: false, error: r.last.error, pages: r.pages }) + "\n";
   }
-  return r.last.ok ? 0 : agentExitCode(r.code, JSON.stringify(r.last.error));
+  return { kind: "text", text, code: r.last.ok ? 0 : agentExitCode(r.code, JSON.stringify(r.last.error)) };
 }
 
 export interface ExecuteOptions {

@@ -103,6 +103,21 @@ export function passthroughPiped(argv: string[], env: NodeJS.ProcessEnv, decide:
   });
 }
 
+/**
+ * Exec whop for a caller that wants the bytes back instead of on stdout: the MCP server. Same argv and env the
+ * pipe would exec, stdout buffered whole, stderr forwarded, and `decide` over the status and the tail as in
+ * `passthroughPiped`. A missing binary is status 127 with the message where stdout would be.
+ */
+export function runBuffered(argv: string[], env: NodeJS.ProcessEnv, decide: (status: number, tail: string) => number): Promise<{ stdout: string; code: number }> {
+  return new Promise((resolve) => {
+    const child = spawn(WHOP, argv, { stdio: ["ignore", "pipe", "inherit"], env });
+    let out = "";
+    child.stdout.on("data", (d: Buffer) => (out += d.toString("utf8")));
+    child.on("error", (e: NodeJS.ErrnoException) => resolve({ stdout: `wv: could not run ${WHOP}: ${e.message}\n`, code: 127 }));
+    child.on("close", (status) => resolve({ stdout: out, code: decide(status ?? 1, out.slice(-TAIL_BYTES)) }));
+  });
+}
+
 export interface RunResult {
   parsed: Parsed;
   code: number;

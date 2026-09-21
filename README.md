@@ -40,6 +40,18 @@ pnpm eval [skill]
 
 Runs a skill's scenarios through `claude -p` against `tests/fake-whop.sh`, so no real account is touched, and judges the transcript: doctor before any write, the plan shown before the approved rerun, never `--yes`, never raw `whop` for a write, the done-when read at the end. The last runs are committed in each skill's `evals/results.md`.
 
+## MCP
+
+```bash
+wv --mcp
+```
+
+The same agent face as a Model Context Protocol server on stdio, for a client that never opens a terminal. Four tools: `wv_manifest`, `wv_read`, `wv_screen`, `wv_write`. `wv_write` never writes on the first call: it returns the plan and a `rerun`, and the second call with that `rerun` runs it, under the same signed approval and idempotency key the pipe uses. `whop --mcp` serves 298 tools and `payouts_create` on it moves money on the first call; this one asks first. Register it with Whop's own installer:
+
+```bash
+whop mcp add --agent claude-code --command "wv --mcp"
+```
+
 ## The skills
 
 | skill | job | its screen | its recipes | last eval |

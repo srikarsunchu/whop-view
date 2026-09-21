@@ -846,6 +846,16 @@ export const copy = {
     approvalInvalid: "The approval does not match this command. It was minted for a different argv, mode, or machine. Run the command without --approve for a fresh plan.",
     needsTerminal: (what: string) => `wv ${what} draws a screen and needs a terminal. wv doctor and wv gtm answer JSON in a pipe.`,
   },
+  mcp: {
+    instructions:
+      "wv is the Whop CLI with a gate. wv_read returns whop's own JSON. wv_write never writes on the first call: it returns a plan and a `rerun`. Show the plan to the person, get a yes, then call wv_write again with the `rerun` array exactly as given (the leading `wv` is optional). The rerun carries an approval bound to that exact command, good for a few minutes, and an idempotency key, so an edited command is refused and a retry cannot write twice. A reply with `ok: false` and no `rerun` is a refusal: report it, do not work around it. wv_screen is where to start: doctor before any write, then the screen for the job.",
+    manifest: "The command reference for one group, or the index of every group: verbs, their kind (read or write), and each flag's type, whether it is required, its description, and an example. Read this instead of guessing a flag.",
+    read: "Run a whop read and get its JSON back. Lists, gets, stats, deliveries, logs. A write is refused here; use wv_write.",
+    screen: "One of wv's screens as data: `doctor` (is this business set up to sell, and what blocks it), `gtm`, `money`, `dev`, `store`, `setup`, `report` (the weekly brief), `gtm rank` (every live campaign against the decide rubric), and `support lookup` (one customer from an email, license key, membership, or payment id). Each joins the reads its job needs into one call.",
+    write: "Plan or run a write, or a recipe (`gtm launch`, `gtm winback`, `money close`, `support refund`, `support dispute`, `dev hook`, `store price`, `store publish`). The first call returns the plan and a `rerun` and runs nothing. After the person has seen the plan and said yes, call again with the `rerun` array exactly as given: that runs it. `plan: true` returns the plan with no rerun.",
+    unknownTool: (name: string) => `Unknown tool: ${name}`,
+    readIsWrite: (cmd: string) => `${cmd} is a write. wv_read only reads; call wv_write with the same argv to get the plan.`,
+  },
 };
 
 const VERB_TITLES: Record<string, string> = {
