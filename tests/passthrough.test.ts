@@ -83,6 +83,22 @@ test("piped stdout: wv swaps create on a fiat pair is the swap recipe, quote and
   assert.equal(JSON.parse(crypto.stdout).plan.kind, "write");
 });
 
+test("piped stdout: --account_id on a screen scopes every read whose schema takes it, and the account on the data", () => {
+  const fake = fakeWhop();
+  const log = join(mkdtempSync(join(tmpdir(), "wv-log-")), "argv.log");
+  const r = wv(["money", "--account_id", "biz_scoped"], { WV_WHOP_BIN: fake, WV_FAKE_LOG: log });
+  assert.equal(r.status, 0, r.stderr);
+  const d = JSON.parse(r.stdout);
+  assert.deepEqual(d.account, { id: "biz_scoped", title: "Scoped Biz" }, "the scoped business, titled from accounts get");
+  const ran = readFileSync(log, "utf8");
+  assert.match(ran, /^payouts methods --include_limits --account_id biz_scoped --format json --full-output$/m, "a read whose schema takes account_id gets the scope");
+  assert.match(ran, /^ledgers report --report_type balance_summary --currency usd --account_id biz_scoped --format json --full-output$/m);
+  assert.match(ran, /^auth status --format json --full-output$/m, "a read whose schema does not take it is untouched");
+  // A plain whop command is not a screen: the flag stays where the person put it and the bytes pass through.
+  const plain = wv(["products", "list", "--account_id", "biz_scoped"], { WV_WHOP_BIN: fake });
+  assert.match(plain.stderr, /^ARGS: products list --account_id biz_scoped$/m);
+});
+
 test("piped stdout: wv store --from asks Whop the price from that country and puts it on the plan", () => {
   const fake = fakeWhop();
   const r = wv(["store", "--from", "de"], { WV_WHOP_BIN: fake });

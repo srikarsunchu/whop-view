@@ -188,6 +188,10 @@ The whop-setup skill (`skills/whop-setup`) is the onboarding: seven rules (the l
 
 Fixtures: `auth.list`, `permissions.check`, `verifications.list`, `payouts.methods.limits`, `error.webhooks_oauth`, recorded with `pnpm fixtures <name>…`. `auth list` carries `userEmail`; the recorder's email redaction is case-insensitive for it. Webhook rows and deliveries cannot be recorded from an oauth login, so the `doctor.ready` scene builds them in `tests/render.ts` from the `Webhook` and `WebhookDelivery` shapes in the API reference.
 
+## Account scope
+
+`--account_id <biz>` on a wv screen or recipe (`wv money --account_id biz_x`, `wv store price plan_y --to 39 --account_id biz_x`) scopes every read it makes to that business, for a caller that switches businesses without changing the CLI's default; Whop Desktop is that caller. `takeScope` in `bin.ts` takes the flag off the screen's argv at the three entry points (`main`, `agentReply`, `execute`) and remembers it; every read goes through a `run` that appends `--account_id` when the verb's cached `--schema` lists an `account_id` option, so `auth status`, `swaps quote`, `plans calculate_tax`, and `permissions check` stay bare. `identity` reports the scoped business, with its title from `accounts get`. A plain `whop` command is not a screen: its flag stays where the person put it and the bytes pass through. `WHOP_ACCOUNT_ID` was checked on 2026-09-21 and the CLI does not honor it on an OAuth login, so the flag is the only way. Tested in `tests/passthrough.test.ts` against the fake whop.
+
 ## Passthrough rules
 
 `wv` renders only when all of these hold. Otherwise it execs `whop` with the original argv, inherits stdio, and exits with its code.

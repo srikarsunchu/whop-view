@@ -2,7 +2,7 @@
 // wv: human view layer for the Whop CLI. Renders when a person is looking, execs `whop` otherwise.
 import { realpathSync } from "node:fs";
 import { makeTheme, paint, type Theme } from "./tokens.ts";
-import { cachedHelpText, cachedLlmsFull, helpText, modeFrom, schema, passthrough, passthroughPiped, run, sandboxKey, sandboxUrl, shouldPassthrough, whopEnv, type Mode } from "./runner.ts";
+import { cachedHelpText, cachedLlmsFull, helpText, modeFrom, schema, passthrough, passthroughPiped, run as runRaw, sandboxKey, sandboxUrl, shouldPassthrough, whopEnv, type Mode, type RunResult } from "./runner.ts";
 import { approveSecret, configPath, maskKey, saveSandboxKey } from "./config.ts";
 import { approveTtlFrom, checkApproval, mintApproval, splitApprove } from "./approve.ts";
 import { sandboxMissingKeyView, sandboxSavedView, sandboxStatusView } from "./views/sandbox.ts";
@@ -52,6 +52,37 @@ const print = (lines: string[]) => process.stdout.write(lines.join("\n") + "\n")
 
 /** Words that are wv's, not whop's. */
 const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox", "agent", "money", "support", "dev", "store", "report", "setup"]);
+
+/**
+ * `--account_id <biz>` on a wv screen or recipe scopes every read it makes to that business, for a caller that
+ * switches businesses without changing the CLI's default (Whop Desktop). The flag is taken off the screen's argv
+ * here and put back on each whop read whose schema has an `account_id` option; a plain `whop` command keeps its
+ * flag and passes through untouched. `WHOP_ACCOUNT_ID` is not honored by the CLI on an OAuth login (checked
+ * 2026-09-21), so the flag is the only way.
+ */
+let accountScope: string | undefined;
+export function takeScope(argv: string[]): string[] {
+  if (!(OURS.has(argv[0]) || isRecipe(argv))) return argv;
+  const out: string[] = [];
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--account_id" && argv[i + 1]) accountScope = argv[++i];
+    else if (a.startsWith("--account_id=")) accountScope = a.slice(13);
+    else out.push(a);
+  }
+  return out;
+}
+
+/** Every read a screen makes goes through here: the scope is appended when the verb's schema takes it. */
+function run(argv: string[], env: NodeJS.ProcessEnv = process.env): Promise<RunResult> {
+  return runRaw(scoped(argv), env);
+}
+export function scoped(argv: string[], scope = accountScope): string[] {
+  if (!scope || argv.length < 2 || argv.some((a) => a === "--account_id" || a.startsWith("--account_id="))) return argv;
+  const sch = schema(argv[0], argv[1]) as { options?: { properties?: Record<string, unknown> } } | null;
+  if (!sch?.options?.properties || !("account_id" in sch.options.properties)) return argv;
+  return [...argv, "--account_id", scope];
+}
 
 export interface Outcome {
   code: number;
@@ -169,7 +200,7 @@ async function main(argvIn: string[]) {
   const isTTY = !!process.stdout.isTTY || (human && own.argv.length > 0);
   if (!isTTY) return agentMain(own.argv, mode, env, plan, all, md);
   const json = assembleFor(dates.argv);
-  const argv = swapAlias(json.argv);
+  const argv = takeScope(swapAlias(json.argv));
 
   // `wv doctor --format json` in a terminal is the agent face on purpose. `--format` would otherwise exec `whop doctor`, which is not a command.
   if (argv[0] === "report" && (md || wantsJson(argv))) process.exit(await reportRun(theme, env, mode, md ? "md" : "json"));
@@ -233,7 +264,7 @@ export async function agentReply(argvIn: string[], opts: AgentOptions): Promise<
   if (dates.error) return textReply(wvErrorEnvelope(argvIn, mode, dates.error), 2);
   const json = assembleFor(dates.argv);
   if (json.error) return textReply(wvErrorEnvelope(argvIn, mode, json.error), 2);
-  const argv = swapAlias(json.argv);
+  const argv = takeScope(swapAlias(json.argv));
   // The manifest is Markdown for a program; it prints the same in a pipe and a terminal.
   if (argv[0] === "agent") {
     const lines = await agentManifest(argv[1], wantsJson(argv));
@@ -902,7 +933,7 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
     print(errorView({ code: json.error.code, message: json.error.message }, theme));
     return { code: 2 };
   }
-  const argv = swapAlias(json.argv);
+  const argv = takeScope(swapAlias(json.argv));
   const [group, verb] = argv;
   if (!group || group === "help") {
     const target = group === "help" ? argv[1] : undefined;
@@ -1279,12 +1310,19 @@ let identityCache: Promise<Identity | null> | undefined;
 
 /** `auth status`, once per process. Confirmations and the session banner both need it. */
 function identity(env: NodeJS.ProcessEnv = process.env): Promise<Identity | null> {
-  identityCache ??= run(["auth", "status"], env).then(({ parsed }) => {
+  identityCache ??= run(["auth", "status"], env).then(async ({ parsed }) => {
     if (!parsed.ok || parsed.payload.kind !== "status") return null;
     const s = parsed.payload.record;
     const a = s.account as Rec | undefined;
     if (!a) return null;
-    return { title: String(a.title ?? ""), id: String(a.id ?? ""), profile: s.profile ? String(s.profile) : undefined, method: s.method ? String(s.method) : undefined };
+    const base = { profile: s.profile ? String(s.profile) : undefined, method: s.method ? String(s.method) : undefined };
+    // Scoped to another business: its title from `accounts get`, the id from the flag either way.
+    if (accountScope && accountScope !== String(a.id ?? "")) {
+      const acct = await run(["accounts", "get", accountScope], env);
+      const r = acct.parsed.ok && "record" in acct.parsed.payload ? acct.parsed.payload.record : undefined;
+      return { ...base, id: accountScope, title: String(r?.title ?? accountScope) };
+    }
+    return { ...base, title: String(a.title ?? ""), id: String(a.id ?? "") };
   });
   return identityCache;
 }

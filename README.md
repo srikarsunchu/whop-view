@@ -164,7 +164,7 @@ Exit codes: `whop` exits 1 for every failure, so a script cannot branch without 
 
 ![exit codes](demo/exit-codes.gif)
 
-Screens: every wv screen answers as JSON in a pipe, or with `--format json` in a terminal. `wv doctor` is `{ ok, blocking, checks: [{ key, level, detail, fix, blocking }] }` with exit 1 on a blocking failure, so an agent's preflight is one call. `wv gtm`, `wv store`, `wv money`, `wv support lookup`, and `wv dev` are every read the screen made, joined, plus the gaps or the suggested writes with their fixes as `wv` commands.
+Screens: every wv screen answers as JSON in a pipe, or with `--format json` in a terminal, and takes `--account_id <biz>` to read another business than the CLI's default. `wv doctor` is `{ ok, blocking, checks: [{ key, level, detail, fix, blocking }] }` with exit 1 on a blocking failure, so an agent's preflight is one call. `wv gtm`, `wv store`, `wv money`, `wv support lookup`, and `wv dev` are every read the screen made, joined, plus the gaps or the suggested writes with their fixes as `wv` commands.
 
 ![doctor as json](demo/doctor-json.gif)
 

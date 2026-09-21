@@ -25,6 +25,7 @@ case "$1 $2" in
     esac ;;
   "products get") fx products.get.json ;;
   "auth status") fx auth.status.json ;;
+  "accounts get") echo '{"ok":true,"data":{"id":"'"$3"'","title":"Scoped Biz","route":"scoped"},"meta":{"command":"accounts get","duration":"1ms"}}'; exit 0 ;;
   "auth switch") [ -n "$WV_FAKE_LOG" ] && echo "$3" > "$WV_FAKE_LOG.profile"; echo '{"ok":true,"data":{"active":"'"$3"'"},"meta":{"command":"auth switch","duration":"1ms"}}'; exit 0 ;;
   "people list") fx people.list.json ;;
   "payouts list") fx payouts.list.json ;;
