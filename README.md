@@ -38,7 +38,7 @@ Regenerates each skill's command map from the live `whop`, copies the shared gat
 pnpm eval [skill]
 ```
 
-Runs a skill's scenarios through `claude -p` against `tests/fake-whop.sh`, so no real account is touched, and judges the transcript: doctor before any write, the plan shown before the approved rerun, never `--yes`, never raw `whop` for a write, the done-when read at the end. The last runs are committed in each skill's `evals/results.md`.
+Runs a skill's scenarios through `claude -p` against `tests/fake-whop.sh`, so no real account is touched, and judges the transcript: doctor before any write, the plan shown before the approved rerun, never `--yes`, never raw `whop` for a write, the done-when read at the end. Add `--mcp` to run them with no shell, through `wv --mcp`. The last runs are committed in each skill's `evals/results.md` and `evals/results.mcp.md`.
 
 ## MCP
 
@@ -59,10 +59,10 @@ Registers it through Whop's own installer (`whop mcp add --command "wv --mcp"`).
 | skill | job | its screen | its recipes | last eval |
 |---|---|---|---|---|
 | [`whop-gtm`](skills/whop-gtm/SKILL.md) | launch, retarget, scale, report | `wv gtm` | `wv gtm launch`, `wv gtm winback`, `wv gtm rank` | 26/26 |
-| [`whop-store`](skills/whop-store/SKILL.md) | prices, publishing, plans, promo codes, checkout links | `wv store` | `wv store price`, `wv store publish` | not run yet |
+| [`whop-store`](skills/whop-store/SKILL.md) | prices, publishing, plans, promo codes, checkout links | `wv store` | `wv store price`, `wv store publish` | 18/18 |
 | [`whop-money`](skills/whop-money/SKILL.md) | balances, payouts, month end, reconcile | `wv money` | `wv money close` | 20/20 |
 | [`whop-support`](skills/whop-support/SKILL.md) | who is this customer, refund, dispute, cases | `wv support lookup` | `wv support refund`, `wv support dispute` | 21/22 |
-| [`whop-dev`](skills/whop-dev/SKILL.md) | ship, webhook, domain, logs, keys | `wv dev` | `wv dev hook` | 11/14 |
+| [`whop-dev`](skills/whop-dev/SKILL.md) | ship, webhook, domain, logs, keys | `wv dev` | `wv dev hook` | 15/15 · MCP 15/15 |
 
 Every skill has the same shape, so an agent that has run one knows the others:
 
@@ -75,7 +75,7 @@ Every skill has the same shape, so an agent that has run one knows the others:
 
 [`gate.md`](skills/_shared/gate.md) is the contract all five share. Without consent `wv` runs nothing: in a pipe a write exits 2 with the plan and a `rerun`; the agent shows the plan, gets a yes, and runs `rerun` exactly as given. `rerun` carries an `--approve` token that is a signature over that argv, the host, and a ten-minute expiry, and an `--idempotency-key` minted at the plan step, so the write that runs is the one the person saw and a retry cannot write twice. A refusal is the same envelope with no `rerun`, and a blocked recipe is a stop, not a menu: the agent never runs the plan's steps by hand through `whop` to do the part that would have worked.
 
-The evals are where that contract meets a model. The gtm, money, and support runs pass their checks; the dev run does not yet, and its `results.md` says why: asked to add a webhook on an OAuth login, the agent guessed at `whop auth switch` and four other spellings instead of reading the fix `wv dev --format json` had already handed it. That transcript is the reason the dev rules now open with the API-key rule. The store skill is newest and has no run yet.
+The evals are where that contract meets a model. Every skill's last run is in its `evals/results.md`. The dev run once failed, and that transcript is why its rules now open with the API-key rule: asked to add a webhook on an OAuth login, the agent guessed at `whop auth switch` and four other spellings instead of reading the fix `wv dev --format json` had already handed it. It passes now, and the same three scenarios also pass with no shell at all: `pnpm eval whop-dev --mcp` gives the agent only the four tools of `wv --mcp`, renders each call as the `wv` command it stands for, and judges it with the same checks. The results sit side by side in `evals/results.md` and `evals/results.mcp.md`. On the OAuth scenario the MCP run reached the proven webhook in seven tool calls and no reference-file reads, against nine shell commands plus two reads through Bash, and the gate held on both.
 
 ### `report`
 

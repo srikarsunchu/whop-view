@@ -149,7 +149,8 @@ export function argvFor(name: string, args: Rec): string[] {
       return [...sandbox, ...screen, ...strings(args.args), ...(args.markdown === true && screen[0] === "report" ? ["--md"] : [])];
     }
     case "wv_write": {
-      const argv = strings(args.argv);
+      // `--yes` is the honor system for a script a person wrote. A model gets the gate: the flag is dropped here.
+      const argv = strings(args.argv).filter((a) => a !== "--yes");
       return [...sandbox, ...(argv[0] === "wv" ? argv.slice(1) : argv), ...(args.plan === true ? ["--plan"] : [])];
     }
     default:
@@ -254,8 +255,11 @@ export async function callTool(name: string, args: Rec, client: Client = {}): Pr
 const respond = (id: Id, result: unknown) => JSON.stringify({ jsonrpc: "2.0", id, result }) + "\n";
 const fail = (id: Id, code: number, message: string) => JSON.stringify({ jsonrpc: "2.0", id, error: { code, message } }) + "\n";
 
-/** Whether the client's initialize declared it can put a question in front of the person. */
-export const clientElicits = (params: Rec | undefined) => isRec(params?.capabilities) && isRec(params.capabilities.elicitation);
+/**
+ * Whether the client's initialize declared it can put a question in front of the person. `WV_MCP_NO_ELICIT=1`
+ * says not to trust it: a headless client (an eval through `claude -p`) may declare it and have nobody to ask.
+ */
+export const clientElicits = (params: Rec | undefined, env: NodeJS.ProcessEnv = process.env) => !env.WV_MCP_NO_ELICIT && isRec(params?.capabilities) && isRec(params.capabilities.elicitation);
 
 /**
  * One request to one response line, or nothing for a notification. `client` is the way back to the person;

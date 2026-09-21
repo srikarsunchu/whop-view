@@ -109,6 +109,7 @@ test("mcp: every tool is one wv argv underneath", () => {
   assert.deepEqual(argvFor("wv_screen", { screen: "support lookup", args: ["mem_1"] }), ["support", "lookup", "mem_1"]);
   assert.deepEqual(argvFor("wv_screen", { screen: "report", markdown: true }), ["report", "--md"]);
   assert.deepEqual(argvFor("wv_write", { argv: ["wv", "payouts", "create", "--amount", "5"], plan: true }), ["payouts", "create", "--amount", "5", "--plan"]);
+  assert.deepEqual(argvFor("wv_write", { argv: ["products", "update", "prod_1", "--yes"] }), ["products", "update", "prod_1"], "a model's --yes is not consent");
   assert.throws(() => argvFor("wv_nope", {}), /Unknown tool/);
   assert.equal(TOOLS.length, 4);
 });
@@ -243,12 +244,16 @@ test("mcp elicitation: money asks for the amount typed back, and y is not consen
   assert.equal(right.byId.get(2)!.result?.isError, undefined);
 });
 
-test("mcp elicitation: a client that did not declare it gets the plan and the rerun, as in the pipe", async () => {
+test("mcp elicitation: a client that did not declare it, or WV_MCP_NO_ELICIT, gets the plan and the rerun, as in the pipe", async () => {
   const env = gateEnv();
-  const r = await serve([init, call(2, "wv_write", { argv: ["products", "update", "prod_1", "--title", "Frame Pro"] })], env, () => ({ action: "accept", content: { approve: true } }));
-  assert.equal(r.asked.length, 0, "nothing was asked");
-  assert.equal(structured(r.byId.get(2)!)?.error?.code, "CONFIRMATION_REQUIRED");
-  assert.ok(Array.isArray(structured(r.byId.get(2)!)?.rerun));
+  const write = call(2, "wv_write", { argv: ["products", "update", "prod_1", "--title", "Frame Pro", "--yes"] });
+  for (const [first, extra] of [[init, {}], [initElicit, { WV_MCP_NO_ELICIT: "1" }]] as [Rpc, NodeJS.ProcessEnv][]) {
+    const r = await serve([first, write], { ...env, ...extra }, () => ({ action: "accept", content: { approve: true } }));
+    assert.equal(r.asked.length, 0, "nothing was asked");
+    assert.equal(structured(r.byId.get(2)!)?.error?.code, "CONFIRMATION_REQUIRED", "--yes from the model did not lift the gate");
+    assert.ok(Array.isArray(structured(r.byId.get(2)!)?.rerun));
+    assert.ok(!r.argv.some((a) => a.startsWith("products update")));
+  }
 });
 
 test("mcp elicitation: plan only never asks, and the sandbox asks for a yes, not an amount", async () => {
