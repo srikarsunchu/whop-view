@@ -1,0 +1,11 @@
+{
+  "ok": false,
+  "error": {
+    "code": "HTTP_403",
+    "message": "OAuth token is not authorized for the developer:manage_webhook scope. This resource requires an API-key login (`whop login --api-key`)."
+  },
+  "meta": {
+    "command": "webhooks list",
+    "duration": "241ms"
+  }
+}

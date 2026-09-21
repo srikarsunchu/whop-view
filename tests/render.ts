@@ -15,6 +15,7 @@ import { seriesView } from "../src/views/series.ts";
 import { summaryView } from "../src/views/summary.ts";
 import { adPlanView, adRefusedView, type AdPlanInput } from "../src/views/adplan.ts";
 import { gtmView } from "../src/views/gtm.ts";
+import { doctorView, DOCTOR_ACTIONS, type DoctorInput } from "../src/views/doctor.ts";
 
 export const FIXTURES = join(import.meta.dirname, "fixtures");
 export const fixture = (name: string) => readFileSync(join(FIXTURES, name), "utf8");
@@ -94,7 +95,60 @@ const GTM_COMMANDS = [
   ["accounts", "preferences"],
 ];
 
+/** An envelope built in the test, for shapes this account cannot record (webhooks need an API-key login). */
+export const synth = (data: unknown) => parseEnvelope(JSON.stringify({ ok: true, data, meta: { command: "synthetic", duration: "1ms" } }));
+const synthPage = (rows: unknown[]) => synth({ data: rows, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } });
+
+const DOCTOR_COMMANDS = [
+  ["auth", "status"],
+  ["auth", "list"],
+  ["permissions", "check", "--resource_id", "biz_VraUMckluH8dzV", "--actions", DOCTOR_ACTIONS.join(",")],
+  ["verifications", "list"],
+  ["payouts", "methods", "--include_limits"],
+  ["people", "list", "--first", "100"],
+  ["social-accounts", "list"],
+  ["accounts", "preferences"],
+  ["products", "list"],
+  ["webhooks", "list"],
+];
+
+/** The real account as recorded: identity unverified, oauth login, nothing connected. */
+export const DOCTOR: DoctorInput = {
+  accountTitle: "Frame",
+  accountId: "biz_VraUMckluH8dzV",
+  auth: envelope("auth.status"),
+  profiles: envelope("auth.list"),
+  permissions: envelope("permissions.check"),
+  verifications: envelope("verifications.list"),
+  methods: envelope("payouts.methods.limits"),
+  people: envelope("people.list"),
+  social: envelope("social-accounts.list"),
+  preferences: envelope("accounts.preferences"),
+  products: envelope("products.list"),
+  webhooks: envelope("error.webhooks_oauth"),
+  deliveries: {},
+  commands: DOCTOR_COMMANDS,
+};
+
+/** The same account with everything done. Shapes follow the API reference for what this account cannot record. */
+export const DOCTOR_READY: DoctorInput = {
+  ...DOCTOR,
+  profiles: synth({ active: "prod", profiles: [{ name: "prod", method: "api_key", accountId: "biz_VraUMckluH8dzV", accountTitle: "Frame" }] }),
+  permissions: synthPage(DOCTOR_ACTIONS.map((action) => ({ action, granted: true }))),
+  verifications: synth({ data: [{ id: "ver_x1AbCdEfGh", status: "verified", last_error_code: null, last_error_reason: null }] }),
+  methods: synth({ data: [{ id: "potk_x1", nickname: "Chase checking" }], page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false }, limits: { object: "payout_limit", currency: "usd", standard: { max_amount: 1000, daily_amount_remaining: 9999 }, instant: { max_amount: 250 } } }),
+  people: synthPage([{ id: "prsn_x1AbCdEfGh", first_source: "whop:adcamp_x1:*", last_source: "direct" }, { id: "prsn_x2AbCdEfGh", first_source: null, last_source: null }]),
+  social: synthPage([{ id: "sacc_x1AbCdEfGh", name: "Hypermotion", platform: "facebook", username: "hypermotion", error: null }]),
+  preferences: synth({ ads_payment_methods: [{ id: "pm_x1AbCdEfGh", brand: "visa", last4: "4242" }], economic_intelligence: true }),
+  webhooks: synthPage([{ id: "hook_x1AbCdEfGh", url: "https://hypermotion.art/hooks", enabled: true, events: ["payment.succeeded"] }]),
+  deliveries: { hook_x1AbCdEfGh: synthPage([{ id: "whd_x1AbCdEfGh", event: "payment.succeeded", success: true, response_code: 200, total_time: 0.21, sent_at: "2026-09-18T09:00:00Z" }, { id: "whd_x2AbCdEfGh", event: "payment.succeeded", success: false, response_code: 500, total_time: 1.2, sent_at: "2026-09-17T09:00:00Z" }]) },
+  commands: [...DOCTOR_COMMANDS, ["webhooks", "deliveries", "hook_x1AbCdEfGh", "--first", "20"]],
+};
+
 export const SCENES: Record<string, (t: Theme) => string[]> = {
+  doctor: (t) => doctorView(DOCTOR, t),
+  "doctor.ready": (t) => doctorView(DOCTOR_READY, t),
+  "doctor.signed_out": (t) => doctorView({ ...DOCTOR, accountTitle: undefined, accountId: undefined, permissions: undefined, auth: synth({ loggedIn: false }), profiles: synth({ active: null, profiles: [] }), webhooks: envelope("error.webhooks_oauth") }, t),
   gtm: (t) =>
     gtmView(
       {

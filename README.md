@@ -224,6 +224,46 @@ The plan is the sandbox. Whop has no test mode for ads, so before any `create` o
 
 The gaps are read from what the screen already fetched, not guessed: no person with a source means no pixel, an empty `social-accounts list` means no page, `accounts preferences` says whether an ads payment method and Economic Intelligence exist. Each gap names the command that fixes it.
 
+### `doctor`
+
+`wv doctor` answers one question: is this business set up to sell. Nine checks, each read from a `whop` command the footer teaches, each failing one naming the command that fixes it, or `dashboard only` with the URL when no command can.
+
+```
+ Frame › biz_VraUMckluH8dzV › production › doctor
+
+ ✓ signed in     sunchusrikar · oauth · Frame
+ ✗ identity      Payouts are blocked: Please complete identity verification
+                 before requesting a withdrawal.
+ fix  whop verifications create --account_id biz_VraUMckluH8dzV
+ ! api key       This oauth login lacks developer:manage_webhook. The api-key
+                 profile sandbox is saved; switch to it for those.
+ fix  whop auth switch sandbox
+ ! pixel         No visit carries a source: the pixel is not installed on your
+                 pages, so nothing is attributed.
+ fix  whop events validate_pixel
+ ! meta page     No Meta page is connected, so every ad command will refuse.
+ fix  whop social-accounts connect --platform meta_business --scopes advertise
+      --redirect_url <url>
+ ! ads payment   No ads payment method on the account, so ads will not deliver.
+ dashboard only  https://whop.com/dashboard/biz_VraUMckluH8dzV/
+ ! intelligence  Economic Intelligence is off, so `whop economic-intelligence`
+                 returns 403.
+ fix  whop accounts update-preferences --economic_intelligence true
+ ✓ products      2 for sale · Frame · Free · 1 more
+ ! webhooks      Webhooks refuse an oauth login. Sign in with an API key to
+                 list, create, or test them.
+ fix  whop auth switch sandbox
+
+ 1 blocking · 6 warnings · 2 ok
+
+ json  whop auth status --format json
+       whop auth list --format json
+       whop permissions check --resource_id biz_VraUMckluH8dzV --actions …
+       …
+```
+
+Three checks block: signed in, identity, and a visible product with a plan. When any of those fails, `wv doctor` exits 1, so a deploy script or an agent can gate on it. The rest are warnings. Identity is read from Whop's own payout limit rather than guessed: `payouts methods --include_limits` says in Whop's words why a standard payout would be refused, and that line is the check. The api key check runs `permissions check` on the six scopes a seller needs and says which the active login lacks; when a saved api-key profile exists it names it, otherwise it gives the login command and points at the dashboard, which is the only place a key is minted. The pixel, page, ads payment, and Economic Intelligence checks are the gaps `wv gtm` already derives. Webhooks count as alive when one has a successful delivery in the last seven days; an oauth login cannot list them at all, and the check says so instead of failing.
+
 ### Sandbox
 
 Whop's CLI docs say there is no sandbox mode. Link ships `--test`, which returns a fake card and never touches the real payment method, and that is the thing to ask Whop for. Until it exists, `wv --sandbox <anything>` (or `WV_SANDBOX=1`) runs the child `whop` with `WHOP_API_BASE_URL` pointed at `sandbox-api.whop.com/api/v1` and, when `WV_SANDBOX_KEY` is set, hands it that key. The session banner, the home status line, and the confirm badge read `sandbox` in green instead of `production` in yellow, the cap and the timeout do not apply, and the warning says no real money moves. The sandbox host does not accept an OAuth login, so without a sandbox key every call errors and the error names the variable to set. `WV_SANDBOX_URL` overrides the host.
@@ -336,6 +376,7 @@ A write verb inside the session gets the same confirmation, then hands the termi
 
 - `wv help` renders the 51 groups the way `whop --help` orders them, two columns at 120 and one at 80.
 - `wv <group>` renders that group's verbs.
+- `wv doctor` is the setup checklist above; it exits 1 when signing in, identity, or a sellable product is missing.
 - `wv stats get <metric> --from … --to …` renders a series: total, sparkline, one money row per point.
 - `--width N` overrides the terminal width. `NO_COLOR` strips every escape.
 - Every teaching footer is built from an argv array and shell-quoted once, so a product title with a space or a quote pastes back as the same command. `WV_PAYOUT_CAP`, `WV_CONFIRM_TIMEOUT`, `WV_SANDBOX`, `WV_SANDBOX_KEY`, and `WV_SANDBOX_URL` are the only knobs; each is described under [`payouts create`](#payouts-create) and [Sandbox](#sandbox).
@@ -356,7 +397,7 @@ Snapshot tests render every view at 80 and 120 columns, with color and without, 
 pnpm fixtures
 ```
 
-Re-records the fixtures from your own account. Read-only commands only.
+Re-records the fixtures from your own account. Read-only commands only. `pnpm fixtures auth.list verifications.list` records just those two.
 
 ```bash
 pnpm demo

@@ -15,6 +15,7 @@ export interface Catalog {
 export const BUILTINS: Candidate[] = [
   { name: "home", desc: "identity, balance, and a 7-day net revenue sparkline" },
   { name: "gtm", desc: "funnel, people, audiences, campaigns, offers, and launch gaps" },
+  { name: "doctor", desc: "is this business set up to sell: login, identity, api key, pixel, page, products, webhooks" },
   { name: "help", desc: "every command group" },
   { name: "copy", desc: "copy a row's id, or json for the agent command, to the clipboard" },
   { name: "next", desc: "the next page of the last list" },

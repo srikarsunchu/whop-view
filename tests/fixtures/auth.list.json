@@ -1,0 +1,30 @@
+{
+  "ok": true,
+  "data": {
+    "active": "sunchusrikar",
+    "profiles": [
+      {
+        "name": "sunchusrikar",
+        "method": "oauth",
+        "accountId": "biz_VraUMckluH8dzV",
+        "accountTitle": "Frame",
+        "accountRoute": "biz_VraUMckluH8dzV",
+        "userId": "user_ICLAwIXM9zFfz",
+        "userEmail": "redacted@example.com",
+        "createdAt": "2026-08-13T22:49:12.297Z"
+      },
+      {
+        "name": "sandbox",
+        "method": "api_key",
+        "accountId": "biz_dsNVEeTiuv4xC2",
+        "accountTitle": "mobil",
+        "accountRoute": "biz_dsNVEeTiuv4xC2",
+        "createdAt": "2026-08-13T22:57:16.454Z"
+      }
+    ]
+  },
+  "meta": {
+    "command": "auth list",
+    "duration": "1ms"
+  }
+}

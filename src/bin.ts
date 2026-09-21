@@ -16,6 +16,7 @@ import { errorView } from "./views/error.ts";
 import { helpView, parseHelp } from "./views/help.ts";
 import { homeView } from "./views/home.ts";
 import { gtmView } from "./views/gtm.ts";
+import { blocked, checks, doctorView, DOCTOR_ACTIONS } from "./views/doctor.ts";
 import { seriesView } from "./views/series.ts";
 import { summaryView } from "./views/summary.ts";
 import { prompt } from "./primitives/prompt.ts";
@@ -26,7 +27,7 @@ import type { Parsed, Rec } from "./envelope.ts";
 const print = (lines: string[]) => process.stdout.write(lines.join("\n") + "\n");
 
 /** Words that are wv's, not whop's. */
-const OURS = new Set(["home", "help", "gtm"]);
+const OURS = new Set(["home", "help", "gtm", "doctor"]);
 
 export interface Outcome {
   code: number;
@@ -94,7 +95,7 @@ async function main(argvIn: string[]) {
   const env = whopEnv(mode);
 
   if (OURS.has(argv[0]) && !process.stdout.isTTY) {
-    process.stderr.write(`wv: ${copy.session.needsTerminal}\n`);
+    process.stderr.write(`wv: ${copy.session.needsTerminal(argv[0])}\n`);
     process.exit(2);
   }
   // `--plan` never writes, so it is safe without a terminal and must never fall through to a real `whop` create.
@@ -128,6 +129,7 @@ export async function execute(argv: string[], theme: Theme, opts: ExecuteOptions
   const env = whopEnv(mode);
   if (group === "home") return home(theme, mode);
   if (group === "gtm") return gtm(theme, mode);
+  if (group === "doctor") return doctor(theme, mode);
   if (!verb || verb.startsWith("--")) {
     print(helpView(parseHelp(helpText([group])), theme, group));
     return { code: 0 };
@@ -404,6 +406,49 @@ async function gtm(theme: Theme, mode: Mode): Promise<Outcome> {
   const [people, audiences, campaigns, promoCodes, social, preferences] = results.slice(metrics.length).map((r) => r.parsed);
   print(gtmView({ accountTitle: acct?.title, accountId: acct?.id, mode, from, to, series, people, audiences, campaigns, promoCodes, social, preferences, commands: cmds }, theme));
   return { code: results.some((r) => r.code) ? 1 : 0 };
+}
+
+/**
+ * `wv doctor`: is this business set up to sell. `auth status` first, since `permissions check` needs the
+ * account id; then nine reads in parallel; then deliveries for the first webhooks. Exit 1 when a blocking
+ * check fails, so a script can gate on it.
+ */
+async function doctor(theme: Theme, mode: Mode): Promise<Outcome> {
+  const env = whopEnv(mode);
+  const spin = spinner(copy.spinner.doctor, theme);
+  const authCmd = ["auth", "status"];
+  const auth = await run(authCmd, env);
+  const acct = auth.parsed.ok && auth.parsed.payload.kind === "status" && (auth.parsed.payload.record.account as Rec | undefined);
+  const accountId = acct ? String(acct.id ?? "") : undefined;
+  const accountTitle = acct ? String(acct.title ?? "") : undefined;
+  const cmds: string[][] = [
+    ["auth", "list"],
+    ["verifications", "list"],
+    ["payouts", "methods", "--include_limits"],
+    ["people", "list", "--first", "100"],
+    ["social-accounts", "list"],
+    ["accounts", "preferences"],
+    ["products", "list"],
+    ["webhooks", "list"],
+  ];
+  const permCmd = accountId ? ["permissions", "check", "--resource_id", accountId, "--actions", DOCTOR_ACTIONS.join(",")] : undefined;
+  spin.update(copy.spinner.doctorReads);
+  const [[profiles, verifications, methods, people, social, preferences, products, webhooks], permissions] = await Promise.all([Promise.all(cmds.map((c) => run(c, env))), permCmd ? run(permCmd, env) : Promise.resolve(undefined)]);
+  const hooks = webhooks.parsed.ok && webhooks.parsed.payload.kind === "page" ? webhooks.parsed.payload.rows.slice(0, 3) : [];
+  const deliveryCmds = hooks.map((h) => ["webhooks", "deliveries", String(h.id), "--first", "20"]);
+  if (deliveryCmds.length) spin.update(copy.spinner.doctorDeliveries);
+  const deliveryResults = await Promise.all(deliveryCmds.map((c) => run(c, env)));
+  spin.stop();
+  const deliveries: Record<string, Parsed> = {};
+  hooks.forEach((h, i) => (deliveries[String(h.id)] = deliveryResults[i].parsed));
+  const input = {
+    accountTitle, accountId, mode,
+    auth: auth.parsed, profiles: profiles.parsed, permissions: permissions?.parsed, verifications: verifications.parsed, methods: methods.parsed,
+    people: people.parsed, social: social.parsed, preferences: preferences.parsed, products: products.parsed, webhooks: webhooks.parsed, deliveries,
+    commands: [authCmd, ...cmds.slice(0, 1), ...(permCmd ? [permCmd] : []), ...cmds.slice(1), ...deliveryCmds],
+  };
+  print(doctorView(input, theme));
+  return { code: blocked(checks(input)) ? 1 : 0 };
 }
 
 main(process.argv.slice(2)).catch((e) => {

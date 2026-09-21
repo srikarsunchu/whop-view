@@ -89,6 +89,26 @@ Rules:
 - Before a launch: `gaps()` derives the blockers from the data already on screen (no attributed person, no usable page, no ads payment method, Economic Intelligence off) and each carries its fix as a footer command.
 - The footer teaches every command that fed the screen, one per line, like `home`.
 
+## Doctor view
+
+`wv doctor` (`src/views/doctor.ts`) is nine checks on one screen, exit 1 when a blocking one fails. `bin.ts` runs `auth status` first because `permissions check` needs the account id, then eight reads in parallel plus `permissions check --resource_id <biz> --actions <DOCTOR_ACTIONS>`, then `webhooks deliveries <id> --first 20` for up to three webhooks. `checks(input)` is pure and returns `{ key, label, level, detail, fix?, dashboard?, blocking }` per check; `doctorView` paints them.
+
+| check | read from | ok | fail or warn | fix |
+|---|---|---|---|---|
+| signed in (blocking) | `auth status` | `loggedIn` | anything else | `whop login` |
+| identity (blocking) | `payouts methods --include_limits` + `verifications list` | `limits.standard.max_amount` with no `error_code` | `error_code` set: Whop's `error_message` verbatim | `whop verifications create --account_id <biz>` |
+| api key | `auth list` + `permissions check` | active profile is `api_key` and nothing ungranted | any ungranted action | `auth switch <saved api-key profile>`, else `auth login --method api-key` plus the dashboard |
+| pixel | `people list --first 100` | someone carries a source | nobody seen, or nobody attributed | `whop events validate_pixel` |
+| meta page | `social-accounts list` | a row without `error` | none | `social-accounts connect …` |
+| ads payment | `accounts preferences` | `ads_payment_methods` non-empty | empty | dashboard only |
+| intelligence | `accounts preferences` | `economic_intelligence` true | false | `accounts update-preferences --economic_intelligence true` |
+| products (blocking) | `products list` | a `visible` product with a `default_plan` | none | `whop products create --help` |
+| webhooks | `webhooks list` + `webhooks deliveries` | a `success: true` delivery with `sent_at` inside 7 days | none, or no webhook, or the oauth 403 | `webhooks test <id> --event payment.succeeded`, `webhooks create …`, or the api-key login |
+
+`DOCTOR_ACTIONS` is `developer:manage_webhook`, `payout:withdraw_funds`, `access_pass:create`, `plan:create`, `payment:basic:read`, `stats:read`; every name was checked against `api-keys permissions`, which is the catalog, not the grant. The identity check is deliberately not `verifications list`: that list is empty on an account whose payouts are blocked, while the payout limit carries the block and its reason. A missing `payout:withdrawal:read` scope drops `limits` and turns the check into a warning, not a block. The dashboard URL is Whop's published root plus the account id; the API reference names only two deeper paths (`/balance/`, `/settings/payments/`) and neither is documented as the ads payment or API key page, so the root is what the screen shows.
+
+Fixtures: `auth.list`, `permissions.check`, `verifications.list`, `payouts.methods.limits`, `error.webhooks_oauth`, recorded with `pnpm fixtures <name>…`. `auth list` carries `userEmail`; the recorder's email redaction is case-insensitive for it. Webhook rows and deliveries cannot be recorded from an oauth login, so the `doctor.ready` scene builds them in `tests/render.ts` from the `Webhook` and `WebhookDelivery` shapes in the API reference.
+
 ## Passthrough rules
 
 `wv` renders only when all of these hold. Otherwise it execs `whop` with the original argv, inherits stdio, and exits with its code.

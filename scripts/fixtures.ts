@@ -37,6 +37,12 @@ const CASES: [string, string[]][] = [
   ["error.typo", ["prodcts", "list"]],
   ["error.validation", ["stats", "get", "net_revenue"]],
   ["error.unknown_flag", ["ledgers", "list", "--first", "2"]],
+  // Doctor inputs. `permissions check` needs the active account's id; it is filled in below.
+  ["auth.list", ["auth", "list"]],
+  ["permissions.check", ["permissions", "check", "--resource_id", "<biz_id>", "--actions", "developer:manage_webhook,payout:withdraw_funds,access_pass:create,plan:create,payment:basic:read,stats:read"]],
+  ["verifications.list", ["verifications", "list"]],
+  ["payouts.methods.limits", ["payouts", "methods", "--include_limits"]],
+  ["error.webhooks_oauth", ["webhooks", "list"]],
 ];
 
 // Fixtures are committed. Nothing a real person could be identified by survives recording:
@@ -48,7 +54,8 @@ const PEOPLE: [string, string][] = [
 ];
 const redact = (text: string) => {
   let out = text
-    .replace(/("[a-z_]*email[a-z_]*":\s*")[^"@]+@[^"]+(")/g, "$1redacted@example.com$2")
+    // `email`, `user_email`, and the camelCase `userEmail` that `auth list` carries.
+    .replace(/("[a-z_]*email[a-z_]*":\s*")[^"@]+@[^"]+(")/gi, "$1redacted@example.com$2")
     .replace(/("(?:line1|line2|postal_code)":\s*")[^"]+(")/g, "$1redacted$2");
   for (const [real, fake] of PEOPLE) out = out.split(real).join(fake);
   return out;
@@ -56,11 +63,24 @@ const redact = (text: string) => {
 
 const dir = join(import.meta.dirname, "..", "tests", "fixtures");
 mkdirSync(dir, { recursive: true });
-for (const [name, args] of CASES) {
+// `pnpm fixtures auth.list verifications.list` records only those; no names records everything.
+const only = process.argv.slice(2);
+const status = spawnSync("whop", ["auth", "status", "--format", "json"], { encoding: "utf8" });
+const biz = (() => {
+  try {
+    return String(JSON.parse(status.stdout).account?.id ?? "");
+  } catch {
+    return "";
+  }
+})();
+for (const [name, argsIn] of CASES) {
+  if (only.length && !only.includes(name)) continue;
+  const args = argsIn.map((a) => (a === "<biz_id>" ? biz : a));
   const r = spawnSync("whop", [...args, "--format", "json", "--full-output"], { encoding: "utf8" });
   writeFileSync(join(dir, `${name}.json`), redact(r.stdout));
   console.log(`${name}: exit ${r.status}, ${r.stdout.length} bytes`);
 }
+if (only.length) process.exit(0);
 // Help text is parsed at runtime; keep a copy so the help view can be snapshotted offline.
 writeFileSync(join(dir, "help.txt"), spawnSync("whop", ["--help"], { encoding: "utf8" }).stdout);
 writeFileSync(join(dir, "help.products.txt"), spawnSync("whop", ["products", "--help"], { encoding: "utf8" }).stdout);
