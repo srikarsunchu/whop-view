@@ -3,6 +3,7 @@ import { callout } from "../primitives/callout.ts";
 import { paint, type Theme } from "../tokens.ts";
 import { padEnd, width } from "../ansi.ts";
 import { copy } from "../copy.ts";
+import { rule } from "../primitives/rule.ts";
 
 /** SCOPE_HINTS idea from whop-desktop Panel.tsx: message patterns that imply a fix. */
 const PATTERNS: { match: RegExp; code: string }[] = [
@@ -39,7 +40,11 @@ export function errorView(error: WhopError, theme: Theme): string[] {
     for (const c of cmds) lines.push("  " + paint(theme, "mono", padEnd(c.cmd, w)) + (c.desc ? "  " + paint(theme, "muted", c.desc) : ""));
   }
   const tag = error.durationMs != null ? `${error.durationMs}ms` : undefined;
-  return callout(gated ? "muted" : "bad", title, lines, theme, tag);
+  if (gated) {
+    // omp's "update available" band: dashed rule, title, one line, dashed rule.
+    return [rule(theme, undefined, "warn", "╌"), " " + paint(theme, "warn", title), ...lines.map((l) => " " + l), rule(theme, undefined, "warn", "╌")];
+  }
+  return callout("bad", title, lines, theme, tag);
 }
 
 /** The CLI suggests its own agent form. People get the human form. */

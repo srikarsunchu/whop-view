@@ -1,13 +1,13 @@
  auth status
 
- Status
+ ── Status ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
    loggedIn   yes
    hasSecret  yes
 
- Relations
+ ── Relations ──────────────────────────────────────────────────────────────────────────────────────────────────────────
    account  Frame  biz_VraUMckluH8dzV
 
- Details
+ ── Details ────────────────────────────────────────────────────────────────────────────────────────────────────────────
    profile   sunchusrikar
    method    oauth
    identity  user_ICLAwIXM9zFfz

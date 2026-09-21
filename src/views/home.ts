@@ -1,10 +1,11 @@
 import type { Parsed, Rec } from "../envelope.ts";
 import { money, shortDate } from "../format.ts";
 import { footer } from "../primitives/footer.ts";
-import { paint, type Theme } from "../tokens.ts";
-import { padEnd, padStart, width } from "../ansi.ts";
+import { paint, type Role, type Theme } from "../tokens.ts";
+import { width } from "../ansi.ts";
 import { copy } from "../copy.ts";
 import { errorView } from "./error.ts";
+import { breadcrumb } from "../primitives/rule.ts";
 
 export interface HomeInput {
   auth: Parsed;
@@ -13,6 +14,8 @@ export interface HomeInput {
   from: string;
   to: string;
   commands: string[];
+  /** API version from `whop --help`, shown in the status line. */
+  api?: string;
 }
 
 const BLOCKS = "▁▂▃▄▅▆▇█";
@@ -25,37 +28,28 @@ export function sparkline(values: number[]): string {
 
 export function homeView(input: HomeInput, theme: Theme): string[] {
   const out: string[] = [];
-  // Identity
+  // Status line: account › id › profile · method › API › balance. One row, like omp's breadcrumb bar.
+  const segs: [string, Role?][] = [];
   if (input.auth.ok && input.auth.payload.kind === "status") {
     const s = input.auth.payload.record;
     const account = s.account as Rec | undefined;
-    const left = paint(theme, "accent", String(account?.title ?? "")) + "  " + paint(theme, "muted", String(account?.id ?? ""));
-    const right = paint(theme, "muted", `${s.profile ?? ""} · ${s.method ?? ""}`);
-    const gap = theme.width - 1 - width(left) - width(right);
-    out.push(" " + left + padStart(right, Math.max(2, gap) + width(right)));
-  } else if (input.auth.ok) {
-    out.push(" " + paint(theme, "warn", copy.home.notSignedIn));
-  } else out.push(...errorView(input.auth.error, theme));
+    segs.push([String(account?.title ?? ""), "accent"], [String(account?.id ?? ""), "muted"], [`${s.profile ?? ""} · ${s.method ?? ""}`, "text"]);
+  } else if (input.auth.ok) segs.push([copy.home.notSignedIn, "warn"]);
+  if (input.api) segs.push([`${copy.help.api} ${input.api}`, "muted"]);
+  const bal = balanceRows(input.balance);
+  for (const [k, v] of bal) segs.push([k ? `${v} ${k}` : v, k === "available" ? "good" : "text"]);
+  out.push(...breadcrumb(theme, segs));
+  if (!input.auth.ok) out.push("", ...errorView(input.auth.error, theme));
   out.push("");
 
-  // Two tiles side by side at normal and wide, stacked at narrow.
-  const balanceTile = tile(copy.home.balance, balanceRows(input.balance), theme);
-  const revenueTile = tile(copy.home.revenue(dayCount(input.from, input.to)), revenueRows(input.revenue, input.from, input.to), theme);
-  if (theme.breakpoint === "narrow") out.push(...balanceTile, "", ...revenueTile);
-  else {
-    const colW = Math.max(...balanceTile.map(width)) + 4;
-    for (let i = 0; i < Math.max(balanceTile.length, revenueTile.length); i++) out.push((padEnd(balanceTile[i] ?? "", colW) + (revenueTile[i] ?? "")).trimEnd());
-  }
+  const rev = revenueRows(input.revenue, input.from, input.to);
+  const title = copy.home.revenue(dayCount(input.from, input.to));
+  const [first, second] = rev;
+  out.push(" " + paint(theme, "accent", title) + "  " + (first ? first[0] + "  " + first[1] : ""));
+  if (second) out.push(" " + " ".repeat(width(title) + 2) + paint(theme, "muted", second[0] + (second[1] ? "  " + second[1] : "")));
   out.push("");
   out.push(...footer([input.commands.join(" · ")], theme));
   return out;
-}
-
-function tile(title: string, rows: [string, string][], theme: Theme): string[] {
-  const lines = [" " + paint(theme, "accent", title)];
-  const keyW = Math.max(0, ...rows.map(([k]) => width(k)));
-  for (const [k, v] of rows) lines.push(("   " + paint(theme, "muted", padEnd(k, keyW)) + (k ? "  " : "") + v).trimEnd());
-  return lines;
 }
 
 function balanceRows(p: Parsed): [string, string][] {

@@ -1,6 +1,7 @@
 import { padEnd, truncate, width } from "../ansi.ts";
 import { paint, type Theme } from "../tokens.ts";
 import { copy } from "../copy.ts";
+import { rule } from "../primitives/rule.ts";
 
 export interface HelpGroup {
   title: string;
@@ -61,7 +62,8 @@ export function helpView(parsed: ParsedHelp, theme: Theme, group?: string): stri
   if (!twoCol) {
     blocks.forEach((b, i) => {
       if (i) out.push("");
-      out.push(...b.map((l) => " " + l));
+      out.push(rule(theme, parsed.groups[i].title));
+      out.push(...b.slice(1).map((l) => " " + l));
     });
     return out;
   }

@@ -1,6 +1,6 @@
  whop products — The things you sell. Each o…  type wv products <command> --help
 
- COMMANDS
+ ── COMMANDS ───────────────────────────────────────────────────────────────────
    create     Create Product
    delete     Delete Product
    get        Retrieve Product

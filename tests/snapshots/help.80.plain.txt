@@ -1,11 +1,11 @@
  whop 0.18.2 · API 2026-09-15                             type wv <group> --help
 
- GET STARTED
+ ── GET STARTED ────────────────────────────────────────────────────────────────
    quickstart               Start here — choose or create the business used by…
    apps                     Build and deploy fully-hosted web apps (*.whop.site)
    upgrade                  Update the CLI to the latest version
 
- COMMERCE
+ ── COMMERCE ───────────────────────────────────────────────────────────────────
    products                 The things you sell. Each owns plans and a store pa…
    plans                    Pricing for a product: one-time, recurring, trials,…
    promo-codes              Discounts that creators configure for checkout.
@@ -14,7 +14,7 @@
    payment-method-domains   Domains verified to show wallet payment methods lik…
    shipments                Track the delivery of an order by its carrier track…
 
- CORE RESOURCES
+ ── CORE RESOURCES ─────────────────────────────────────────────────────────────
    accounts                 A business on Whop: profile, wallet, capabilities,…
    users                    A person on Whop: profile and connected identities.
    team-members             An account's team members and the roles that scope…
@@ -25,10 +25,10 @@
    verifications            Legal identity required before payouts and card iss…
    exports                  Asynchronous CSV dumps of an account's dashboard da…
 
- NOTIFICATIONS
+ ── NOTIFICATIONS ──────────────────────────────────────────────────────────────
    notifications            The user's notification feed: unread badges, mark-r…
 
- PAYMENTS
+ ── PAYMENTS ───────────────────────────────────────────────────────────────────
    payments                 A charge against a buyer, and the step they still o…
    refunds                  Money returned to a buyer from a payment.
    confirmation-tokens      A short-lived reference to payment details collecte…
@@ -38,7 +38,7 @@
    dispute-alerts           Issuer warnings that arrive before a chargeback doe…
    resolution-center-cases  File or respond to a case against a payment, as the…
 
- MONEY
+ ── MONEY ──────────────────────────────────────────────────────────────────────
    ledgers                  The activity feed behind an account or user's balan…
    payouts                  Send money from a balance to a bank or wallet.
    cards                    Issue cards that spend from a balance.
@@ -47,31 +47,31 @@
    deposits                 Add funds to a balance.
    swaps                    Convert a balance between currencies.
 
- PARTNERS
+ ── PARTNERS ───────────────────────────────────────────────────────────────────
    partners                 Your partner profile, referral links, payout rates,…
 
- WORKFORCE
+ ── WORKFORCE ──────────────────────────────────────────────────────────────────
    bounties                 Paid tasks with reviewed submissions and escrowed r…
    bounty-submissions       Work submitted to a bounty, from attempt to payout.
 
- TRACKING
+ ── TRACKING ───────────────────────────────────────────────────────────────────
    people                   Visitors and customers of an account, with identity…
    events                   Conversion and engagement events tracked for attrib…
 
- ADS
+ ── ADS ────────────────────────────────────────────────────────────────────────
    ads                      The creative: copy, assets, and destination URL.
    ad-campaigns             Platform, objective, and budget for a set of ads.
    ad-groups                Audience, placements, and schedule within a campaig…
    audiences                Reusable targeting lists for ad groups.
 
- MEDIA
+ ── MEDIA ──────────────────────────────────────────────────────────────────────
    files                    Upload files and attach them wherever Whop accepts…
    media                    AI-generated assets, billed from a balance, attacha…
 
- IDENTITY
+ ── IDENTITY ───────────────────────────────────────────────────────────────────
    social-accounts          Connected Facebook and Instagram accounts that run…
 
- DEVELOPER
+ ── DEVELOPER ──────────────────────────────────────────────────────────────────
    domains                  Custom domains assigned to hosted apps.
    app-builds               Versioned build artifacts deployed to an app's plat…
    api-keys                 Programmatic credentials for an account or app.
@@ -82,7 +82,7 @@
    ask-question             Record an unanswered Whop question for internal rev…
    files                    Create file uploads and retrieve uploaded file deta…
 
- AUTH
+ ── AUTH ───────────────────────────────────────────────────────────────────────
    auth                     Manage authentication
    login                    Sign in to Whop
    logout                   Sign out

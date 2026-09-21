@@ -1,25 +1,25 @@
  Hypermotion  prod_iQ2Zub6GFQS5Q
 
- Identity
+ ── Identity ───────────────────────────────────────────────────────────────────────────────────────────────────────────
    route  frame-creator
 
- Status
+ ── Status ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
    visibility  visible
    verified    no
 
- Money
+ ── Money ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
    plan  $29.00/mo  plan_ozEZmitgc8tjB
 
- Dates
+ ── Dates ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
    created  Sep 11, 2026 01:58 UTC · 8d ago
    updated  Sep 16, 2026 00:06 UTC · 4d ago
 
- Relations
+ ── Relations ──────────────────────────────────────────────────────────────────────────────────────────────────────────
    account             Hypermotion  biz_VraUMckluH8dzV
    owner user          sri @designedbysri  user_ICLAwIXM9zFfz
    marketplace status  not_available
 
- Details
+ ── Details ────────────────────────────────────────────────────────────────────────────────────────────────────────────
    headline                     Words, into motion.
    description                  Create motion graphics with words. Choose Flex for a one-time credit purchase, or
                                 Creator for monthly credits and reference video and design system features. Generation

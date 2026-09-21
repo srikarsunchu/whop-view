@@ -81,6 +81,7 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
         from: "2026-09-12",
         to: "2026-09-18",
         commands: ["auth status", "ledgers report --report_type balance_summary", "stats get net_revenue --from 2026-09-12 --to 2026-09-18 --interval day"],
+        api: parseHelp(fixture("help.txt")).api,
       },
       t,
     ),

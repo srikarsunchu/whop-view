@@ -1,13 +1,13 @@
  [1mauth status[22m
 
- [1mStatus[22m
+ [2m── [22m[1mStatus[22m[2m ─────────────────────────────────────────────────────────────────────[22m
    [2mloggedIn [22m  yes
    [2mhasSecret[22m  yes
 
- [1mRelations[22m
+ [2m── [22m[1mRelations[22m[2m ──────────────────────────────────────────────────────────────────[22m
    [2maccount[22m  Frame  biz_VraUMckluH8dzV
 
- [1mDetails[22m
+ [2m── [22m[1mDetails[22m[2m ────────────────────────────────────────────────────────────────────[22m
    [2mprofile [22m  sunchusrikar
    [2mmethod  [22m  oauth
    [2midentity[22m  [2muser_ICLAwIXM9zFfz[22m

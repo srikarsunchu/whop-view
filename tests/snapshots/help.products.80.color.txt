@@ -1,6 +1,6 @@
  [1mwhop products — The things you sell. Each o…[22m  [2mtype wv products <command> --help[22m
 
- [1mCOMMANDS[22m
+ [2m── [22m[1mCOMMANDS[22m[2m ───────────────────────────────────────────────────────────────────[22m
    create     [2mCreate Product[22m
    delete     [2mDelete Product[22m
    get        [2mRetrieve Product[22m

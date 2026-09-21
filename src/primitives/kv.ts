@@ -1,5 +1,6 @@
 import { padEnd, width, wrap } from "../ansi.ts";
 import { INDENT, paint, type Role, type Theme } from "../tokens.ts";
+import { rule } from "./rule.ts";
 
 export interface KvRow {
   key: string;
@@ -20,7 +21,7 @@ export function kv(sections: KvSection[], theme: Theme): string[] {
   for (const s of sections) {
     if (s.rows.length === 0) continue;
     if (out.length) out.push("");
-    if (s.title) out.push(" " + paint(theme, "accent", s.title));
+    if (s.title) out.push(rule(theme, s.title));
     const keyW = Math.max(...s.rows.map((r) => width(r.key)));
     const valW = Math.max(16, theme.width - INDENT.length - 1 - keyW - 2);
     for (const r of s.rows) {

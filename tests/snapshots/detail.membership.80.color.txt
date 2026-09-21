@@ -1,13 +1,13 @@
  [1mmembership[22m  [2mmem_kfT4Jl8Pb8DlWE[22m
 
- [1mStatus[22m
+ [2m── [22m[1mStatus[22m[2m ─────────────────────────────────────────────────────────────────────[22m
    [2mstatus              [22m  [32mcompleted[39m
    [2mcancel at period end[22m  [2mno[22m
 
- [1mDates[22m
+ [2m── [22m[1mDates[22m[2m ──────────────────────────────────────────────────────────────────────[22m
    [2mcreated[22m  Sep 16, 2026 00:04 UTC · 4d ago
 
- [1mRelations[22m
+ [2m── [22m[1mRelations[22m[2m ──────────────────────────────────────────────────────────────────[22m
    [2muser   [22m  [2muser_3meX572iT5dAg[22m
    [2mproduct[22m  [2mprod_iQ2Zub6GFQS5Q[22m
    [2mplan   [22m  [2mplan_NrjXyj6yTetff[22m

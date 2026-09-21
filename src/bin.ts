@@ -106,7 +106,8 @@ async function home(theme: ReturnType<typeof makeTheme>) {
   const spin = spinner(copy.spinner, theme);
   const [auth, balance, revenue] = await Promise.all(cmds.map((c) => run(c)));
   spin.stop();
-  print(homeView({ auth: auth.parsed, balance: balance.parsed, revenue: revenue.parsed, from, to, commands: cmds.map((c) => c.join(" ")) }, theme));
+  const api = parseHelp(helpText([])).api;
+  print(homeView({ auth: auth.parsed, balance: balance.parsed, revenue: revenue.parsed, from, to, commands: cmds.map((c) => c.join(" ")), api }, theme));
   process.exit(auth.code || balance.code || revenue.code);
 }
 

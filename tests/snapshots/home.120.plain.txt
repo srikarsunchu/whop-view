@@ -1,7 +1,6 @@
- Frame  biz_VraUMckluH8dzV                                                                          sunchusrikar · oauth
+ Frame › biz_VraUMckluH8dzV › sunchusrikar · oauth › API 2026-09-15 › $18.56 available
 
- Balance                 Net revenue · 7d
-   available  $18.56       $18.56            █▁▁█▁▁▁
-                           Sep 12 to Sep 18
+ Net revenue · 7d  $18.56  █▁▁█▁▁▁
+                   Sep 12 to Sep 18
 
  auth status · ledgers report --report_type balance_summary · stats get net_revenue --from 2026-09-12 --to 2026-09-18 -…

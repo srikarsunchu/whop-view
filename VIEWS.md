@@ -39,6 +39,8 @@ Spacing: 2 columns between table columns, 1 blank line between blocks, 2-space i
 | `footer` | `(lines, width)` | Every line `muted`. Commands inside are `mono`. |
 | `prompt` | `(question, defaultNo)` | Prints `question [y/N]`, reads one line from the TTY, resolves `boolean`. |
 | `spinner` | `(label)` | Braille spinner on one line, cleared on stop. Only shown after 300 ms. |
+| `rule` | `(title?, role, char)` | A horizontal rule, optionally with a title set into it. Section headers in kv and help use it. |
+| `breadcrumb` | `(segments)` | Segments joined by a muted chevron, wrapping at width. The home status line. |
 
 **Views.** Compose primitives. Never call `whop` directly; the runner hands them a parsed envelope.
 
@@ -182,18 +184,17 @@ Header: group, count, account title right-aligned. Footer: `n of total`, `next: 
 ```
  membership  mem_kfT4Jl8Pb8DlWE
 
- Status
+ ── Status ─────────────────────────────────────────────────────────────────────
    status                completed
    cancel at period end  no
 
- Dates
-   created               Sep 16, 2026 00:04 UTC · 3d ago
+ ── Dates ──────────────────────────────────────────────────────────────────────
+   created  Sep 16, 2026 00:04 UTC · 3d ago
 
- Relations
-   account               Hypermotion  biz_VraUMckluH8dzV
-   product               prod_iQ2Zub6GFQS5Q
-   plan                  plan_NrjXyj6yTetff
-   user                  user_3meX572iT5dAg
+ ── Relations ──────────────────────────────────────────────────────────────────
+   product  prod_iQ2Zub6GFQS5Q
+   plan     plan_NrjXyj6yTetff
+   account  Hypermotion  biz_VraUMckluH8dzV
 
  json  whop memberships get mem_kfT4Jl8Pb8DlWE --format json
 ```
@@ -253,16 +254,20 @@ Groups and order are parsed from `whop --help` at runtime, never hardcoded, so t
 ### home
 
 ```
- Frame  biz_VraUMckluH8dzV                     sunchusrikar · oauth
+ Frame › biz_VraUMckluH8dzV › sunchusrikar · oauth › API 2026-09-15
+ $18.56 available
 
- Balance                    Net revenue · 7d
-   available     $18.56       $18.56  ▁▁█▁▁█▁▁
-                              Sep 12 to Sep 18
+ Net revenue · 7d  $18.56  █▁▁█▁▁▁
+                   Sep 12 to Sep 18
 
- auth status · ledgers report --report_type balance_summary · stats get net_revenue --from 2026-09-12 --to 2026-09-18 --interval day
+ auth status · ledgers report --report_type balance_summary · stats get net_rev…
 ```
 
-Three calls run in parallel: `auth status`, `ledgers report --report_type balance_summary`, and `stats get net_revenue --from <today-7> --to <today-1> --interval day`. `stats get` requires `--from` and `--to`, so home computes them in UTC. A failed tile renders its error inline and the others still show. Sparkline is eight block characters scaled to the max point.
+The first line is a breadcrumb status line in the style of omp's bar: account, id, profile and method, API version, then each balance bucket. It wraps at width. Three calls run in parallel: `auth status`, `ledgers report --report_type balance_summary`, and `stats get net_revenue --from <today-7> --to <today-1> --interval day`. `stats get` requires `--from` and `--to`, so home computes them in UTC. A failed tile renders its error inline and the others still show. Sparkline is eight block characters scaled to the max point.
+
+## Borrowed from omp
+
+Four patterns from the oh-my-pi TUI, reproduced in the plain renderer with no dependency: the breadcrumb status line (home), titles set into horizontal rules (detail sections and help groups), the dashed band for notices (feature-gated errors), and the name-left description-right picker shape (help). Its `@oh-my-pi/pi-tui` package was considered and rejected: it depends on the agent runtime and native addons, and every wv view is a static print.
 
 ## Deviations from the brief, found against the real CLI
 

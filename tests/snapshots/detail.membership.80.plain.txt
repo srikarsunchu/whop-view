@@ -1,13 +1,13 @@
  membership  mem_kfT4Jl8Pb8DlWE
 
- Status
+ ── Status ─────────────────────────────────────────────────────────────────────
    status                completed
    cancel at period end  no
 
- Dates
+ ── Dates ──────────────────────────────────────────────────────────────────────
    created  Sep 16, 2026 00:04 UTC · 4d ago
 
- Relations
+ ── Relations ──────────────────────────────────────────────────────────────────
    user     user_3meX572iT5dAg
    product  prod_iQ2Zub6GFQS5Q
    plan     plan_NrjXyj6yTetff
