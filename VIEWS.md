@@ -151,6 +151,14 @@ The protocol is two calls. The first, without `--yes`, exits 2 with the plan and
 
 `moneyGateFor` in `bin.ts` is the shared gather-and-decide step for both faces: identity, the balance in the payout's currency, the saved method, Whop's live limit, and the refusal reason. `adPlanFor` already was. Tests run the pipe against a fake `whop` that answers the gate's reads from fixtures (`tests/passthrough.test.ts`), one test per envelope.
 
+## Agent manifest
+
+`wv agent [group]` (`src/views/manifest.ts`) is the tier between `whop --llms` (16 KB, a command list with no flags) and `whop --llms-full` (338 KB, every flag of every command). One Markdown page per group, plain, no color, no width, the same in a pipe and a terminal. `bin.ts` reads the group list from the root help, the verbs from the group's help (both through the one-day help cache), and each verb's flags from `--schema` through the runner's schema cache, so a warm page costs no `whop` calls.
+
+The page: the group's one-line description and the `whop@` version; the gate protocol once, only when the group has a write; the doctor checks its writes depend on (`PREREQS`: ads groups need `pixel`, `page`, `payment`; `webhooks` needs `apiKey`; `payouts`, `cards`, `transfers`, `swaps` need `identity`); the wv spellings paragraph when any flag takes an object or an array; the date presets line when a verb takes them; a command table with each verb's kind (`read`, `write`, `money`, `destructive`, from `markers()` over `status.ts`); then one section per verb with its positional arguments and a flag table (name, type through `anyOf`, required, description with enum, default, and example folded in). A verb whose `--schema` is help text instead of JSON (`apps builds`) gets `No schema: … is a command group`. With no group the index lists every group under its `whop --help` section with the protocol once.
+
+`scripts/skill.ts` regenerates the command reference inside `skills/whop-gtm/SKILL.md` between `<!-- wv agent:start -->` and `<!-- wv agent:end -->`: every GTM group's verbs, their kind, and the flags the schema marks required. `pnpm skill` runs it before copying the skill, so the hand-copied flag names that used to sit in "Field notes" are gone; what remains there is semantics the schema does not say. Fixtures: `help.payouts.txt` and `schema.<group>.<verb>.json` for six verbs; the payouts page is snapshotted at `tests/snapshots/agent.payouts.md`.
+
 ## Envelope shapes
 
 Captured from the real CLI. With `--full-output`:

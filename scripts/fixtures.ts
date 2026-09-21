@@ -97,6 +97,11 @@ if (only.length) process.exit(0);
 // Help text is parsed at runtime; keep a copy so the help view can be snapshotted offline.
 writeFileSync(join(dir, "help.txt"), spawnSync("whop", ["--help"], { encoding: "utf8" }).stdout);
 writeFileSync(join(dir, "help.products.txt"), spawnSync("whop", ["products", "--help"], { encoding: "utf8" }).stdout);
+writeFileSync(join(dir, "help.payouts.txt"), spawnSync("whop", ["payouts", "--help"], { encoding: "utf8" }).stdout);
+// Schemas, for the `wv agent` manifest test. `payouts` covers money verbs, a nested type, and a verb with no schema.
+for (const [g, v] of [["payouts", "create"], ["payouts", "list"], ["payouts", "methods"], ["payouts", "cancel"], ["stats", "get"], ["ads", "create"]]) {
+  writeFileSync(join(dir, `schema.${g}.${v}.json`), spawnSync("whop", [g, v, "--schema", "--format", "json"], { encoding: "utf8" }).stdout);
+}
 // Plain (non --full-output) forms, for the passthrough byte-identity test.
 writeFileSync(join(dir, "products.list.plain.txt"), spawnSync("whop", ["products", "list"], { encoding: "utf8" }).stdout);
 console.log("help + plain captured");

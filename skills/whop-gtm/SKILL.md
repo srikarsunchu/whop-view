@@ -10,11 +10,11 @@ The Whop CLI (`whop`, 0.18+) exposes every go-to-market stage as a command group
 ## Rules before any command
 
 1. **Production only.** The CLI has no sandbox, test, or dry-run mode for ads. Every write runs against the real account. Ad budgets, bounties, and media generation move real money.
-2. **Gate the money lines.** When a terminal is present, run writes through `wv` (whop-view) instead of `whop`. `wv ads create --plan` renders the whole campaign tree, a real reach estimate, and the committed spend without writing anything; without `--plan` it asks the person to type the budget back. Without `wv`, stop and show the person the exact command and what it commits before running it.
+2. **Gate the money lines.** Run every write through `wv` (whop-view) instead of `whop`. Without `--yes`, `wv` does not run it: in a terminal it shows the plan and asks the person to type the amount back; in a pipe it exits 2 with a JSON envelope (`error.code` `CONFIRMATION_REQUIRED`, `plan`, `rerun`). Show the plan to the person, then run `rerun`. `--plan` returns the plan and runs nothing. Refusals (`WHOP_LIMIT`, `WV_CAP`, `INSUFFICIENT_BALANCE`, `WV_AD_CAP`) have no `rerun`. Without `wv`, stop and show the person the exact command and what it commits before running it.
 3. **Every write takes `--idempotency-key`.** Generate it from the plan step, not the call, so a retry never creates a second campaign or a second bounty.
-4. **Read the schema, not your memory.** `whop <group> <verb> --schema` is the truth. Field names below were verified against 0.18.2 / API 2026-09-15 and will drift.
-5. **Object and array flags take JSON.** `--ad_group '{"ad_campaign_id":"adcamp_x",...}'`, `--headlines '["a","b"]'`.
-6. **Prerequisites are one-time browser actions.** Pixel on the funnel pages, a Meta Business connected with the `advertise` scope, an ads payment method, and Economic Intelligence switched on. Check them first (see Preflight) and tell the person which are missing instead of failing later.
+4. **Read the schema, not your memory.** `wv agent <group>` prints every verb's flags from `--schema`, marks writes and money, and names the setup checks the group needs. `wv agent` alone lists the groups. Field names in the playbooks were verified against 0.18.2 / API 2026-09-15 and will drift.
+5. **Object and array flags take JSON.** `--ad_group '{"ad_campaign_id":"adcamp_x",...}'`, `--headlines '["a","b"]'`. Through `wv`, dotted paths (`--ad_group.budget_amount 40`), repeated flags, and `@file.json` assemble to the same JSON.
+6. **Prerequisites are one-time browser actions.** Pixel on the funnel pages, a Meta Business connected with the `advertise` scope, an ads payment method, and Economic Intelligence switched on. `wv doctor --format json` checks all of them in one call and returns a `fix` per failing check; tell the person which are missing instead of failing later.
 
 ## The loop
 
@@ -125,17 +125,248 @@ whop economic-intelligence update reca_x --status executed          # approve
 whop economic-intelligence update reca_x --status superseded --reason "wrong audience"   # reject
 ```
 
-## Field notes (verified 0.18.2)
+## Command reference
 
-- `ad-campaigns create`: `objective` awareness|traffic|engagement|leads|sales; `platform` is `meta` only; `budget_optimization` ad_campaign|ad_group (default ad_group); `budget_type` daily|lifetime; `bid_type` minimum_cost|average_target|maximum_target with `desired_cost_per_result`.
-- `ad-groups create`: `conversion_event` standard names or any custom pixel event; `optimization_goal` (18 values, `conversions` for sales); `conversion_location` website|instant_forms|messaging…; `placements` `"automatic"` or per-platform positions; `regions.include.countries|regions|cities|zips|custom_locations`; `detailed_targeting.interests|behaviors|demographics` by id from `targeting_options`; `frequency_cap` only on awareness.
-- `ads create`: `ad_group` (inline, with `ad_campaign_id`) or `ad_group_id`; arrays `headlines`, `primary_texts`, `descriptions`; `creatives` `[{"id":"file_…","format":"vertical"}]` (2–10 without format = carousel); `existing_post_id` to boost a post; `social_accounts '[{"id":"sacc_…"}]'`.
-- `audiences create`: `source_type` csv_upload|people_filter|engagement; `filters` uses the same keys as `people list`; lookalikes need `source_audience_id`, `count` 1–6, `percentage` 1–20.
-- `promo-codes create` required: `code`, `amount_off`, `promo_type`, `base_currency`, `new_users_only`, `promo_duration_months`.
-- `bounties create`: escrow is `gross_reward_amount × accepted_submissions_limit`, floor $5; `frequency` needs `publish_at` and `publish_at_timezone`.
-- `stats get ad_delivery`: `source` whop:<campaign>:<group>:<ad> or with `:*`; `metric` spend|impressions|clicks, and on placement/publisher_platform also results|roas|cost_per_result; `breakdown_by` age|gender|placement|country|….
-- `people list`: `has_purchased`, `contactable`, `source`, `attribution_model`, `last_seen_within_days`, `ltv_gt`, `audience_id`, sort by `ltv`/`aov`/`purchase_count`. Page size 100.
-- `events list` needs `--from` and `--to` no more than 30 days apart, or an `identifier`.
+Every flag, its type, and whether a verb writes or moves money comes from `wv agent <group>`, which reads `--schema` live and so cannot drift. The block below is the map, regenerated by `pnpm skill`.
+
+<!-- wv agent:start -->
+
+Generated by `pnpm skill` from whop@0.18.2 · API 2026-09-15. `wv agent <group>` prints every flag with its type and description; this is the map.
+
+### people
+
+Visitors and customers of an account, with identity, purchase, and traffic profiles. · `wv agent people`
+
+- `whop people get` · read
+- `whop people list` · read
+
+### events
+
+Conversion and engagement events tracked for attribution. · `wv agent events`
+
+- `whop events create` · write · required: `--account_id`, `--event_name`
+- `whop events list` · read
+- `whop events pulse` · read
+- `whop events validate_pixel` · read
+
+### audiences
+
+Reusable targeting lists for ad groups. · `wv agent audiences`
+
+- `whop audiences add_people` · read · required: `--file_id`
+- `whop audiences create` · write · required: `--account_id`
+- `whop audiences delete` · write, destructive
+- `whop audiences list` · read
+- `whop audiences update` · write
+
+### media
+
+AI-generated assets, billed from a balance, attachable wherever files are accepted. · `wv agent media`
+
+- `whop media generate` · read · required: `--prompt`, `--type`, `--timeout`
+- `whop media get` · read
+
+### files
+
+Upload files and attach them wherever Whop accepts documents. · `wv agent files`
+
+- `whop files complete` · read · required: `--multipart_parts`, `--multipart_upload_id`
+- `whop files create` · write · required: `--filename`
+- `whop files get` · read
+- `whop files list` · read · required: `--file_ids`
+
+### social-accounts
+
+Connected Facebook and Instagram accounts that run ads. · `wv agent social-accounts`
+
+- `whop social-accounts connect` · read · required: `--platform`, `--redirect_url`
+- `whop social-accounts create` · write · required: `--platform`
+- `whop social-accounts delete` · write, destructive
+- `whop social-accounts lead_forms` · read
+- `whop social-accounts list` · read
+- `whop social-accounts posts` · read
+
+### ad-campaigns
+
+Platform, objective, and budget for a set of ads. · `wv agent ad-campaigns`
+
+- `whop ad-campaigns create` · write · required: `--objective`, `--platform`, `--title`
+- `whop ad-campaigns delete` · write, destructive
+- `whop ad-campaigns duplicate` · write
+- `whop ad-campaigns get` · read
+- `whop ad-campaigns list` · read
+- `whop ad-campaigns pause` · write
+- `whop ad-campaigns retry_payment` · write
+- `whop ad-campaigns unpause` · write
+- `whop ad-campaigns update` · write
+
+### ad-groups
+
+Audience, placements, and schedule within a campaign. · `wv agent ad-groups`
+
+- `whop ad-groups create` · write · required: `--ad_campaign_id`
+- `whop ad-groups delete` · write, destructive
+- `whop ad-groups duplicate` · write
+- `whop ad-groups estimate_reach` · read · required: `--platform`
+- `whop ad-groups get` · read
+- `whop ad-groups list` · read
+- `whop ad-groups pause` · write
+- `whop ad-groups targeting_options` · read · required: `--platform`
+- `whop ad-groups unpause` · write
+- `whop ad-groups update` · write
+
+### ads
+
+The creative: copy, assets, and destination URL. · `wv agent ads`
+
+- `whop ads create` · write
+- `whop ads delete` · write, destructive
+- `whop ads duplicate` · write
+- `whop ads get` · read
+- `whop ads list` · read
+- `whop ads pause` · write
+- `whop ads unpause` · write
+- `whop ads update` · write
+
+### promo-codes
+
+Discounts that creators configure for checkout. · `wv agent promo-codes`
+
+- `whop promo-codes activate` · read
+- `whop promo-codes create` · write · required: `--account_id`, `--amount_off`, `--base_currency`, `--code`, `--new_users_only`, `--promo_duration_months`, `--promo_type`
+- `whop promo-codes deactivate` · read
+- `whop promo-codes delete` · write, destructive
+- `whop promo-codes get` · read
+- `whop promo-codes list` · read
+
+### checkout-configurations
+
+Turn a plan into a shareable, prefilled checkout link. · `wv agent checkout-configurations`
+
+- `whop checkout-configurations create` · write
+- `whop checkout-configurations delete` · write, destructive
+- `whop checkout-configurations get` · read
+- `whop checkout-configurations list` · read
+
+### plans
+
+Pricing for a product: one-time, recurring, trials, stock. · `wv agent plans`
+
+- `whop plans calculate_tax` · read
+- `whop plans create` · write
+- `whop plans delete` · write, destructive
+- `whop plans get` · read
+- `whop plans list` · read
+- `whop plans update` · write
+
+### products
+
+The things you sell. Each owns plans and a store page. · `wv agent products`
+
+- `whop products create` · write · required: `--title`
+- `whop products delete` · write, destructive
+- `whop products get` · read
+- `whop products list` · read
+- `whop products publish` · write
+- `whop products unpublish` · write
+- `whop products update` · write
+
+### partners
+
+Your partner profile, referral links, payout rates, and referred businesses. · `wv agent partners`
+
+- `whop partners create` · write
+- `whop partners earnings` · read
+- `whop partners get` · read
+- `whop partners leaderboard` · read
+- `whop partners links` · read
+- `whop partners list` · read
+- `whop partners referred_users` · read
+- `whop partners retrieve` · read
+
+### bounties
+
+Paid tasks with reviewed submissions and escrowed rewards. · `wv agent bounties`
+
+- `whop bounties cancel` · write, destructive
+- `whop bounties create` · write · required: `--description`, `--gross_reward_amount`, `--title`
+- `whop bounties get` · read
+- `whop bounties get-submission` · read
+- `whop bounties list` · read
+- `whop bounties submissions` · read
+- `whop bounties update` · write
+
+### bounty-submissions
+
+Work submitted to a bounty, from attempt to payout. · `wv agent bounty-submissions`
+
+- `whop bounty-submissions create` · write · required: `--bounty_id`
+- `whop bounty-submissions delete` · write, destructive
+- `whop bounty-submissions get` · read
+- `whop bounty-submissions list` · read
+- `whop bounty-submissions submit` · read
+
+### memberships
+
+A customer's purchase of a plan, from checkout through cancellation. · `wv agent memberships`
+
+- `whop memberships cancel` · write, destructive
+- `whop memberships extend` · write · required: `--days`
+- `whop memberships get` · read
+- `whop memberships invite` · write · required: `--plan_id`
+- `whop memberships list` · read
+- `whop memberships pause` · write
+- `whop memberships resume` · write
+- `whop memberships resync_access` · read
+- `whop memberships transfer` · write
+- `whop memberships update` · write
+
+### stats
+
+Aggregated financial, audience, and traffic reporting. · `wv agent stats`
+
+- `whop stats get` · read · required: `--from`, `--to`
+- `whop stats list` · read
+
+### exports
+
+Asynchronous CSV dumps of an account's dashboard data. · `wv agent exports`
+
+- `whop exports create` · write · required: `--resource`
+- `whop exports get` · read
+- `whop exports list` · read
+
+### economic-intelligence
+
+What an account should do next to grow, generated from its own data. · `wv agent economic-intelligence`
+
+- `whop economic-intelligence create` · write · required: `--input`
+- `whop economic-intelligence list` · read
+- `whop economic-intelligence update` · write · required: `--status`
+
+### webhooks
+
+Event notifications pushed to your server as things happen. · `wv agent webhooks`
+
+- `whop webhooks create` · write · required: `--url`
+- `whop webhooks delete` · write, destructive
+- `whop webhooks deliveries` · read
+- `whop webhooks deliveries-replay` · read
+- `whop webhooks get` · read
+- `whop webhooks list` · read
+- `whop webhooks replay` · write · required: `--sent_after`
+- `whop webhooks test` · read · required: `--event`
+- `whop webhooks update` · write
+
+<!-- wv agent:end -->
+
+Semantics the schema does not say (verified 0.18.2):
+
+- `bounties create`: escrow is `gross_reward_amount × accepted_submissions_limit`, floor $5.
+- `ads create`: 2–10 `creatives` without a `format` become a carousel. `existing_post_id` boosts a post instead.
+- `audiences create`: lookalikes need `source_audience_id`; `filters` uses the same keys as `people list`.
+- `stats get ad_delivery`: `source` is `whop:<campaign>:<group>:<ad>`, or with `:*`. Attribution unifies under that path.
+- `events list` needs `--from` and `--to` no more than 30 days apart, or an `identifier`. `wv` presets: `--last 7d`, `--this month`.
 - `experiments` returns 403 outside Whop. `notifications create` reaches your app's members, not strangers.
 
 ## Webhooks that close the loop

@@ -1,0 +1,107 @@
+{
+  "options": {
+    "type": "object",
+    "properties": {
+      "account_id": {
+        "description": "Account to pay out from, prefixed `biz_`. Provide exactly one of `account_id` or `user_id`.",
+        "type": "string",
+        "example": "biz_xxxxxxxxxxxxxx"
+      },
+      "acknowledge_bank_warning": {
+        "description": "Set to `true` to continue when the destination bank could not confirm the payout method account holder's name, or `false` to have the payout refused in that case so the account holder can correct the name or link their bank first. Omitting the field skips the warning gate — a client that cannot show the warning keeps its pre-gate behavior.",
+        "type": "boolean"
+      },
+      "amount": {
+        "type": "number",
+        "description": "The amount to pay out in the specified currency."
+      },
+      "currency": {
+        "description": "The currency to pay out. Balances are held per currency and the payout draws only from the balance in this currency, so match the currency the funds arrived in — for example `cad` for an account funded by CAD transfers. When omitted, uses `usd` if that balance can cover a withdrawal, otherwise the account's only other funded currency.",
+        "type": "string",
+        "example": "usd"
+      },
+      "metadata": {
+        "description": "Key-value data to attach to the payout, echoed on every read and in webhook payloads. At most 50 keys, key names up to 40 characters, string values up to 500 characters. Never store secrets or regulated personal data here — webhook bodies are retained for delivery inspection.",
+        "type": "object",
+        "propertyNames": {},
+        "additionalProperties": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "example": {
+          "batch_id": "2026-08-18"
+        }
+      },
+      "notes": {
+        "description": "Free-form notes to attach to the payout, with a maximum of 255 characters. Omit or pass `null` for no notes.",
+        "anyOf": [
+          {
+            "type": "string",
+            "maxLength": 255,
+            "description": "Free-form notes to attach to the payout, with a maximum of 255 characters. Omit or pass `null` for no notes."
+          },
+          {
+            "type": "null",
+            "description": "Free-form notes to attach to the payout, with a maximum of 255 characters. Omit or pass `null` for no notes."
+          }
+        ],
+        "example": "Detailing supplies restock"
+      },
+      "payout_method_id": {
+        "type": "string",
+        "example": "potk_xxxxxxxxxxxxxx",
+        "description": "The saved payout method to deliver to (a potk_ identifier)."
+      },
+      "platform_covers_fees": {
+        "description": "Whether the parent platform covers the payout fee instead of the account being paid out. Omit to use the platform's configured fee coverage policy; pass `false` to opt out of it. `true` is only accepted for accounts that belong to a platform, and requires the platform's policy to cover this payout method's category or a caller authorized to manage the platform's child account fees.",
+        "type": "boolean"
+      },
+      "quote_token": {
+        "description": "The server-signed quote_token returned by POST /payouts/quotes. Required when the ledger account's payout_quote_required is true; a payout without it is refused with the invalid_payout_quote error type. When provided, Whop will not commit a provider payout below the destination amount the quote showed.",
+        "type": "string",
+        "example": "signed-payout-quote"
+      },
+      "speed": {
+        "description": "How fast the funds should arrive. `instant` is only accepted when the account and payout method are eligible; otherwise the payout is rejected.",
+        "type": "string",
+        "enum": [
+          "standard",
+          "instant"
+        ],
+        "example": "standard"
+      },
+      "statement_descriptor": {
+        "description": "Text that appears on the recipient's bank statement. Must be 5-22 alphanumeric characters (A-Z, a-z, 0-9). Without a `quote_token`, omit or pass `null` to use the default descriptor. With a `quote_token`, set this value when creating the quote; the payout request may omit it but cannot add or change it.",
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 22,
+            "description": "Text that appears on the recipient's bank statement. Must be 5-22 alphanumeric characters (A-Z, a-z, 0-9). Without a `quote_token`, omit or pass `null` to use the default descriptor. With a `quote_token`, set this value when creating the quote; the payout request may omit it but cannot add or change it."
+          },
+          {
+            "type": "null",
+            "description": "Text that appears on the recipient's bank statement. Must be 5-22 alphanumeric characters (A-Z, a-z, 0-9). Without a `quote_token`, omit or pass `null` to use the default descriptor. With a `quote_token`, set this value when creating the quote; the payout request may omit it but cannot add or change it."
+          }
+        ],
+        "example": "MYCOMPANY"
+      },
+      "user_id": {
+        "description": "User to pay out from, prefixed `user_`. Provide exactly one of `account_id` or `user_id`.",
+        "type": "string",
+        "example": "user_xxxxxxxxxxxxxx"
+      },
+      "idempotency-key": {
+        "description": "A unique key that makes this request safe to retry. See [Idempotent requests](https://docs.whop.com/developer/api/idempotency).",
+        "type": "string",
+        "maxLength": 255,
+        "example": "d9105228-4a08-46b1-8b91-42fed586d383"
+      }
+    },
+    "required": [
+      "amount",
+      "payout_method_id"
+    ],
+    "additionalProperties": false
+  }
+}

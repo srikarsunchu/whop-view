@@ -1,0 +1,36 @@
+{
+  "args": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^(?!\\.\\.?$)[^/?#%\\\\\\x00-\\x1f\\x7f]+$",
+        "description": "Payout ID, prefixed `wdrl_`, or the `cofr_` payout request ID returned by `POST /payouts` — both cancel the same payout."
+      }
+    },
+    "required": [
+      "id"
+    ],
+    "additionalProperties": false
+  },
+  "options": {
+    "type": "object",
+    "properties": {
+      "account_id": {
+        "description": "Owning account ID, prefixed `biz_`. Provide exactly one of `account_id` or `user_id`.",
+        "type": "string"
+      },
+      "user_id": {
+        "description": "Owning user ID, prefixed `user_`. Provide exactly one of `account_id` or `user_id`.",
+        "type": "string"
+      },
+      "idempotency-key": {
+        "description": "A unique key that makes this request safe to retry. See [Idempotent requests](https://docs.whop.com/developer/api/idempotency).",
+        "type": "string",
+        "maxLength": 255,
+        "example": "d9105228-4a08-46b1-8b91-42fed586d383"
+      }
+    },
+    "additionalProperties": false
+  }
+}

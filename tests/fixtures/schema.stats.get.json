@@ -1,0 +1,194 @@
+{
+  "args": {
+    "type": "object",
+    "properties": {
+      "metric": {
+        "type": "string",
+        "pattern": "^(?!\\.\\.?$)[^/?#%\\\\\\x00-\\x1f\\x7f]+$",
+        "description": "The metric to retrieve, for example net_revenue. Use GET /stats to see every metric key. The metric sets the unit and the properties you can filter or break down by."
+      }
+    },
+    "required": [
+      "metric"
+    ],
+    "additionalProperties": false
+  },
+  "options": {
+    "type": "object",
+    "properties": {
+      "account_id": {
+        "description": "The account this query concerns, for example biz_AbC123.",
+        "type": "string"
+      },
+      "user_id": {
+        "description": "The user this query concerns, for example user_AbC123. Available on metrics that support user subjects, such as account_balance.",
+        "type": "string"
+      },
+      "from": {
+        "type": "string",
+        "description": "Start of the range — a date (YYYY-MM-DD), expanded to the start of that day, or an ISO 8601 timestamp (for example 2026-07-16T16:37:00Z), used exactly."
+      },
+      "to": {
+        "type": "string",
+        "description": "End of the range — a date (YYYY-MM-DD), expanded to the end of that day, or an ISO 8601 timestamp (for example 2026-07-17T16:37:00Z), used exactly."
+      },
+      "interval": {
+        "description": "How wide each point is. Defaults to day. Snapshot metrics are day-only.",
+        "type": "string",
+        "enum": [
+          "minute",
+          "five_minutes",
+          "thirty_minutes",
+          "hour",
+          "day",
+          "week",
+          "month",
+          "year"
+        ]
+      },
+      "breakdown_by": {
+        "description": "Split the metric out by one of its properties — each point gets a breakdown array. For example breakdown_by=currency returns an entry for usd, an entry for eur, and so on.",
+        "type": "string"
+      },
+      "convert_to": {
+        "description": "Display currency for money metrics — every amount is converted into this ISO currency using the exchange rate on each period's date. Defaults to usd. For the ads metrics (ad_spend, ad_delivery), pass the account's ads reporting currency to match the ad entity endpoints. On transaction metrics, it is ignored when you filter or break down by currency (those report the original transaction currency, unconverted).",
+        "type": "string"
+      },
+      "currency": {
+        "description": "Select the source currency or asset on metrics that list currency. For transaction metrics, for example currency=eur, values are reported without conversion. For market_prices, use btc or xaut and convert_to=usd. Pair with breakdown_by=currency to split a metric by currency.",
+        "type": "string"
+      },
+      "time_zone": {
+        "description": "IANA time zone to bucket the series in, for example America/New_York. Defaults to UTC. Not accepted by snapshot metrics, which are UTC only.",
+        "type": "string"
+      },
+      "payment_method": {
+        "description": "Filter to a single payment method, for example card or crypto. Available on metrics that list payment_method.",
+        "type": "string"
+      },
+      "card_network": {
+        "description": "Filter to a single card brand, for example visa. A refinement of payment_method=card. Available on metrics that list card_network.",
+        "type": "string"
+      },
+      "dispute_reason": {
+        "description": "Filter disputes to a normalized reason, for example product_not_received. Pair with breakdown_by=dispute_reason to split dispute counts by reason.",
+        "type": "string"
+      },
+      "source": {
+        "description": "Filter to a single GMV source, for example payments — or, on the traffic metrics, a visit source (whop_ads, direct, or a utm_source value). Pair with breakdown_by=source to split by source. Available on metrics that list source.",
+        "type": "string"
+      },
+      "hostname": {
+        "description": "Filter traffic metrics to one website hostname, for example shop.example.com. Pair with breakdown_by=hostname to split by website.",
+        "type": "string"
+      },
+      "page": {
+        "description": "Filter traffic metrics to one page — a hostname plus normalized path, for example shop.example.com/pricing. Pair with breakdown_by=page to split by page.",
+        "type": "string"
+      },
+      "device_type": {
+        "description": "Filter traffic metrics to one device type: desktop, mobile, tablet, or unknown. Pair with breakdown_by=device_type to split by device.",
+        "type": "string"
+      },
+      "country_code": {
+        "description": "Filter traffic metrics to one visitor country (uppercase ISO 3166-1 alpha-2, for example US). Pair with breakdown_by=country_code to split by country.",
+        "type": "string"
+      },
+      "event_name": {
+        "description": "Filter the events metric to one tracked event name, for example pixel.page or pixel.custom. Pair with breakdown_by=event_name to split by event.",
+        "type": "string"
+      },
+      "event_type": {
+        "description": "Filter the events metric to a canonical group of events: page_view (pixel page views plus whop.com store views), checkout_start (hosted and embedded checkout views), or other. Pair with breakdown_by=event_type to split by group.",
+        "type": "string",
+        "enum": [
+          "page_view",
+          "checkout_start",
+          "other"
+        ]
+      },
+      "custom_name": {
+        "description": "Filter the events metric to one merchant-defined custom event name. Only valid alongside event_name=pixel.custom. Pair with breakdown_by=custom_name to split custom events by name.",
+        "type": "string"
+      },
+      "segment": {
+        "description": "Filter to a single wallet-balance segment, for example available. Pair with breakdown_by=segment to split the balance. Available on metrics that list segment.",
+        "type": "string"
+      },
+      "category": {
+        "description": "Filter to a single balance-activity category, for example payments. Pair with breakdown_by=category to split the activity. Available on metrics that list category.",
+        "type": "string"
+      },
+      "merchant": {
+        "description": "Filter to a single cashback merchant bucket, for example whop-ads. Pair with breakdown_by=merchant to split cashback by merchant. Available on metrics that list merchant.",
+        "type": "string"
+      },
+      "fee_type": {
+        "description": "Filter to a single fee type. Pair with breakdown_by=fee_type to split fees by type. Available on metrics that list fee_type.",
+        "type": "string"
+      },
+      "product": {
+        "description": "Filter to a single product (access pass id), for example prod_AbC123. Pair with breakdown_by=product. Available on metrics that list product.",
+        "type": "string"
+      },
+      "status": {
+        "description": "Filter to a single membership status. Pair with breakdown_by=status. Available on metrics that list status.",
+        "type": "string"
+      },
+      "access_level": {
+        "description": "Filter to a single access level. Pair with breakdown_by=access_level. Available on metrics that list access_level.",
+        "type": "string"
+      },
+      "most_recent_action": {
+        "description": "Filter to a single most-recent member action. Pair with breakdown_by=most_recent_action. Available on metrics that list most_recent_action.",
+        "type": "string"
+      },
+      "referred_user_id": {
+        "description": "Filter a referral metric to the businesses attributed to one person you referred, for example user_AbC123. Available on metrics that list referred_user_id.",
+        "type": "string"
+      },
+      "ad_campaign_ids": {
+        "description": "Ad campaign ids (adcamp_...) to scope the report to; stats are summed across them. Available on metrics that list ad_campaign_ids.",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "example": "adcamp_xxxxxxxxxxxxxx"
+        }
+      },
+      "ad_group_ids": {
+        "description": "Ad group ids (adgrp_...) to scope the report to; stats are summed across them. Available on metrics that list ad_group_ids.",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "example": "adgrp_xxxxxxxxxxxxxx"
+        }
+      },
+      "ad_ids": {
+        "description": "Ad ids (ad_...) to scope the report to; stats are summed across them. Available on metrics that list ad_ids.",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "example": "ad_xxxxxxxxxxxxxx"
+        }
+      },
+      "snapshot_window": {
+        "description": "Window used by a snapshot metric. Ordinary snapshots accept 30d as their trailing activity window. Cohorted dispute metrics accept 7d or 28d as the sales-transaction pool; their attribution window is fixed in the metric name. Each metric lists its accepted values in the catalog.",
+        "type": "string",
+        "enum": [
+          "7d",
+          "28d",
+          "30d"
+        ]
+      },
+      "event": {
+        "description": "Filter the events metric to one or more full event names, for example payment.completed or pixel.lead. Comma-separate several to break the metric down by each event. Available on metrics that list event.",
+        "type": "string"
+      }
+    },
+    "required": [
+      "from",
+      "to"
+    ],
+    "additionalProperties": false
+  }
+}

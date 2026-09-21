@@ -390,6 +390,8 @@ $ wv payouts create --amount 5 --payout_method_id potk_x | cat
 
 Screens: `wv doctor --format json` and `wv gtm --format json` return the data behind the screen, and a pipe gets the same without the flag. Doctor is `{ ok, blocking, checks: [{ key, level, detail, fix, blocking }] }` with exit 1 on a blocking failure, so an agent's preflight is one call. GTM is every read the screen made, the people summary, and the launch gaps with their fixes. Other wv screens in a pipe answer `NEEDS_TERMINAL`, exit 2.
 
+Manifest: `wv agent <group>` prints one Markdown page per command group from `--schema`: every verb's flags with types and required marks, which verbs write, move money, or destroy, the gate protocol, and the doctor checks the group needs before its first write. `wv agent` alone lists the groups. It sits between `whop --llms` (16 KB, no flags) and `whop --llms-full` (338 KB). `pnpm skill` regenerates the command reference in the whop-gtm skill from it.
+
 The agent shows the plan to the person and runs `rerun`. `--plan` returns `{ ok: true, plan }` and runs nothing, for every write. Refusals use the same shape with no `rerun`: `WHOP_LIMIT` in Whop's words, `WV_CAP`, `INSUFFICIENT_BALANCE`, `WV_AD_CAP`. For ads the plan is the campaign tree, the reach estimate, and the committed spend. `--format json` on a write does not lift the gate; `--schema` and `--help` do, since they run nothing. `WV_RAW=1` turns all of it off. A bad `--last` preset or a missing `@file` is the same envelope with `BAD_PRESET`, `EVENTS_RANGE`, or `JSON_FLAGS`.
 
 ### `home`

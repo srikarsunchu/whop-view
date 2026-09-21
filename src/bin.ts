@@ -2,7 +2,7 @@
 // wv: human view layer for the Whop CLI. Renders when a person is looking, execs `whop` otherwise.
 import { realpathSync } from "node:fs";
 import { makeTheme, type Theme } from "./tokens.ts";
-import { helpText, modeFrom, schema, passthrough, run, sandboxKey, sandboxUrl, shouldPassthrough, whopEnv, type Mode } from "./runner.ts";
+import { cachedHelpText, helpText, modeFrom, schema, passthrough, run, sandboxKey, sandboxUrl, shouldPassthrough, whopEnv, type Mode } from "./runner.ts";
 import { configPath, maskKey, saveSandboxKey } from "./config.ts";
 import { sandboxMissingKeyView, sandboxSavedView, sandboxStatusView } from "./views/sandbox.ts";
 import { ask } from "./primitives/prompt.ts";
@@ -24,6 +24,7 @@ import { money } from "./format.ts";
 import { adPlanView, adRefusedView, budgetOf, commitment, isAdPlan, jsonFlags, reachArgv, treeFromArgv, type AdPlanInput, type AdTree, type Reach } from "./views/adplan.ts";
 import { errorView } from "./views/error.ts";
 import { helpView, parseHelp } from "./views/help.ts";
+import { manifest, manifestIndex, type VerbSchema } from "./views/manifest.ts";
 import { homeView } from "./views/home.ts";
 import { gtmData, gtmView, type GtmInput } from "./views/gtm.ts";
 import { blocked, checks, doctorData, doctorView, DOCTOR_ACTIONS, type DoctorInput } from "./views/doctor.ts";
@@ -37,7 +38,7 @@ import type { Parsed, Rec } from "./envelope.ts";
 const print = (lines: string[]) => process.stdout.write(lines.join("\n") + "\n");
 
 /** Words that are wv's, not whop's. */
-const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox"]);
+const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox", "agent"]);
 
 export interface Outcome {
   code: number;
@@ -144,6 +145,13 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
   const json = assembleFor(dates.argv);
   if (json.error) emit(wvErrorEnvelope(argvIn, mode, json.error), 2);
   const argv = json.argv;
+  // The manifest is Markdown for a program; it prints the same in a pipe and a terminal.
+  if (argv[0] === "agent") {
+    const lines = await agentManifest(argv[1]);
+    if (!lines) emit(wvErrorEnvelope(argv, mode, { code: "COMMAND_NOT_FOUND", message: copy.manifest.unknownGroup(argv[1] ?? "") }), 2);
+    print(lines!);
+    process.exit(0);
+  }
   // Two screens are data as well as pictures. The rest draw and need a terminal.
   if (DATA_SCREENS.has(argv[0])) process.exit(await screenJson(argv[0], mode, env));
   if (OURS.has(argv[0])) emit(wvErrorEnvelope(argv, mode, { code: "NEEDS_TERMINAL", message: copy.agent.needsTerminal(argv[0]) }), 2);
@@ -165,6 +173,22 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
     emit(confirmationEnvelope(args, mode, moneyPlan(gate.input)), 2);
   }
   passthrough(argv0IsCheck(args) ? ["memberships", "get", ...args.slice(2)] : args, env);
+}
+
+/**
+ * `wv agent [group]`. The root help names the groups; a group's help names its verbs; `--schema` (cached by
+ * the runner) names each verb's flags. Null when the group is not one `whop --help` lists.
+ */
+async function agentManifest(group?: string): Promise<string[] | null> {
+  const root = parseHelp(cachedHelpText([]));
+  const version = /^(whop@\S+)/.exec(cachedHelpText([]))?.[1];
+  if (!group) return manifestIndex(root, version);
+  const entry = root.groups.flatMap((g) => g.entries).find((e) => e.name === group);
+  if (!entry) return null;
+  const verbs: VerbSchema[] = parseHelp(cachedHelpText([group]))
+    .groups.flatMap((g) => g.entries)
+    .map((e) => ({ verb: e.name, desc: e.desc, schema: schema(group, e.name) }));
+  return manifest({ group, desc: entry.desc, verbs, version, api: root.api });
 }
 
 /** wv screens that have a JSON face: `--format json`, or any pipe. */
@@ -217,6 +241,15 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
   }
   const mode = opts.mode ?? "production";
   const env = whopEnv(mode);
+  if (group === "agent") {
+    const lines = await agentManifest(verb);
+    if (!lines) {
+      print(errorView({ code: "COMMAND_NOT_FOUND", message: copy.manifest.unknownGroup(verb ?? "") }, theme));
+      return { code: 2 };
+    }
+    print(lines);
+    return { code: 0 };
+  }
   if (group === "home") return home(theme, mode);
   if (group === "gtm") return gtm(theme, mode);
   if (group === "doctor") return doctor(theme, mode);

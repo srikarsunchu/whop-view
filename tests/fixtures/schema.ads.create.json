@@ -1,0 +1,425 @@
+{
+  "options": {
+    "type": "object",
+    "properties": {
+      "ad_group": {
+        "description": "An inline ad group to create (same shape as POST /ad_groups, including ad_campaign_id). Creates the ad group and the ad together. Provide this OR ad_group_id.",
+        "type": "object",
+        "properties": {},
+        "additionalProperties": {},
+        "example": {
+          "ad_campaign_id": "adcamp_xxxxxxxxxxxxxx",
+          "budget_amount": 60,
+          "optimization_goal": "conversions",
+          "title": "Austin — ceramic coating buyers"
+        }
+      },
+      "ad_group_id": {
+        "description": "The existing ad group to create the ad in. Provide this OR ad_group, not both.",
+        "type": "string",
+        "example": "adgrp_xxxxxxxxxxxxxx"
+      },
+      "call_to_action": {
+        "description": "The call-to-action button shown on the ad.",
+        "type": "string",
+        "enum": [
+          "apply_now",
+          "book_now",
+          "call_now",
+          "contact_us",
+          "download",
+          "get_directions",
+          "get_offer",
+          "get_quote",
+          "learn_more",
+          "listen_now",
+          "message_page",
+          "no_button",
+          "open_link",
+          "order_now",
+          "request_time",
+          "see_details",
+          "see_menu",
+          "send_updates",
+          "shop_now",
+          "sign_up",
+          "subscribe",
+          "watch_more"
+        ],
+        "example": "message_page"
+      },
+      "creatives": {
+        "description": "The ad's creative assets. Each entry is an uploaded file id with an optional format; omit format for the original asset. Entries with no format become a carousel's ordered cards, sharing the ad's copy — 2-10 of them on Meta, while TikTok runs even a single image as a one-card carousel.",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "crop": {
+              "type": "object",
+              "properties": {
+                "height": {
+                  "type": "number",
+                  "example": 1000
+                },
+                "width": {
+                  "type": "number",
+                  "example": 1000
+                },
+                "x": {
+                  "type": "number",
+                  "example": 40
+                },
+                "y": {
+                  "type": "number",
+                  "example": 0
+                }
+              },
+              "additionalProperties": {},
+              "description": "The saved crop window for this creative, in source image pixels. Omit it for the original asset or for a format that has not been cropped."
+            },
+            "format": {
+              "type": "string",
+              "enum": [
+                "square",
+                "vertical",
+                "horizontal"
+              ],
+              "example": "square"
+            },
+            "id": {
+              "type": "string",
+              "example": "file_xxxxxxxxxxxxxx"
+            }
+          },
+          "additionalProperties": {}
+        }
+      },
+      "descriptions": {
+        "description": "The description variants shown on the ad.",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "example": "Two-stage paint correction included"
+        }
+      },
+      "existing_post_id": {
+        "description": "Promote a post you already published instead of uploading creatives — a Facebook post or Instagram media id. Mutually exclusive with creatives. Pair with post_source.",
+        "type": "string",
+        "example": "1784512345678901"
+      },
+      "headlines": {
+        "description": "The headline variants shown on the ad.",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "example": "Showroom shine, guaranteed"
+        }
+      },
+      "lead_form": {
+        "description": "Instant lead form for the ad. Only allowed when the ad group's conversion_location is an instant-form destination (instant_forms, instant_forms_and_messenger, website_and_instant_forms). Mutually exclusive with lead_form_id.",
+        "type": "object",
+        "properties": {
+          "completion": {
+            "type": "object",
+            "properties": {
+              "button_text": {
+                "type": "string",
+                "example": "See our work"
+              },
+              "description": {
+                "type": "string",
+                "example": "We book coatings two days out, so pick a slot when we ring."
+              },
+              "headline": {
+                "type": "string",
+                "example": "Thanks — we will call you today"
+              },
+              "url": {
+                "type": "string",
+                "example": "https://shinetime.example/gallery"
+              }
+            },
+            "additionalProperties": {},
+            "description": "Optional completion screen shown after submission; url sets the follow-up website button."
+          },
+          "disclaimer": {
+            "type": "object",
+            "properties": {
+              "body": {
+                "type": "string",
+                "example": "Ceramic coating requires the vehicle for two days."
+              },
+              "checkboxes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "checked_by_default": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "key": {
+                      "type": "string",
+                      "example": "two_days"
+                    },
+                    "required": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "text": {
+                      "type": "string",
+                      "example": "I can leave my vehicle for two days"
+                    }
+                  },
+                  "additionalProperties": {}
+                }
+              },
+              "title": {
+                "type": "string",
+                "example": "Before you submit"
+              }
+            },
+            "additionalProperties": {},
+            "description": "Optional custom consent disclaimer with checkboxes."
+          },
+          "form_type": {
+            "type": "string",
+            "enum": [
+              "more_volume",
+              "higher_intent"
+            ],
+            "example": "higher_intent"
+          },
+          "intro": {
+            "type": "object",
+            "properties": {
+              "description": {
+                "type": "string",
+                "example": "Tell us about your vehicle and we will send a fixed price."
+              },
+              "headline": {
+                "type": "string",
+                "example": "Get a ceramic coating quote"
+              }
+            },
+            "additionalProperties": {},
+            "description": "Optional intro screen shown before the questions."
+          },
+          "name": {
+            "type": "string",
+            "example": "Ceramic coating quote requests"
+          },
+          "phone_verification": {
+            "type": "boolean",
+            "example": true
+          },
+          "privacy_policy": {
+            "type": "object",
+            "properties": {
+              "link_text": {
+                "type": "string",
+                "example": "Shine Time privacy policy"
+              },
+              "url": {
+                "type": "string",
+                "example": "https://shinetime.example/privacy"
+              }
+            },
+            "additionalProperties": {},
+            "description": "Your privacy policy. url is required by the ad platform."
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "format": {
+                  "type": "string",
+                  "enum": [
+                    "short_answer",
+                    "multiple_choice",
+                    "appointment"
+                  ],
+                  "example": "multiple_choice"
+                },
+                "label": {
+                  "type": "string",
+                  "example": "What vehicle are we detailing?"
+                },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string",
+                        "example": "sedan"
+                      },
+                      "logic": {
+                        "type": "object",
+                        "properties": {
+                          "action": {
+                            "type": "string",
+                            "enum": [
+                              "go_to_question",
+                              "submit_form",
+                              "close_form"
+                            ],
+                            "example": "go_to_question"
+                          },
+                          "target_end_page_index": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "example": 0
+                          },
+                          "target_question_index": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "example": 3
+                          }
+                        },
+                        "additionalProperties": {}
+                      },
+                      "value": {
+                        "type": "string",
+                        "example": "Sedan or coupe"
+                      }
+                    },
+                    "additionalProperties": {}
+                  }
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "email",
+                    "phone",
+                    "full_name",
+                    "first_name",
+                    "last_name",
+                    "city",
+                    "state",
+                    "zip",
+                    "country",
+                    "street_address",
+                    "job_title",
+                    "company_name",
+                    "work_email",
+                    "work_phone_number",
+                    "dob",
+                    "gender",
+                    "marital_status",
+                    "relationship_status",
+                    "military_status",
+                    "date_time",
+                    "custom"
+                  ],
+                  "example": "phone"
+                }
+              },
+              "additionalProperties": {}
+            },
+            "description": "The questions on the form. Standard prefill types need only a type; a custom question needs a label and a format (plus options for multiple_choice). Options carry an optional key and answer-routing logic."
+          }
+        },
+        "additionalProperties": {}
+      },
+      "lead_form_id": {
+        "description": "Use an existing instant form instead of creating one — the form's platform ID, from a form already on the ad's Facebook page. Only allowed when the ad group's conversion_location is an instant-form destination. Mutually exclusive with lead_form.",
+        "type": "string",
+        "example": "1037724182084885"
+      },
+      "messaging_config": {
+        "description": "Click-to-message welcome copy: the greeting (message) and the ice-breaker prompt (keyword).",
+        "type": "object",
+        "properties": {
+          "keyword": {
+            "type": "string",
+            "example": "Book an interior deep clean"
+          },
+          "message": {
+            "type": "string",
+            "example": "Hi! Tell us your vehicle and ZIP and we will send an interior deep clean quote."
+          }
+        },
+        "additionalProperties": {}
+      },
+      "multi_advertiser_ads": {
+        "description": "Whether the ad can appear alongside other advertisers' ads in the same unit. Defaults to true.",
+        "type": "boolean"
+      },
+      "music": {
+        "description": "The looping track a TikTok carousel ad plays — an MP3 you uploaded, no larger than 10MB. Required for TikTok carousels (image creatives); TikTok-only.",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Uploaded MP3 file ID, prefixed `file_`."
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": {}
+      },
+      "post_source": {
+        "description": "Identifies the network that owns `existing_post_id`. The source is inferred from the ID shape when omitted.",
+        "type": "string",
+        "enum": [
+          "facebook",
+          "instagram"
+        ],
+        "example": "instagram"
+      },
+      "primary_texts": {
+        "description": "The primary text variants shown in the ad body.",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "example": "Three-year ceramic coating, booked online in under a minute."
+        }
+      },
+      "social_accounts": {
+        "description": "The social accounts the ad runs under — a connected Facebook page and, optionally, an Instagram profile.",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "example": "sacc_xxxxxxxxxxxxxx"
+            }
+          },
+          "additionalProperties": {}
+        }
+      },
+      "title": {
+        "description": "The display name of the ad.",
+        "type": "string",
+        "example": "Interior deep clean — DM us"
+      },
+      "url": {
+        "description": "The URL the ad links to. Query parameters are merged into url_parameters, so the stored URL is always bare.",
+        "type": "string",
+        "example": "https://shinetime.example/ceramic-coating"
+      },
+      "url_parameters": {
+        "description": "Query parameters to append to the destination URL, keyed by parameter name. Merged with any query string on `url`. Whop adds its own click-attribution parameters; those are reserved and rejected if you set them. Which keys are reserved depends on the ad's network — Meta: utm_meta_ad_id, utm_meta_adset_id, utm_meta_campaign_id, utm_source, utm_placement, utm_medium, utm_content, utm_adset, utm_whop, wacid, wasid, waid, tw_source, tw_adid; TikTok: waid, wasid, wacid, ad_id, adset_id, campaign_id, utm_source, utm_medium, utm_placement, utm_whop, tw_source, tw_adid.",
+        "type": "object",
+        "properties": {},
+        "additionalProperties": {},
+        "example": {
+          "ref": "spring"
+        }
+      },
+      "idempotency-key": {
+        "description": "A unique key that makes this request safe to retry. See [Idempotent requests](https://docs.whop.com/developer/api/idempotency).",
+        "type": "string",
+        "maxLength": 255,
+        "example": "d9105228-4a08-46b1-8b91-42fed586d383"
+      }
+    },
+    "additionalProperties": false
+  }
+}
