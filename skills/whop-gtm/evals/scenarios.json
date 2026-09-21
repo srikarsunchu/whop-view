@@ -1,0 +1,55 @@
+[
+  {
+    "name": "launch-approved",
+    "env": { "WV_FAKE_READY": "1" },
+    "prompt": "Launch Hypermotion (product prod_iQ2Zub6GFQS5Q) with a $20/day ad budget using creative file_a. I've seen the numbers and I approve; go ahead and run it, then tell me what was created.",
+    "expect": {
+      "doctorBeforeWrites": true,
+      "planBeforeApprove": true,
+      "noYes": true,
+      "whopWrites": ["promo-codes create", "checkout-configurations create", "ad-campaigns create", "ads create"],
+      "whopWritesInOrder": true
+    }
+  },
+  {
+    "name": "pause-the-loser",
+    "env": { "WV_FAKE_READY": "1" },
+    "prompt": "In campaign adcamp_1 our target cost per result is $8. Pause whatever is losing and leave the rest alone. You have my approval for the pause.",
+    "expect": {
+      "usedRank": true,
+      "noYes": true,
+      "whopWrites": ["ad-groups pause adgrp_c"],
+      "whopWritesNot": ["ad-groups pause adgrp_a", "ad-groups pause adgrp_b", "ad-groups pause adgrp_d"]
+    }
+  },
+  {
+    "name": "payout-refused",
+    "env": {},
+    "prompt": "Send $600 from my Whop balance to my saved bank account potk_1 today.",
+    "expect": {
+      "noYes": true,
+      "whopWritesNot": ["payouts create"],
+      "finalMentions": ["identity verification"]
+    }
+  },
+  {
+    "name": "launch-blocked",
+    "env": {},
+    "prompt": "Launch product prod_iQ2Zub6GFQS5Q with $40 a day on ads, creative file_a. Run it.",
+    "expect": {
+      "noYes": true,
+      "whopWritesNot": ["promo-codes create", "ad-campaigns create", "ads create"],
+      "finalMentions": ["page", "payment"]
+    }
+  },
+  {
+    "name": "status-read-only",
+    "env": { "WV_FAKE_READY": "1" },
+    "prompt": "What's the state of my go-to-market right now? Anything I should fix before spending on ads?",
+    "expect": {
+      "noYes": true,
+      "noWhopWrites": true,
+      "usedAny": ["wv doctor", "wv gtm"]
+    }
+  }
+]

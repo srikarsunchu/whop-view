@@ -9,6 +9,9 @@ import { listView } from "../src/views/list.ts";
 import { detailView } from "../src/views/detail.ts";
 import { changesFor, confirmView, currentSummary, refusedView } from "../src/views/confirm.ts";
 import { buildLaunch, launchDoneView, launchView, parseLaunchArgs } from "../src/views/launch.ts";
+import { buildWinback, parseWinbackArgs } from "../src/views/winback.ts";
+import { recipeView } from "../src/views/recipe.ts";
+import { rankView } from "../src/views/rank.ts";
 import { errorView } from "../src/views/error.ts";
 import { helpView, parseHelp } from "../src/views/help.ts";
 import { homeView } from "../src/views/home.ts";
@@ -132,6 +135,16 @@ const LAUNCH_OPTS = parseLaunchArgs(LAUNCH_ARGV, LAUNCH_NOW).opts!;
 export const LAUNCH_BLOCKED = buildLaunch(LAUNCH_ARGV, LAUNCH_OPTS, { product: record0("products.get"), preferences: record0("accounts.preferences"), social: [], reach: { error: "No connected Meta account" }, accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion", cap: 500, now: LAUNCH_NOW });
 /** The same launch on an account that is set up. */
 export const LAUNCH_READY = buildLaunch(LAUNCH_ARGV, LAUNCH_OPTS, { product: record0("products.get"), preferences: { ads_reporting_currency: "usd", ads_payment_methods: [{ id: "pm_1", brand: "visa", last4: "4242" }] }, social: [{ id: "sacc_x1", platform: "facebook", name: "Hypermotion", username: "hypermotion" }], reach: { lower: 1_500_000, upper: 1_800_000 }, accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion", cap: 2000, now: LAUNCH_NOW });
+
+const WINBACK_ARGV = ["gtm", "winback", "adcamp_x1", "--budget", "15", "--idempotency-key", "5b2c1d6e-0000-4000-8000-000000000003"];
+export const WINBACK_READY = buildWinback(WINBACK_ARGV, parseWinbackArgs(WINBACK_ARGV).opts!, { preferences: { ads_reporting_currency: "usd", ads_payment_methods: [{ id: "pm_1" }] }, social: [{ id: "sacc_x1", platform: "facebook", name: "Hypermotion", username: "hypermotion" }], campaign: { id: "adcamp_x1", title: "Launch · Hypermotion", status: "active" }, visitors: { seen: 100, more: true }, reach: { lower: 400, upper: 900 }, accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion", cap: 2000, now: LAUNCH_NOW });
+const RANK_GROUPS = [
+  { id: "adgrp_a1", title: "US 25-44 · purchase", status: "active", delivery_status: "active", spend: 420, results: 60, cost_per_result: 7, return_on_ad_spend: 3.1, created_at: "2026-09-10T00:00:00Z" },
+  { id: "adgrp_b1", title: "lal 1%", status: "active", delivery_status: "learning", spend: 90, results: 4, cost_per_result: 22.5, created_at: "2026-09-20T00:00:00Z" },
+  { id: "adgrp_c1", title: "lal 3%", status: "active", delivery_status: "active", spend: 600, results: 55, cost_per_result: 18.5, return_on_ad_spend: 0.4, created_at: "2026-09-05T00:00:00Z" },
+  { id: "adgrp_d1", title: "broad", status: "active", delivery_status: "issues", spend: 0, results: 0, created_at: "2026-09-19T00:00:00Z" },
+];
+export const RANK = { campaignId: "adcamp_x1", campaign: { id: "adcamp_x1", title: "Launch · Hypermotion", status: "active" }, groups: parseEnvelope(JSON.stringify({ ok: true, data: { data: RANK_GROUPS, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } }, meta: { command: "ad-groups list", duration: "1ms" } })), target: 8, currency: "usd", accountTitle: "Hypermotion", accountId: "biz_VraUMckluH8dzV", now: LAUNCH_NOW.getTime(), commands: [["ad-campaigns", "get", "adcamp_x1"], ["ad-groups", "list", "--ad_campaign_id", "adcamp_x1", "--order", "cost_per_result", "--direction", "asc"]] };
 
 export const synth = (data: unknown) => parseEnvelope(JSON.stringify({ ok: true, data, meta: { command: "synthetic", duration: "1ms" } }));
 const synthPage = (rows: unknown[]) => synth({ data: rows, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } });
@@ -300,6 +313,9 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "confirm.payout.sandbox": (t) => confirmView({ ...PAYOUT, mode: "sandbox", destination: "Chase checking ••••4242  potk_x1", balance: { available: 418.56, currency: "usd" } }, t),
   "confirm.payout.over_cap": (t) => refusedView({ ...PAYOUT, argv: ["payouts", "create", "--amount", "2000", "--currency", "usd", "--payout_method_id", "potk_x1"], reason: "cap", destination: "Chase checking ••••4242  potk_x1", balance: { available: 2418.56, currency: "usd" }, cap: 500 }, t),
   "confirm.payout.over_balance": (t) => refusedView({ ...PAYOUT, reason: "balance", destination: "Chase checking ••••4242  potk_x1", balance: { available: 18.56, currency: "usd" }, cap: 500 }, t),
+  "winback.ready": (t) => recipeView(WINBACK_READY, t),
+  rank: (t) => rankView(RANK, t),
+  "rank.no_target": (t) => rankView({ ...RANK, target: undefined }, t),
   "launch.blocked": (t) => launchView(LAUNCH_BLOCKED, t),
   "launch.ready": (t) => launchView(LAUNCH_READY, t),
   "launch.plan_only": (t) => launchView(LAUNCH_READY, t, { planOnly: true }),

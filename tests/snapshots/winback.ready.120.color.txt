@@ -1,0 +1,27 @@
+ [33m▌[39m [1mWin back visitors who did not buy[22m                                                                [33mwrites to production[39m
+
+   [2mwv gtm winback adcamp_x1 --budget 15 --idempotency-key 5b2c1d6e-0000-4000-8000-000000000003[22m
+
+   [2mcampaign  [22m  Launch · Hypermotion  adcamp_x1
+   [2mspend     [22m  [33m$15.00/day · $450.00 over 30 days · no end date[39m
+   [2mreach     [22m  400–900 people on meta
+   [2mpays from [22m  the account's ads payment method
+   [2mruns under[22m  Hypermotion (facebook) @hypermotion
+   [2mcap       [22m  [2m$2,000.00 committed spend per plan from wv[22m
+   [2mfrom      [22m  Hypermotion  biz_VraUMckluH8dzV
+
+ [2m── [22m[1mSteps[22m[2m ──────────────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2m1  visitors audience [22m  people-filter · seen in 30 days · never bought · contactable · refreshes · ~100+ people now
+                          [2mruns[22m  whop audiences create --account_id biz_VraUMckluH8dzV --name 'visited 30d, no purcha…
+   [2m2  customers audience[22m  people-filter · has bought · refreshes · excluded from the ad group
+                          [2mruns[22m  whop audiences create --account_id biz_VraUMckluH8dzV --name customers --source_type…
+   [2m3  promo code        [22m  COMEBACK · $5.00 off · churned customers · one per customer
+                          [2mruns[22m  whop promo-codes create --account_id biz_VraUMckluH8dzV --code COMEBACK --promo_type…
+   [2m4  ad group          [22m  winback 30d · in Launch · Hypermotion · includes visitors, excludes customers
+                          [2mruns[22m  whop ad-groups create --ad_campaign_id adcamp_x1 --title 'winback 30d' --budget_amou…
+
+   [2m4 writes run in order against production, each with its own idempotency key. A step that fails stops the rest; what[22m
+   [2mwas created stays, and the card names it.[22m
+
+ [2mevery argv[22m  [2mwv gtm winback adcamp_x1 --budget 15 --idempotency-key 5b2c1d6e-0000-4000-8000-000000000003 --plan | cat[22m
+

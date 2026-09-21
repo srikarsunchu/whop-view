@@ -1,0 +1,27 @@
+ ▌ Win back visitors who did not buy                                                                writes to production
+
+   wv gtm winback adcamp_x1 --budget 15 --idempotency-key 5b2c1d6e-0000-4000-8000-000000000003
+
+   campaign    Launch · Hypermotion  adcamp_x1
+   spend       $15.00/day · $450.00 over 30 days · no end date
+   reach       400–900 people on meta
+   pays from   the account's ads payment method
+   runs under  Hypermotion (facebook) @hypermotion
+   cap         $2,000.00 committed spend per plan from wv
+   from        Hypermotion  biz_VraUMckluH8dzV
+
+ ── Steps ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1  visitors audience   people-filter · seen in 30 days · never bought · contactable · refreshes · ~100+ people now
+                          runs  whop audiences create --account_id biz_VraUMckluH8dzV --name 'visited 30d, no purcha…
+   2  customers audience  people-filter · has bought · refreshes · excluded from the ad group
+                          runs  whop audiences create --account_id biz_VraUMckluH8dzV --name customers --source_type…
+   3  promo code          COMEBACK · $5.00 off · churned customers · one per customer
+                          runs  whop promo-codes create --account_id biz_VraUMckluH8dzV --code COMEBACK --promo_type…
+   4  ad group            winback 30d · in Launch · Hypermotion · includes visitors, excludes customers
+                          runs  whop ad-groups create --ad_campaign_id adcamp_x1 --title 'winback 30d' --budget_amou…
+
+   4 writes run in order against production, each with its own idempotency key. A step that fails stops the rest; what
+   was created stays, and the card names it.
+
+ every argv  wv gtm winback adcamp_x1 --budget 15 --idempotency-key 5b2c1d6e-0000-4000-8000-000000000003 --plan | cat
+

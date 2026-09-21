@@ -66,7 +66,7 @@ test("launch: placeholders resolve from earlier results and stay visible when th
   const argv = ["ads", "create", "--url", "{checkout.purchase_url}", "--ad_group", '{"ad_campaign_id":"{campaign.id}","x":1}', "--title", "{promo.code} live"];
   assert.deepEqual(substitute(argv, { checkout: { purchase_url: "https://w/c/1" }, campaign: { id: "adcamp_1" }, promo: { code: "LAUNCH20" } }), ["ads", "create", "--url", "https://w/c/1", "--ad_group", '{"ad_campaign_id":"adcamp_1","x":1}', "--title", "LAUNCH20 live"]);
   assert.deepEqual(substitute(["--url", "{checkout.purchase_url}"], {}), ["--url", "{checkout.purchase_url}"]);
-  const checks = doneChecks({ steps: [] } as never, { promo: { id: "promo_1" }, campaign: { id: "adcamp_1" } });
+  const checks = doneChecks({ promo: { id: "promo_1" }, campaign: { id: "adcamp_1" } });
   assert.deepEqual(checks.map((c) => c.label), ["promo", "campaign", "spend tomorrow", "the funnel"]);
   assert.deepEqual(checks[0].argv, ["whop", "promo-codes", "get", "promo_1", "--format", "json"]);
   assert.equal(checks[2].argv[0], "wv", "the date preset only resolves through wv");

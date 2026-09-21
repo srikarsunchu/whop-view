@@ -1,0 +1,18 @@
+ [1mHypermotion[22m[2m › [22m[2mbiz_VraUMckluH8dzV[22m[2m › [22m[33mproduction[39m[2m › [22m[1mrank[22m[2m › [22m[2mLaunch · Hypermotion[22m
+
+ [2mad group           [22m  [2mdelivery[22m  [2mage[22m  [2m  spend[22m  [2mresults[22m  [2m   cpr[22m  [2mverdict[22m
+ US 25-44 · purchase  [32mactive  [39m  [2m11d[22m  $420.00       60  [32m $7.00[39m  [32mscale[39m
+ lal 3%               [32mactive  [39m  [2m16d[22m  $600.00       55  [31m$18.50[39m  [31mpause[39m
+ lal 1%               learning  [2m 1d[22m   $90.00        4  [31m$22.50[39m  [2mwait[22m
+ broad                issues    [2m 2d[22m    $0.00        0       —  [33mnot delivering[39m
+
+   [2mTarget $8.00 per result. A group waits until 3 days and 50 results; over 2×[22m
+   [2mthe target it is a pause, under the target a scale. One change per campaign[22m
+   [2mper day; duplicate a winner instead of editing it.[22m
+
+ [2mscale[22m  [2mwv ads list --ad_group_id adgrp_a1 --format json[22m
+ [2mpause[22m  [2mwv ad-groups pause adgrp_c1[22m
+ [2mjson[22m  [2mwhop ad-campaigns get adcamp_x1 --format json[22m
+ [2mjson[22m  [2mwhop ad-groups list --ad_campaign_id adcamp_x1 --order cost_per_result[22m
+       [2m--direction asc --format json[22m
+

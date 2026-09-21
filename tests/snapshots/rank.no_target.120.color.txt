@@ -1,0 +1,14 @@
+ [1mHypermotion[22m[2m › [22m[2mbiz_VraUMckluH8dzV[22m[2m › [22m[33mproduction[39m[2m › [22m[1mrank[22m[2m › [22m[2mLaunch · Hypermotion[22m
+
+ [2mad group           [22m  [2mdelivery[22m  [2mage[22m  [2m  spend[22m  [2mresults[22m  [2m   cpr[22m  [2m roas[22m  [2mverdict[22m
+ US 25-44 · purchase  [32mactive  [39m  [2m11d[22m  $420.00       60   $7.00  3.10×  hold
+ lal 3%               [32mactive  [39m  [2m16d[22m  $600.00       55  $18.50  0.40×  hold
+ lal 1%               learning  [2m 1d[22m   $90.00        4  $22.50      —  [2mwait[22m
+ broad                issues    [2m 2d[22m    $0.00        0       —      —  [33mnot delivering[39m
+
+   [2mNo --target, so no pause or scale verdicts: name the cost per result one sale is worth (price × margin) and rerun.[22m
+   [2mGroups under 3 days or 50 results wait regardless.[22m
+
+ [2mjson[22m  [2mwhop ad-campaigns get adcamp_x1 --format json[22m
+ [2mjson[22m  [2mwhop ad-groups list --ad_campaign_id adcamp_x1 --order cost_per_result --direction asc --format json[22m
+

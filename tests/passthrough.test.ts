@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdtempSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { FIXTURES, fixture } from "./render.ts";
@@ -15,44 +15,8 @@ const node = process.execPath;
 function fakeWhop(): string {
   const dir = mkdtempSync(join(tmpdir(), "wv-fake-"));
   const script = join(dir, "whop");
-  // Echoes argv to stderr so tests can assert what wv passed through, prints the plain fixture.
-  // The reads the gate needs answer from fixtures. `WV_FAKE_METHODS` swaps the payout methods fixture, so a
-  // test can choose between Whop's own limit (the recorded one blocks every payout) and none.
-  writeFileSync(
-    script,
-    `#!/bin/sh
-echo "ARGS: $*" >&2
-echo "BASE: \${WHOP_API_BASE_URL:-unset} KEY: \${WHOP_API_KEY:-unset}" >&2
-fx() { cat "${FIXTURES}/$1"; exit 0; }
-if [ "$1" = "--llms-full" ]; then
-  printf '# whop\n\n## whop products\n\n### whop products frobnicate\n\nFrobnicate Product\n\n> Confirm with the user before executing this destructive command.\n\n### whop products list\n\nList Products\n'
-  exit 0
-fi
-case "$*" in *--schema*) [ -f "${FIXTURES}/schema.$1.$2.json" ] && fx "schema.$1.$2.json"; echo '{"code":"COMMAND_NOT_FOUND","message":"no schema"}'; exit 1 ;; esac
-case "$1 $2" in
-  "products list")
-    case "$*" in
-      *--after*c2*) fx products.list.json ;;
-      *--format*json*--full-output*) [ -n "$WV_FAKE_PAGED" ] && fx products.list.page1.json; fx products.list.json ;;
-      *) fx products.list.plain.txt ;;
-    esac ;;
-  "products get") fx products.get.json ;;
-  "auth status") fx auth.status.json ;;
-  "ledgers report") fx ledgers.report.json ;;
-  "payouts methods") fx "\${WV_FAKE_METHODS:-payouts.methods.limits.json}" ;;
-  "accounts preferences") [ -n "$WV_FAKE_READY" ] && { echo '{"ok":true,"data":{"ads_payment_methods":[{"id":"pm_1","brand":"visa","last4":"4242"}],"ads_reporting_currency":"usd","economic_intelligence":true},"meta":{"command":"accounts preferences","duration":"1ms"}}'; exit 0; }; fx accounts.preferences.json ;;
-  "social-accounts list") [ -n "$WV_FAKE_READY" ] && { echo '{"ok":true,"data":{"data":[{"id":"sacc_1","platform":"facebook","name":"Hypermotion","username":"hypermotion"}],"page_info":{"start_cursor":null,"end_cursor":null,"has_next_page":false,"has_previous_page":false}},"meta":{"command":"social-accounts list","duration":"1ms"}}'; exit 0; }; fx social-accounts.list.json ;;
-  "promo-codes create") echo '{"ok":true,"data":{"id":"promo_1","code":"LAUNCH20","status":"active"},"meta":{"command":"promo-codes create","duration":"1ms"}}'; exit 0 ;;
-  "checkout-configurations create") echo '{"ok":true,"data":{"id":"chk_1","purchase_url":"https://whop.com/checkout/chk_1"},"meta":{"command":"checkout-configurations create","duration":"1ms"}}'; exit 0 ;;
-  "ad-campaigns create") [ -n "$WV_FAKE_CAMPAIGN_FAILS" ] && { echo '{"ok":false,"error":{"code":"HTTP_422","message":"No ads payment method"},"meta":{"command":"ad-campaigns create","duration":"1ms"}}'; exit 1; }; echo '{"ok":true,"data":{"id":"adcamp_1","status":"paused"},"meta":{"command":"ad-campaigns create","duration":"1ms"}}'; exit 0 ;;
-  "ads create") echo '{"ok":true,"data":{"id":"ad_1","status":"in_review"},"meta":{"command":"ads create","duration":"1ms"}}'; exit 0 ;;
-  "ad-groups estimate_reach") echo '{"ok":false,"error":{"code":"HTTP_400","message":"no estimate"},"meta":{"command":"ad-groups estimate_reach","duration":"1ms"}}'; exit 1 ;;
-  "payouts create"|"products update"|"products frobnicate") echo '{"ok":true,"data":{"id":"fake_1"},"meta":{"command":"'"$1 $2"'","duration":"1ms"}}'; exit 0 ;;
-esac
-echo '{"code":"COMMAND_NOT_FOUND","message":"nope"}'
-exit 1
-`,
-  );
+  // The shared stand-in, `tests/fake-whop.sh`, with the fixtures directory baked in.
+  writeFileSync(script, readFileSync(join(import.meta.dirname, "fake-whop.sh"), "utf8").split("${WV_FAKE_FIXTURES}").join(FIXTURES));
   chmodSync(script, 0o755);
   return script;
 }
@@ -425,4 +389,62 @@ test("launch: a step that fails stops the run and names what was made and what w
   assert.equal(e.failed, "campaign");
   assert.equal(wroteTo(r, "ads create"), false, "nothing after the failure runs");
   assert.ok(e.rerun?.includes("--idempotency-key"), "the resume carries the same keys");
+});
+
+// `wv gtm winback`: two audiences, a promo, one ad group in an existing campaign, results fed forward.
+const WINBACK = ["gtm", "winback", "adcamp_1", "--budget", "15", "--idempotency-key", "base"];
+
+test("winback: the plan is two audiences, a promo, and a group that includes one and excludes the other", () => {
+  const r = wv([...WINBACK, "--plan"], launchEnv({ WV_FAKE_READY: "1" }));
+  assert.equal(r.status, 0, r.stdout);
+  const plan = envelopeOf(r).plan as { steps: { key: string; argv: string[]; skipped?: string }[]; blockers: string[]; campaign: string; window: { days: number; visitors: { seen: number } } };
+  assert.deepEqual(plan.steps.map((s) => s.key), ["visitors", "customers", "promo", "group"]);
+  assert.deepEqual(plan.blockers, []);
+  assert.equal(plan.window.days, 30);
+  assert.ok(plan.window.visitors.seen >= 0);
+  const group = plan.steps[3].argv.join(" ");
+  assert.match(group, /"include":\["\{visitors\.id\}"\],"exclude":\["\{customers\.id\}"\]/);
+  assert.match(group, /--ad_campaign_id adcamp_1 /);
+  assert.ok(plan.steps[0].argv.includes("base-visitors"));
+  // No budget: the group is skipped and nothing blocks; a budget without a campaign blocks in words.
+  const promoOnly = envelopeOf(wv(["gtm", "winback"], gateEnv()));
+  assert.equal(promoOnly.error?.code, "CONFIRMATION_REQUIRED");
+  assert.deepEqual((promoOnly.plan as { steps: { key: string; skipped?: string }[] }).steps.filter((s) => s.skipped).map((s) => s.key), ["group"]);
+  const noCampaign = envelopeOf(wv(["gtm", "winback", "--budget", "15"], launchEnv({ WV_FAKE_READY: "1" })));
+  assert.equal(noCampaign.error?.code, "WINBACK_BLOCKED");
+  assert.match(noCampaign.error?.hint ?? "", /--budget needs --campaign/);
+});
+
+test("winback: the approved rerun feeds both audience ids into the ad group", () => {
+  const env = launchEnv({ WV_FAKE_READY: "1" });
+  const asked = envelopeOf(wv(WINBACK, env));
+  assert.equal(asked.error?.code, "CONFIRMATION_REQUIRED");
+  const ran = wv(asked.rerun!.slice(1), env);
+  assert.equal(ran.status, 0, ran.stdout + ran.stderr);
+  const done = envelopeOf(ran) as ReturnType<typeof envelopeOf> & { results: Record<string, { id: string }>; next: { run: string[] }[] };
+  assert.deepEqual(Object.keys(done.results), ["visitors", "customers", "promo", "group"]);
+  const group = ran.stderr.split("\n").find((l) => l.startsWith("ARGS: ad-groups create"))!;
+  assert.match(group, /"include":\["adaud_visitors"\],"exclude":\["adaud_customers"\]/);
+  assert.match(group, /--idempotency-key base-group/);
+  assert.ok(done.next.some((n) => n.run.join(" ") === "wv gtm rank adcamp_1"), "done-when points at the rank read in three days");
+});
+
+test("rank: the groups under a campaign, ranked by cost per result, with the rubric's verdicts", () => {
+  const r = wv(["gtm", "rank", "adcamp_1", "--target", "8"], gateEnv());
+  assert.equal(r.status, 0, r.stdout);
+  const d = JSON.parse(r.stdout) as { ok: boolean; target: number; groups: { id: string; verdict: string; action?: string[] }[]; rubric: { minDays: number } };
+  assert.equal(d.ok, true);
+  assert.equal(d.target, 8);
+  assert.deepEqual(d.groups.map((g) => [g.id, g.verdict]), [
+    ["adgrp_a", "scale"],
+    ["adgrp_c", "pause"],
+    ["adgrp_b", "wait"],
+    ["adgrp_d", "not_delivering"],
+  ]);
+  assert.deepEqual(d.groups[1].action, ["wv", "ad-groups", "pause", "adgrp_c"]);
+  const noTarget = JSON.parse(wv(["gtm", "rank", "adcamp_1"], gateEnv()).stdout) as { groups: { verdict: string }[] };
+  assert.deepEqual(noTarget.groups.map((g) => g.verdict), ["hold", "hold", "wait", "not_delivering"], "no target, no pause or scale");
+  const bad = wv(["gtm", "rank"], gateEnv());
+  assert.equal(bad.status, 2);
+  assert.equal(envelopeOf(bad).error?.code, "VALIDATION_ERROR");
 });

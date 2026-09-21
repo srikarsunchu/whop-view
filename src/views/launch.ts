@@ -6,14 +6,12 @@
 import type { Rec } from "../envelope.ts";
 import { copy, type Mode } from "../copy.ts";
 import { money } from "../format.ts";
-import { callout } from "../primitives/callout.ts";
-import { footer, type FooterLine } from "../primitives/footer.ts";
-import { kv, type KvRow, type KvSection } from "../primitives/kv.ts";
-import { paint, type Theme } from "../tokens.ts";
-import { truncate, wrap } from "../ansi.ts";
-import { shellJoin } from "../argv.ts";
+import type { Theme } from "../tokens.ts";
 import { commitment, describeReach, describeSocial, type Commitment, type Reach } from "./adplan.ts";
 import { planPrice } from "../format.ts";
+import { recipeData, recipeDoneView, recipeView, stepKey, substitute, type RecipePlan, type RecipeRow, type RecipeStep, type RecipeViewOptions } from "./recipe.ts";
+
+export { stepKey, substitute };
 
 export interface LaunchOptions {
   product: string;
@@ -114,21 +112,11 @@ export interface LaunchReads {
 
 export type StepKey = "promo" | "checkout" | "campaign" | "ad";
 
-export interface LaunchStep {
-  key: StepKey;
-  group: string;
-  verb: string;
-  /** The whop argv, with `{step.field}` placeholders for results of earlier steps. */
-  argv: string[];
-  /** Why this step will not run. The plan lists it anyway so the person sees what is missing. */
-  skipped?: string;
-}
+export type LaunchStep = RecipeStep & { key: StepKey };
 
-export interface LaunchPlan {
+/** The generic plan plus what the launch knows: the product, the commitment, the reach, who pays. */
+export interface LaunchPlan extends RecipePlan {
   opts: LaunchOptions;
-  argv: string[];
-  mode: Mode;
-  account?: { id?: string; title?: string };
   product?: { id: string; title?: string; planId?: string; planTitle?: string; price?: string; visibility?: string };
   currency: string;
   steps: LaunchStep[];
@@ -137,19 +125,12 @@ export interface LaunchPlan {
   social?: Rec[];
   paysFrom?: string;
   cap?: number | null;
-  /** Reasons the launch will not run at all. Empty means approvable. */
-  blockers: string[];
-  warnings: string[];
   expiresAt: string;
-  /** `{step.field}` references, in words, for the card. */
   key: string;
 }
 
 const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
 const isObj = (v: unknown): v is Rec => !!v && typeof v === "object" && !Array.isArray(v);
-
-/** The base every step key derives from. A rerun carries it, so a retry of an approved launch writes nothing twice. */
-export const stepKey = (base: string, step: StepKey) => `${base}-${step}`;
 
 /** The ad group whop expects, from the options. Shared with the plan's reach estimate. */
 export function adGroupFor(opts: LaunchOptions, title: string): Rec {
@@ -173,9 +154,9 @@ export function buildLaunch(argv: string[], opts: LaunchOptions, reads: LaunchRe
   const mode = reads.mode ?? "production";
   const key = opts.key ?? "{key}";
   const p = reads.product;
-  const plan = p && isObj(p.default_plan) ? p.default_plan : undefined;
+  const defaultPlan = p && isObj(p.default_plan) ? p.default_plan : undefined;
   const currency = str(reads.preferences?.ads_reporting_currency) ?? "usd";
-  const product = p ? { id: String(p.id ?? opts.product), title: str(p.title), planId: str(plan?.id), planTitle: str(plan?.title), price: plan ? planPrice(plan) : undefined, visibility: str(p.visibility) } : undefined;
+  const product = p ? { id: String(p.id ?? opts.product), title: str(p.title), planId: str(defaultPlan?.id), planTitle: str(defaultPlan?.title), price: defaultPlan ? planPrice(defaultPlan) : undefined, visibility: str(p.visibility) } : undefined;
   const expires = new Date(now.getTime() + opts.days * 86_400_000);
   const expiresAt = expires.toISOString().replace(/\.\d{3}Z$/, "Z");
   const biz = reads.accountId ?? "<biz_id>";
@@ -183,11 +164,13 @@ export function buildLaunch(argv: string[], opts: LaunchOptions, reads: LaunchRe
   const warnings: string[] = [];
   if (!p) blockers.push(c.noProduct(opts.product));
   else if (product?.visibility !== "visible") warnings.push(c.notVisible(product?.visibility ?? "unknown"));
-  if (p && !plan) blockers.push(c.noPlan);
+  if (p && !defaultPlan) blockers.push(c.noPlan);
 
   const steps: LaunchStep[] = [];
   steps.push({
     key: "promo",
+    label: c.stepLabels.promo,
+    what: c.promoLine(opts.code, opts.percent, opts.days, opts.stock),
     group: "promo-codes",
     verb: "create",
     argv: [
@@ -198,6 +181,8 @@ export function buildLaunch(argv: string[], opts: LaunchOptions, reads: LaunchRe
   });
   steps.push({
     key: "checkout",
+    label: c.stepLabels.checkout,
+    what: c.checkoutLine(product?.planTitle ?? product?.planId ?? "?", product?.price),
     group: "checkout-configurations",
     verb: "create",
     argv: ["checkout-configurations", "create", "--account_id", biz, "--plan_id", product?.planId ?? "{plan}", "--metadata", JSON.stringify({ campaign: opts.campaign }), "--idempotency-key", stepKey(key, "checkout")],
@@ -216,6 +201,8 @@ export function buildLaunch(argv: string[], opts: LaunchOptions, reads: LaunchRe
   }
   steps.push({
     key: "campaign",
+    label: c.stepLabels.campaign,
+    what: c.campaignLine,
     group: "ad-campaigns",
     verb: "create",
     argv: ["ad-campaigns", "create", "--title", title, "--platform", "meta", "--objective", "sales", "--budget_optimization", "ad_group", "--idempotency-key", stepKey(key, "campaign")],
@@ -225,6 +212,8 @@ export function buildLaunch(argv: string[], opts: LaunchOptions, reads: LaunchRe
   const adSkipped = adsSkipped ?? (opts.creatives.length ? undefined : c.noCreative);
   steps.push({
     key: "ad",
+    label: c.stepLabels.ad,
+    what: c.adLine(opts.creatives.length, opts.countries.join(","), opts.ages),
     group: "ads",
     verb: "create",
     argv: [
@@ -245,54 +234,23 @@ export function buildLaunch(argv: string[], opts: LaunchOptions, reads: LaunchRe
     commit = commitment({ amount: opts.budget, type: "daily", owner: "group", typed: true }, now.getTime());
     if (mode !== "sandbox" && reads.cap != null && commit.total > reads.cap) blockers.push(c.overCap(money(commit.total, currency), money(reads.cap, currency)));
   }
-  return { opts, argv, mode, account: reads.accountId || reads.accountTitle ? { id: reads.accountId, title: reads.accountTitle } : undefined, product, currency, steps, commitment: commit, reach: wantsAds ? reads.reach : undefined, social, paysFrom, cap: wantsAds ? reads.cap : undefined, blockers, warnings, expiresAt, key };
-}
-
-/** Fills `{step.field}` from earlier results. An unresolved reference stays as written, so the failure is visible. */
-export function substitute(argv: string[], results: Partial<Record<StepKey, Rec>>): string[] {
-  return argv.map((a) => a.replace(/\{(promo|checkout|campaign|ad)\.([a-z_]+)\}/g, (whole, step: StepKey, field: string) => {
-    const v = results[step]?.[field];
-    return v === undefined || v === null ? whole : String(v);
-  }));
-}
-
-const commandLine = (argv: string[]) => shellJoin(["whop", ...argv]);
-
-/** The plan as data, for the pipe. */
-export function launchData(plan: LaunchPlan): Rec {
-  return {
-    kind: "launch",
-    command: shellJoin(["wv", ...plan.argv]),
-    mode: plan.mode,
-    account: plan.account,
-    product: plan.product,
-    currency: plan.currency,
-    steps: plan.steps.map((s) => ({ key: s.key, command: commandLine(s.argv), argv: s.argv, skipped: s.skipped })),
-    commitment: plan.commitment,
-    reach: plan.reach,
-    paysFrom: plan.paysFrom,
-    cap: plan.cap,
-    blockers: plan.blockers,
-    warnings: plan.warnings,
-    promo: { code: plan.opts.code, percent: plan.opts.percent, expiresAt: plan.expiresAt, stock: plan.opts.stock },
+  const partial = { opts, argv, mode, product, currency, steps, commitment: commit, reach: wantsAds ? reads.reach : undefined, social, paysFrom, cap: wantsAds ? reads.cap : undefined, blockers, warnings, expiresAt, key };
+  const plan: LaunchPlan = {
+    ...partial,
+    name: "launch",
+    title: c.title,
+    account: reads.accountId || reads.accountTitle ? { id: reads.accountId, title: reads.accountTitle } : undefined,
+    summary: launchSummary(partial),
+    typedAmount: wantsAds && opts.budget !== undefined && mode !== "sandbox" ? { amount: opts.budget, currency } : undefined,
+    data: { product, currency, commitment: commit, reach: wantsAds ? reads.reach : undefined, paysFrom, cap: wantsAds ? reads.cap : undefined, promo: { code: opts.code, percent: opts.percent, expiresAt, stock: opts.stock } },
+    done: (results) => doneChecks(results),
   };
+  return plan;
 }
 
-/** The steps as kv rows: what each creates, muted when skipped, then the command in mono. */
-function stepRows(plan: LaunchPlan, theme: Theme): KvRow[] {
+function launchSummary(plan: Pick<LaunchPlan, "product" | "commitment" | "opts" | "currency" | "reach" | "paysFrom" | "social" | "cap">): RecipeRow[] {
   const c = copy.launch;
-  return plan.steps.map((s, i) => {
-    const label = c.stepLabels[s.key];
-    const what = s.key === "promo" ? c.promoLine(plan.opts.code, plan.opts.percent, plan.opts.days, plan.opts.stock) : s.key === "checkout" ? c.checkoutLine(plan.product?.planTitle ?? plan.product?.planId ?? "?", plan.product?.price) : s.key === "campaign" ? c.campaignLine : c.adLine(plan.opts.creatives.length, plan.opts.countries.join(","), plan.opts.ages);
-    const value = s.skipped ? `${what}  ${paint(theme, "muted", `${c.skipped} · ${s.skipped}`)}` : what;
-    // One line per command: the ad's JSON would wrap into a wall. `--plan` in a pipe carries every argv in full.
-    return { key: `${i + 1}  ${label}`, value, role: s.skipped ? "muted" : "text", extra: s.skipped ? undefined : [[c.runs, truncate(commandLine(s.argv), Math.max(20, theme.width - 28))]] };
-  });
-}
-
-function summaryRows(plan: LaunchPlan, theme: Theme): KvRow[] {
-  const c = copy.launch;
-  const rows: KvRow[] = [];
+  const rows: RecipeRow[] = [];
   if (plan.product) rows.push({ key: c.product, value: `${plan.product.title ?? ""}  ${plan.product.id}`.trim(), role: plan.product.visibility === "visible" ? "text" : "warn" });
   if (plan.commitment && plan.opts.budget !== undefined) {
     rows.push({ key: c.spend, value: `${money(plan.opts.budget, plan.currency)}/${copy.adplan.day} · ${copy.adplan.until(money(plan.commitment.total, plan.currency), plan.commitment.days)}${plan.commitment.openEnded ? ` · ${c.noEnd}` : ""}`, role: "warn" });
@@ -305,61 +263,15 @@ function summaryRows(plan: LaunchPlan, theme: Theme): KvRow[] {
     }
     if (plan.cap !== undefined) rows.push({ key: copy.confirm.cap, value: plan.cap === null ? copy.confirm.noCap : copy.adplan.cap(money(plan.cap, plan.currency)), role: "muted" });
   }
-  if (plan.account) rows.push({ key: copy.confirm.from, value: `${plan.account.title ?? ""}  ${plan.account.id ?? ""}`.trim() });
-  void theme;
   return rows;
 }
 
-export interface LaunchViewOptions {
-  planOnly?: boolean;
-}
-
-export function launchView(plan: LaunchPlan, theme: Theme, opts: LaunchViewOptions = {}): string[] {
-  const c = copy.launch;
-  const blocked = plan.blockers.length > 0;
-  const role = opts.planOnly ? "accent" : blocked ? "bad" : "warn";
-  const tag = opts.planOnly ? copy.adplan.planBadge : blocked ? c.blocked : copy.confirm.badge(plan.mode);
-  const out = callout(role, c.title, [paint(theme, "mono", shellJoin(["wv", ...plan.argv]))], theme, tag);
-  out.push("");
-  const sections: KvSection[] = [{ rows: summaryRows(plan, theme) }, { title: c.steps, rows: stepRows(plan, theme) }];
-  out.push(...kv(sections, theme));
-  out.push("");
-  for (const b of plan.blockers) for (const l of wrap(`${c.blockerMark} ${b}`, theme.width - 3)) out.push("   " + paint(theme, "bad", l));
-  for (const w of plan.warnings) for (const l of wrap(`${c.warnMark} ${w}`, theme.width - 3)) out.push("   " + paint(theme, "warn", l));
-  if (plan.blockers.length || plan.warnings.length) out.push("");
-  const notes = [plan.mode === "sandbox" ? copy.confirm.sandboxWarning : c.warning(plan.steps.filter((s) => !s.skipped).length)];
-  for (const l of wrap(notes.join(" "), theme.width - 3)) out.push("   " + paint(theme, "muted", l));
-  out.push("");
-  const lines: FooterLine[] = [[c.fullArgv, ["wv", ...plan.argv, "--plan", "|", "cat"]]];
-  if (blocked) lines.unshift([copy.doctor.fix, ["wv", "doctor"]]);
-  out.push(...footer(lines, theme), "");
-  return out;
-}
-
-/** After the run: what each step made, or where it stopped, and the checks that say the launch is live. */
-export function launchDoneView(plan: LaunchPlan, results: Partial<Record<StepKey, Rec>>, failed: { step: StepKey; message: string } | undefined, theme: Theme): string[] {
-  const c = copy.launch;
-  const rows: KvRow[] = [];
-  for (const s of plan.steps) {
-    if (s.skipped) continue;
-    const r = results[s.key];
-    if (r) rows.push({ key: c.stepLabels[s.key], value: [str(r.code) ?? str(r.title) ?? "", str(r.id) ?? "", str(r.status) ?? str(r.purchase_url) ?? ""].filter(Boolean).join("  "), role: "good" });
-    else if (failed?.step === s.key) rows.push({ key: c.stepLabels[s.key], value: `${c.failed} · ${failed.message}`, role: "bad" });
-    else rows.push({ key: c.stepLabels[s.key], value: c.notRun, role: "muted" });
-  }
-  const out = callout(failed ? "bad" : "good", failed ? c.stopped : c.done, [], theme);
-  out.push(...kv([{ rows }], theme));
-  out.push("");
-  if (failed) {
-    for (const l of wrap(c.resume, theme.width - 3)) out.push("   " + paint(theme, "muted", l));
-    out.push("");
-  }
-  out.push(...footer(doneChecks(plan, results).map((l) => [l.label, l.argv] as FooterLine), theme), "");
-  return out;
-}
+export const launchData = (plan: LaunchPlan): Rec => recipeData(plan);
+export const launchView = (plan: LaunchPlan, theme: Theme, opts: RecipeViewOptions = {}): string[] => recipeView(plan, theme, opts);
+export const launchDoneView = (plan: LaunchPlan, results: Partial<Record<string, Rec>>, failed: { step: string; message: string } | undefined, theme: Theme): string[] => recipeDoneView(plan, results, failed, theme);
 
 /** "Done when": the reads that prove the launch is live, as agent commands, with the ids the run produced. */
-export function doneChecks(plan: LaunchPlan, results: Partial<Record<StepKey, Rec>>): { label: string; argv: string[] }[] {
+export function doneChecks(results: Partial<Record<string, Rec>>): { label: string; argv: string[] }[] {
   const c = copy.launch;
   const out: { label: string; argv: string[] }[] = [];
   if (results.promo?.id) out.push({ label: c.check.promo, argv: ["whop", "promo-codes", "get", String(results.promo.id), "--format", "json"] });

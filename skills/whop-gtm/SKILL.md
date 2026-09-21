@@ -5,22 +5,20 @@ description: Run go-to-market on Whop from the terminal, through wv over the Who
 
 # Whop GTM
 
-The Whop CLI (`whop`, 0.18+) exposes every go-to-market stage as a command group with `--format json` and `--schema`, and enforces nothing around them: the 149 commands it tags "confirm before executing" run on sight, every failure exits 1, and its manifests are either too thin to act on or too big for a turn. This skill runs the loop through `wv` ([whop-view](https://github.com/srikarsunchu/whop-view)), which forwards every read as `whop`'s own bytes and turns every write into a plan the person approves: `wv doctor --format json` is the preflight, `wv agent <group>` is the manifest with every flag, and a write without `--yes` comes back as a `CONFIRMATION_REQUIRED` envelope with the plan and a `rerun` instead of money moving. The command reference below is generated from the live CLI by `pnpm skill`.
+The Whop CLI (`whop`, 0.18+) exposes every go-to-market stage as a command group. `wv` (whop-view) wraps it: every write becomes a plan the person approves, reads stay whop's bytes with an exit code you can branch on, and two playbooks are single commands. This file is the rules and the map; each playbook, the decide rubric, and the failure map are one read away under `references/`.
 
-## Rules before any command
+## Rules
 
-The bare CLI has no gate, no dry-run, no useful exit code, and no manifest that fits a turn. `wv` supplies each of those, so the rules are about using `wv` the way it expects rather than working around `whop`.
-
-1. **Every write goes through `wv`, never `whop`.** Without `--yes`, `wv` runs nothing. In a terminal it shows the plan and asks the person to type the amount back. In a pipe it exits 2 with a JSON envelope: `error.code` `CONFIRMATION_REQUIRED`, a `plan` (the command, the account, the money, the balance, the caps, and for a record what changes), and a `rerun`. Show the plan to the person, get a yes, then run `rerun` exactly as given. Its `--approve` token is bound to that argv and expires in ten minutes, so an edited or stale rerun is refused and nothing runs. Never add `--yes` yourself. `--plan` returns `{ ok: true, plan }` and runs nothing, for any write. A refusal (`WHOP_LIMIT` in Whop's words, `WV_CAP`, `INSUFFICIENT_BALANCE`, `WV_AD_CAP`) is the same envelope with no `rerun`; report it, do not retry. If `wv` is not installed, stop and show the person the exact `whop` command and what it commits before running anything.
-2. **Retries cannot double-spend.** `rerun` carries an `--idempotency-key` that `wv` minted at the plan step, so an approved retry never creates a second campaign, bounty, or payout. Only when you must call `whop` directly, generate the key yourself from the plan step, not the call.
-3. **Reads are `whop`'s own bytes, plus an exit code you can branch on.** `wv <group> list --format json` is byte-identical to `whop`, and the status is 3 for a bad request, 4 for not allowed, 5 for not found, 2 when `wv` refused before running, where `whop` says 1 for all of them. `wv <group> list --all` follows the cursor and streams one object per line, which `whop` cannot do.
-4. **Read the manifest, not your memory.** `wv agent <group>` prints every verb's flags from `--schema`, marks which write, move money, or destroy, and names the doctor checks the group needs before its first write. `wv agent` alone lists every group and verb with its kind; `--format json` on either returns the same as data. The command reference at the end of this skill is generated from it and pinned to 0.18.2 / API 2026-09-15; the live manifest wins when they differ.
-5. **Preflight is one call.** The pixel on the funnel pages, a Meta Business connected with the `advertise` scope, an ads payment method, Economic Intelligence, identity verification for payouts, and an API-key login for webhooks are one-time setup. `wv doctor --format json` checks all of them and returns `{ ok, blocking, checks: [{ key, level, detail, fix, blocking }] }`, exit 1 on a blocking failure. Run it first, show the person each failing check's `fix`, and do not start a playbook whose prerequisites are red.
-6. **Objects and arrays are JSON to `whop`, plain flags to you.** Through `wv`, dotted paths (`--ad_group.budget_amount 40 --ad_group.regions.include.countries US`), repeated flags (`--headlines "a" --headlines "b"`), and `@file.json` assemble to the JSON flag `whop` expects, and the plan shows the assembled command. Writing the JSON by hand also works; `wv` never touches a command that already carries it.
-7. **Dates are presets.** `--last 7d`, `--last 30d`, `--this month`, and `--last month` on `stats get` and `events list` resolve to `--from` and `--to` before `whop` runs. An `events list` range over 30 days is refused before the call, in Whop's words.
-8. **Production is the default, and the sandbox is not a test mode for ads.** `wv --sandbox` points `whop` at the sandbox host with a key kept in `wv`'s config; `wv sandbox status` says whether that works. The sandbox has no Meta account, so ad estimates and creates usually refuse there. Ad budgets, bounties, payouts, and media generation move real money in production; that is what the gate is for.
-
-9. **Every playbook ends with reads that prove it.** Each one below closes with "Done when": the `wv` reads whose answers mean the step landed, and what to tell the person when they do not. Run them before reporting success; a write that returned an id is not a launch that delivers.
+1. **Every write goes through `wv`, never `whop`.** Without consent `wv` runs nothing. In a terminal it shows the plan and asks the person to type the amount back. In a pipe it exits 2 with `error.code` `CONFIRMATION_REQUIRED`, a `plan`, and a `rerun`. Show the plan, get a yes, run `rerun` exactly as given: its `--approve` token is bound to that argv and expires in ten minutes, so an edited or stale rerun is refused. Never add `--yes` yourself. `--plan` returns the plan and runs nothing. A refusal (`WHOP_LIMIT`, `WV_CAP`, `INSUFFICIENT_BALANCE`, `WV_AD_CAP`, `LAUNCH_BLOCKED`, `WINBACK_BLOCKED`) has no `rerun`; report it, do not retry. Without `wv`, stop and show the person the exact `whop` command and what it commits.
+2. **Retries cannot double-spend.** `rerun` carries the `--idempotency-key` `wv` minted at the plan step; a recipe carries one per step from one base.
+3. **Reads are whop's bytes plus an exit code.** `wv <group> list --format json` is byte-identical to `whop`; status 3 is a bad request, 4 not allowed, 5 not found, 2 refused by `wv`. `--all` follows the cursor and streams one object per line.
+4. **Read the manifest, not your memory.** `wv agent <group>` prints every verb's flags from `--schema` and marks which write, move money, or destroy; `wv agent` lists every group and verb; `--format json` on either is the same as data. `references/commands.md` is the generated map, pinned to 0.18.2 / API 2026-09-15; the live manifest wins.
+5. **Preflight is one call.** `wv doctor --format json` returns `{ ok, blocking, checks: [{ key, level, detail, fix, blocking }] }`, exit 1 on a blocking failure. Run it first; show each failing check's `fix`; do not start a playbook whose prerequisites are red.
+6. **Whop Ads runs on Whop's ad account.** Whop owns the ad account, the review and launch path, and the billing. The seller connects the Facebook page the ads run under (`social-accounts connect --platform meta_business --scopes advertise`), adds an ads payment method in the dashboard, and installs the pixel on any destination outside Whop. Every performance number is attributed by the Whop pixel, not by Meta. An ad sits `in_review` until Whop's review passes it; `rejected` comes with `issues`.
+7. **Objects and arrays are JSON to `whop`, plain flags to you.** Through `wv`, dotted paths (`--ad_group.budget_amount 40`), repeated flags, and `@file.json` assemble to the JSON flag, and the plan shows the assembled command.
+8. **Dates are presets.** `--last 7d`, `--last 30d`, `--this month`, `--last month` on `stats get` and `events list`. An `events list` range over 30 days is refused before the call.
+9. **Production is the default; the sandbox is not a test mode for ads.** `wv --sandbox` uses a key kept in `wv`'s config; `wv sandbox status` says whether it works. Ad budgets, bounties, payouts, and `media generate` move real money in production.
+10. **Every playbook ends with reads that prove it.** Each reference closes with "Done when". A write that returned an id is not a launch that delivers.
 
 ## The loop
 
@@ -35,421 +33,27 @@ The bare CLI has no gate, no dry-run, no useful exit code, and no manifest that 
 | measure | `stats get ad_delivery` / `events` / `people` / `gross_revenue` / `trial_conversion_rate` / `churn_rate`, `exports create` | attribution unified under `whop:<campaign>:<group>:<ad>` source paths; ROAS and cost per result from your own pixel |
 | decide | `ad-campaigns pause` / `unpause`, `ads duplicate`, `ad-groups update`, `economic-intelligence create` / `list` / `update`, `webhooks create` | pause losers, clone winners, or hand the numbers to Whop's recommender and approve what comes back |
 
-## Preflight (read-only, one call)
+## Preflight
 
 ```bash
-wv doctor --format json
+wv doctor --format json    # signed in, identity, api key, pixel, facebook page, ads payment, intelligence, products, webhooks; a fix per failing check
+wv gtm --format json       # the funnel, people, audiences, campaigns, offers, and the launch gaps, as data
 ```
-
-Nine checks, each with a `key`, a `level` (`ok`, `warn`, `fail`), a `detail` in Whop's words where Whop has any, a `fix` as the exact command when the CLI has one or a dashboard URL when it does not, and `blocking`. The envelope is `{ ok, blocking, checks: [...] }` and the exit code is 1 when a blocking check fails, so the branch is the status, not the body. In a terminal the same call is a screen; in a pipe it is the data, no flag needed.
-
-| key | what it reads | blocking | when red |
-|---|---|---|---|
-| `auth` | `auth status` | yes | not signed in → `whop login` |
-| `identity` | `payouts methods --include_limits`, the same limit the payout gate reads | yes | payouts blocked, in Whop's words → `whop verifications create --account_id <biz>` |
-| `apikey` | `auth list` and `permissions check` on the six scopes a seller needs | no | an OAuth login lacks `developer:manage_webhook` → `whop auth switch <saved api-key profile>`, or the login command plus the dashboard where a key is minted |
-| `pixel` | `people list --first 100`, anyone with a source | no | nobody attributed → `whop events validate_pixel` after the pixel is in the `<head>` of every funnel page |
-| `page` | `social-accounts list` | no | no Meta Business → `whop social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>`, which returns a URL the person opens |
-| `payment` | `accounts preferences` | no | no ads payment method → dashboard only |
-| `ei` | `accounts preferences` | no | Economic Intelligence off → `whop accounts update-preferences --economic_intelligence true` |
-| `products` | `products list`, a visible product with a plan | yes | nothing to buy → `whop products create --help` |
-| `webhooks` | `webhooks list` and the newest deliveries | no | no webhook, none delivered in 7 days, or the OAuth 403 → `whop webhooks create …`, `whop webhooks test <id> --event payment.succeeded`, or the API-key login |
-
-Which checks a playbook needs is in `wv agent <group>` under its prerequisites, and in the playbooks below: ads need `pixel`, `page`, and `payment`; payouts, cards, transfers, and swaps need `identity`; webhooks need `apikey`; the Monday report needs `ei`. Every fix is a one-time action, most of them the person's: run the `fix` when it is a command, show the URL when it is the dashboard, and rerun doctor before starting. Do not begin a playbook whose checks are red and hope the write explains itself later; the ad write would refuse in Whop's words at the last step instead of the first.
 
 ## Playbooks
 
-Every line is `wv`, reads and writes alike: a read is `whop`'s bytes with a real exit code, a write is a plan until the person approves. Ids are placeholders. Lines marked `# $` commit money. Each playbook starts with the same preflight and ends with the same approval step:
+Ids are placeholders. Every write is `wv …` and answers with a plan; reads stay `whop …`. Read the reference before running one.
 
-```bash
-wv doctor --format json          # exit 1 and a `fix` per red check means stop and show the person
-# … the playbook's reads, then one write at a time:
-wv <group> <verb> … --plan       # the plan, nothing runs: show it
-wv <group> <verb> …              # exit 2, CONFIRMATION_REQUIRED, `plan`, `rerun`
-# the person says yes → run `rerun` exactly as given (it carries --approve and --idempotency-key)
-```
-
-### 1 · Launch day
-
-One command plans the whole day: a promo code, a checkout link for the product's default plan, a Meta campaign, and one ad pointed at that checkout link. Four writes, one approval, one rerun.
-
-```bash
-wv gtm launch $PROD --budget 40 --creative file_a --plan          # the plan and nothing else
-wv gtm launch $PROD --budget 40 --creative file_a                 # CONFIRMATION_REQUIRED with plan and rerun
-```
-
-Read `plan.blockers` first: no default plan, no Meta page, no ads payment method, or a 30-day commitment over `WV_AD_CAP` come back as `LAUNCH_BLOCKED` with no `rerun`; fix them (`wv doctor --format json` has the commands) and plan again. `plan.steps` is every command with its own idempotency key, later steps referencing earlier results as `{campaign.id}` and `{checkout.purchase_url}`. Show the person the spend line, the reach, and the four steps, then run `rerun` unchanged. Flags: `--code` and `--percent` (default `LAUNCH20`, 20% for new customers, 7 days), `--days`, `--stock`, `--headline`, `--primary-text`, `--countries US,CA`, `--ages 25-44`, `--url` to point the ad elsewhere, `--campaign` for the utm. Leave `--budget` off to create only the promo and the checkout link. A creative comes from `wv media generate --type image --prompt "…" --wait --timeout 300` (billed from balance, gated like any write) and its `file.id` goes to `--creative`.
-
-Done when the run's `next` reads agree: `promo-codes get` is `active`, the `purchase_url` opens, `ad-campaigns get` and `ads get` exist (the ad sits `in_review` until Meta approves it), `wv stats get ad_delivery --last 1d --source whop:<campaign>:*` shows spend the next day, and `wv gtm` has no gaps. A step that fails stops the rest: the envelope carries `results` for what was made, `failed` for the step, and a `rerun` with the same keys, so running it again finishes the launch without creating anything twice.
-
-Do not set `utm_source`, `utm_medium`, `utm_content`, `wacid`, `waid`, `wasid`: Whop reserves them.
-
-### 2 · Winback
-
-```bash
-wv audiences create --account_id $BIZ --name "visited 30d, no purchase" --source_type people_filter \
-  --filters.has_purchased false --filters.last_seen_within_days 30 --filters.contactable true --auto_refresh true
-wv audiences create --account_id $BIZ --name "customers" --source_type people_filter --filters.has_purchased true
-wv promo-codes create --account_id $BIZ --code COMEBACK --promo_type flat_amount --amount_off 5 --base_currency usd \
-  --new_users_only false --churned_users_only true --promo_duration_months 1 --one_per_customer true
-wv ad-groups create --ad_campaign_id adcamp_x --title "winback 30d" --budget_amount 15 --budget_type daily \
-  --optimization_goal conversions --conversion_event purchase \
-  --audiences.include adaud_visitors --audiences.exclude adaud_customers --placements automatic   # $
-```
-
-Filters must be rolling windows (`last_seen_within_days`), never fixed dates, or the audience will not refresh. The audience ids for the ad group come from the two `create` responses; `wv audiences list --format json` lists them again.
-
-Done when: `wv audiences list --format json` shows both audiences with a `status` that is not building and a `total_rows` above zero for the visitors one (an empty visitors audience means the pixel is not attributing; `wv doctor` names the fix); `wv promo-codes list --status active --format json` includes `COMEBACK`; `wv ad-groups list --ad_campaign_id adcamp_x --format json` includes `winback 30d` and its status is not paused; and by the next day `wv stats get ad_delivery --last 1d --source "whop:adcamp_x:*" --group_by source --metric spend --format json` shows spend on the new group. Not done, and worth saying to the person: a lookalike-sized budget on a retargeting audience of a few hundred people will exhaust the audience in days; watch `cost_per_result` against the campaign's other groups after three days and pause the group if it is worse.
-
-### 3 · Lookalike scale
-
-```bash
-wv audiences create --account_id $BIZ --audience_type lookalike --source_audience_id adaud_customers --count 3 --percentage 6
-wv ad-groups estimate_reach --platform meta --audiences.include adaud_lal_1 --regions.include.countries US --format json
-# one ad group per band (each a gated write), then after three days:
-wv stats get ad_delivery --account_id $BIZ --last 3d --source "whop:adcamp_x:*" --group_by source --metric cost_per_result --format json
-wv ad-groups pause adgrp_worst
-wv ads duplicate ad_best
-```
-
-The source audience needs at least 100 matched people. `percentage` must divide evenly by `count`. `pause` and `duplicate` are writes and get the plan like any other; a pause moves no money, so its plan is the command and the account and the prompt is a plain yes.
-
-Done when, in two stages. After the creates: `wv audiences list --audience_type lookalike --format json` shows `count` audiences, one per band, each with a `status` that is not building and `total_rows` above zero; `estimate_reach` for each band returned bounds rather than an error; and `wv ad-groups list --ad_campaign_id adcamp_x --format json` shows one group per band, none paused. Do not judge before three days or fifty results per group, whichever is later. After that: the `ad_delivery` read grouped by source ranks the bands by `cost_per_result`; the plan is to pause the worst band and duplicate the ad in the best one, one change per day, never two variables at once, and only when the best band's cost per result is under the campaign's target. Report the ranking to the person before pausing anything, since a pause moves no money and needs only a yes, but it also throws away the learning that band has bought.
-
-### 4 · Creators do the distribution
-
-```bash
-wv products update $PROD --global_affiliate_status enabled --global_affiliate_percentage 30
-wv bounties create --account_id $BIZ --title "Clip a 30s vertical from the launch stream" \
-  --description "Cut a 30s vertical. Link the post. Paid per approved clip." --business_goal_type clipping \
-  --gross_reward_amount 25 --accepted_submissions_limit 20 \
-  --publish_at 2026-09-29T16:00:00Z --publish_at_timezone America/Los_Angeles --frequency weekly     # $ escrows 25 × 20 every week
-wv bounty-submissions list --bounty_id bnty_x --status submitted --all
-wv stats get affiliate_fees --account_id $BIZ --this month --format json
-wv partners links --format json
-```
-
-The `products update` plan shows the change, `global affiliate status  disabled → enabled`, read from the record before anything runs. Approve or deny on a submission is dashboard only. `--all` streams every submission as one object per line; poll about once a minute while a person reviews.
-
-Done when: `wv products get $PROD --format json` shows `global_affiliate_status` `enabled` at the percentage asked; `wv bounties get bnty_x --format json` shows the bounty with its `publish_at` in the future and a status that is not draft (the escrow, `gross_reward_amount × accepted_submissions_limit`, has been taken from the balance, and `wv ledgers report --report_type balance_summary --format json` moved by that much); after `publish_at`, `wv bounty-submissions list --bounty_id bnty_x --all` grows; and within the month `wv stats get affiliate_fees --this month --format json` and `wv stats get partner_link_clicks --this month --format json` are above zero. Stop and tell the person when submissions sit in `submitted` for more than a day, since review is dashboard only, and when a weekly bounty's escrow would leave the balance short of the next payout.
-
-### 5 · Monday report that asks Whop what to do
-
-Needs `intelligence` green in doctor; otherwise `economic-intelligence` answers a 403 whose fix is `whop accounts update-preferences --economic_intelligence true`.
-
-```bash
-for m in page_visits new_users trial_conversion_rate gross_revenue ad_spend churn_rate; do
-  wv stats get $m --account_id $BIZ --last 7d --format json --filter-output totals
-done
-wv economic-intelligence create --account_id $BIZ --input "<one paragraph: what you sell, the six numbers, what you want, what you can spend>"
-wv economic-intelligence list --account_id $BIZ --status ready --format json
-wv economic-intelligence update reca_x --status executed          # approve: a write, so a plan first
-wv economic-intelligence update reca_x --status superseded --reason "wrong audience"   # reject
-```
-
-`wv gtm --format json` is the same six numbers plus the people summary, the campaigns, the offers, and the launch gaps in one call, if the report is for a person rather than for Whop's recommender.
-
-Done when: the six reads returned `totals` for the same seven-day window and the person has seen them next to last week's; `wv economic-intelligence list --status ready --format json` has at least one recommendation, and each one the person approved is `executed` and each one they rejected is `superseded` with a `--reason`; `wv gtm --format json` returns `gaps: []`, or every remaining gap has been shown with its fix. A recommendation that would spend more than the person named as the budget is reported, not executed. Nothing in this playbook writes except the `update`, so the report itself can run unattended and on a schedule.
-
-## Decide: the rubric
-
-The measure and decide stages are where money is saved or wasted, and where an agent is most tempted to act on one day of data. The numbers below are Meta's own learning-phase mechanics and the margins the product's price implies; the person can override any of them by naming a target.
-
-**Set the target before the first read.** Cost per result must land under what one sale is worth: for a one-time plan, the price times the margin the person names (default 50%); for a renewal, the first payment plus one more period, times that margin. Write the number down in the plan (`--primary-text` or the campaign title is fine) so every later read compares against it, not against a feeling.
-
-**Read one thing.** `wv stats get ad_delivery --last 3d --source "whop:<campaign>:*" --group_by source --breakdown_by metric --format json` returns spend, impressions, and clicks per ad group with whole-window `data.totals`; `wv ad-campaigns list --format json` carries `spend`, `results`, `cost_per_result`, `return_on_ad_spend`, and `delivery_status` per campaign. Group by one segment deeper than the filter (`whop:<campaign>:*` gives groups, `whop:<campaign>:<group>:*` gives ads). Only `whop:*` paths report delivery; a `utm_source` root returns nothing.
-
-**Do not judge early.** Three full days and fifty results per ad group, whichever is later. Under that, the only decisions are "is it delivering at all" (`delivery_status`, spend above zero within 24 hours) and "is it rejected" (`ads get` status; Meta review, fix the creative or copy, do not touch the budget).
-
-| what the read says | decision | how |
+| playbook | command | reference |
 |---|---|---|
-| no spend after 24 hours | delivery problem, not performance | check `ads get` status (in review, rejected), the page under `social-accounts list`, and the payment method under `accounts preferences`; `wv doctor` covers all three |
-| cost per result over 2× target after the minimum sample | losing | `wv ad-groups pause <id>`, report the ranking first |
-| cost per result between target and 2× target | inconclusive | leave it another three days; change nothing |
-| cost per result under target, results still climbing | winning | `wv ads duplicate <id>` into a new group with a fresh audience band, or raise the group budget by at most 20% a day; never both on the same day |
-| results flat while spend climbs, impressions per person rising | creative fatigue | new creative in a duplicated ad; do not edit the running one, an edit resets Meta's learning |
-| `return_on_ad_spend` under 1 for a week with the sample met | the offer, not the ad | change the promo or the landing page before spending more; pause everything until the person decides |
-
-**Rules that hold regardless.** One change per campaign per day. Never edit a delivering ad's creative or targeting; duplicate and let the old one run out. Pause, do not delete, so the numbers stay readable next week. Budget moves are 20% steps. A pause needs a plain yes; a duplicate carries the group's budget into the plan and gets the money prompt. When Whop's recommender (`economic-intelligence list --status ready`) disagrees with this table, show the person both and let them pick; approve with `--status executed`, reject with `--status superseded --reason`.
-
-## When it fails
-
-Every failure is one of these. The exit code says which family; the `code` in the body says which row. On any 4 or 5, run `wv doctor --format json` before retrying anything.
-
-| exit | code and message | what it means | what to do |
-|---|---|---|---|
-| 2 | `CONFIRMATION_REQUIRED` | not a failure: the plan is ready | show `plan`, get a yes, run `rerun` unchanged |
-| 2 | `LAUNCH_BLOCKED` | a launch step cannot run | every reason is in `plan.blockers` and `hint`; fix them, plan again |
-| 2 | `WHOP_LIMIT` · "Please complete identity verification…" | Whop refuses the payout, in its words | `whop verifications create --account_id <biz>`, then the dashboard; nothing to retry |
-| 2 | `WV_CAP`, `WV_AD_CAP` | over wv's per-write cap | report the amount and the cap; the person raises `WV_PAYOUT_CAP` or `WV_AD_CAP` for one shell, or lowers the amount, or sets an end date so an ad's commitment is real |
-| 2 | `INSUFFICIENT_BALANCE` | the ledger cannot cover it | report; `wv ledgers report --report_type balance_summary --format json` for the number |
-| 2 | `APPROVAL_INVALID`, `APPROVAL_EXPIRED` | the rerun was edited, is over ten minutes old, or came from another machine | run the command without `--approve` for a fresh plan; never add `--yes` |
-| 2 | `BAD_PRESET`, `EVENTS_RANGE` | a date flag wv refused | `--last 7d`, `--this month`, `--last month`; `events list` spans at most 30 days |
-| 2 | `JSON_FLAGS` | an `@file` is missing or not JSON | fix the path or the file |
-| 2 | `NEEDS_TERMINAL` | a wv screen that only draws | `wv doctor` and `wv gtm` answer `--format json`; the rest need a person |
-| 3 | `VALIDATION_ERROR` · "expected string, received undefined" on `stats get` | `--from` and `--to` are required | use a preset through `wv` |
-| 3 | `HTTP_422` on `ads create` or `ad-groups create` | Meta refused the object | the message names the field; `wv agent ads` has the enum |
-| 3 | `HTTP_400` · "No Rain account found for this account." | card issuing is gated behind a Rain account | out of scope; tell the person |
-| 3 | `HTTP_400` · "Authenticate with an account-scoped credential…" | cashback rules need an API key, not OAuth | `whop login --method api-key` |
-| 3 | `UNKNOWN` · "Unknown flag: --yes" or "--approve" | the command ran through `whop`, not `wv` | rerun it as `wv …`; `whop` does not know wv's flags |
-| 4 | `HTTP_403` · "You don't have access to Economic Intelligence yet." | the preference is off | `wv accounts update-preferences --economic_intelligence true` |
-| 4 | `HTTP_403` · "OAuth token is not authorized for the developer:manage_webhook scope" | webhooks need an API-key profile | `whop login --method api-key --apiKey whop_…` |
-| 4 | `HTTP_403` · "This endpoint requires Whop internal access" | `experiments` is internal-only | stop; nothing a seller can do |
-| 4 | `HTTP_401` · "Authentication failed" in sandbox mode | wrong or missing sandbox key | `wv sandbox status`; the key lives in wv's config, never the shell's production key |
-| 5 | `HTTP_404` · "Resource not found", "Membership not found" | wrong id, or an id from another account | check the id with the group's `list`; add `--account_id <biz>` when the account is not the active one |
-| 5 | `COMMAND_NOT_FOUND` | a typo | `cta.commands` in the body carries the suggestion; `wv agent` lists every group |
-| 1 | anything else | whop's own status | read `message`; if it names Meta, it is the ad platform, and `wv doctor`'s `page` and `payment` checks are the first places to look |
-
-Two ad failures are not envelopes at all. `estimate_reach` answering "No Meta ad account available for reach estimates" means no page is connected with the `advertise` scope; `social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>` returns a URL the person opens. An ad that stays `in_review` for more than a day, or turns `rejected`, is Meta's review, not Whop's; the fix is the creative or the copy, and the budget is not the problem.
-
-## Command reference
-
-Every flag, its type, and whether a verb writes or moves money comes from `wv agent <group>`, which reads `--schema` live and so cannot drift. The block below is the map, regenerated by `pnpm skill`.
-
-<!-- wv agent:start -->
-
-Generated by `pnpm skill` from whop@0.18.2 · API 2026-09-15. `wv agent <group>` prints every flag with its type and description; this is the map.
-
-### people
-
-Visitors and customers of an account, with identity, purchase, and traffic profiles. · `wv agent people`
-
-- `whop people get` · read
-- `whop people list` · read
-
-### events
-
-Conversion and engagement events tracked for attribution. · `wv agent events`
-
-- `whop events create` · write · required: `--account_id`, `--event_name`
-- `whop events list` · read
-- `whop events pulse` · read
-- `whop events validate_pixel` · read
-
-### audiences
-
-Reusable targeting lists for ad groups. · `wv agent audiences`
-
-- `whop audiences add_people` · write · required: `--file_id`
-- `whop audiences create` · write · required: `--account_id`
-- `whop audiences delete` · write, destructive
-- `whop audiences list` · read
-- `whop audiences update` · write
-
-### media
-
-AI-generated assets, billed from a balance, attachable wherever files are accepted. · `wv agent media`
-
-- `whop media generate` · write · required: `--prompt`, `--type`, `--timeout`
-- `whop media get` · read
-
-### files
-
-Upload files and attach them wherever Whop accepts documents. · `wv agent files`
-
-- `whop files complete` · write · required: `--multipart_parts`, `--multipart_upload_id`
-- `whop files create` · write · required: `--filename`
-- `whop files get` · read
-- `whop files list` · read · required: `--file_ids`
-
-### social-accounts
-
-Connected Facebook and Instagram accounts that run ads. · `wv agent social-accounts`
-
-- `whop social-accounts connect` · write · required: `--platform`, `--redirect_url`
-- `whop social-accounts create` · write · required: `--platform`
-- `whop social-accounts delete` · write, destructive
-- `whop social-accounts lead_forms` · read
-- `whop social-accounts list` · read
-- `whop social-accounts posts` · read
-
-### ad-campaigns
-
-Platform, objective, and budget for a set of ads. · `wv agent ad-campaigns`
-
-- `whop ad-campaigns create` · write · required: `--objective`, `--platform`, `--title`
-- `whop ad-campaigns delete` · write, destructive
-- `whop ad-campaigns duplicate` · write
-- `whop ad-campaigns get` · read
-- `whop ad-campaigns list` · read
-- `whop ad-campaigns pause` · write
-- `whop ad-campaigns retry_payment` · write
-- `whop ad-campaigns unpause` · write
-- `whop ad-campaigns update` · write
-
-### ad-groups
-
-Audience, placements, and schedule within a campaign. · `wv agent ad-groups`
-
-- `whop ad-groups create` · write · required: `--ad_campaign_id`
-- `whop ad-groups delete` · write, destructive
-- `whop ad-groups duplicate` · write
-- `whop ad-groups estimate_reach` · read · required: `--platform`
-- `whop ad-groups get` · read
-- `whop ad-groups list` · read
-- `whop ad-groups pause` · write
-- `whop ad-groups targeting_options` · read · required: `--platform`
-- `whop ad-groups unpause` · write
-- `whop ad-groups update` · write
-
-### ads
-
-The creative: copy, assets, and destination URL. · `wv agent ads`
-
-- `whop ads create` · write
-- `whop ads delete` · write, destructive
-- `whop ads duplicate` · write
-- `whop ads get` · read
-- `whop ads list` · read
-- `whop ads pause` · write
-- `whop ads unpause` · write
-- `whop ads update` · write
-
-### promo-codes
-
-Discounts that creators configure for checkout. · `wv agent promo-codes`
-
-- `whop promo-codes activate` · write
-- `whop promo-codes create` · write · required: `--account_id`, `--amount_off`, `--base_currency`, `--code`, `--new_users_only`, `--promo_duration_months`, `--promo_type`
-- `whop promo-codes deactivate` · write
-- `whop promo-codes delete` · write, destructive
-- `whop promo-codes get` · read
-- `whop promo-codes list` · read
-
-### checkout-configurations
-
-Turn a plan into a shareable, prefilled checkout link. · `wv agent checkout-configurations`
-
-- `whop checkout-configurations create` · write
-- `whop checkout-configurations delete` · write, destructive
-- `whop checkout-configurations get` · read
-- `whop checkout-configurations list` · read
-
-### plans
-
-Pricing for a product: one-time, recurring, trials, stock. · `wv agent plans`
-
-- `whop plans calculate_tax` · read
-- `whop plans create` · write
-- `whop plans delete` · write, destructive
-- `whop plans get` · read
-- `whop plans list` · read
-- `whop plans update` · write
-
-### products
-
-The things you sell. Each owns plans and a store page. · `wv agent products`
-
-- `whop products create` · write · required: `--title`
-- `whop products delete` · write, destructive
-- `whop products get` · read
-- `whop products list` · read
-- `whop products publish` · write
-- `whop products unpublish` · write
-- `whop products update` · write
-
-### partners
-
-Your partner profile, referral links, payout rates, and referred businesses. · `wv agent partners`
-
-- `whop partners create` · write
-- `whop partners earnings` · read
-- `whop partners get` · read
-- `whop partners leaderboard` · read
-- `whop partners links` · read
-- `whop partners list` · read
-- `whop partners referred_users` · read
-- `whop partners retrieve` · read
-
-### bounties
-
-Paid tasks with reviewed submissions and escrowed rewards. · `wv agent bounties`
-
-- `whop bounties cancel` · write, destructive
-- `whop bounties create` · write · required: `--description`, `--gross_reward_amount`, `--title`
-- `whop bounties get` · read
-- `whop bounties get-submission` · read
-- `whop bounties list` · read
-- `whop bounties submissions` · read
-- `whop bounties update` · write
-
-### bounty-submissions
-
-Work submitted to a bounty, from attempt to payout. · `wv agent bounty-submissions`
-
-- `whop bounty-submissions create` · write · required: `--bounty_id`
-- `whop bounty-submissions delete` · write, destructive
-- `whop bounty-submissions get` · read
-- `whop bounty-submissions list` · read
-- `whop bounty-submissions submit` · write
-
-### memberships
-
-A customer's purchase of a plan, from checkout through cancellation. · `wv agent memberships`
-
-- `whop memberships cancel` · write, destructive
-- `whop memberships extend` · write · required: `--days`
-- `whop memberships get` · read
-- `whop memberships invite` · write · required: `--plan_id`
-- `whop memberships list` · read
-- `whop memberships pause` · write
-- `whop memberships resume` · write
-- `whop memberships resync_access` · write
-- `whop memberships transfer` · write
-- `whop memberships update` · write
-
-### stats
-
-Aggregated financial, audience, and traffic reporting. · `wv agent stats`
-
-- `whop stats get` · read · required: `--from`, `--to`
-- `whop stats list` · read
-
-### exports
-
-Asynchronous CSV dumps of an account's dashboard data. · `wv agent exports`
-
-- `whop exports create` · write · required: `--resource`
-- `whop exports get` · read
-- `whop exports list` · read
-
-### economic-intelligence
-
-What an account should do next to grow, generated from its own data. · `wv agent economic-intelligence`
-
-- `whop economic-intelligence create` · write · required: `--input`
-- `whop economic-intelligence list` · read
-- `whop economic-intelligence update` · write · required: `--status`
-
-### webhooks
-
-Event notifications pushed to your server as things happen. · `wv agent webhooks`
-
-- `whop webhooks create` · write · required: `--url`
-- `whop webhooks delete` · write, destructive
-- `whop webhooks deliveries` · read
-- `whop webhooks deliveries-replay` · write
-- `whop webhooks get` · read
-- `whop webhooks list` · read
-- `whop webhooks replay` · write · required: `--sent_after`
-- `whop webhooks test` · read · required: `--event`
-- `whop webhooks update` · write
-
-<!-- wv agent:end -->
-
-Semantics the schema does not say (verified 0.18.2):
-
-- `bounties create`: escrow is `gross_reward_amount × accepted_submissions_limit`, floor $5.
-- `ads create`: 2–10 `creatives` without a `format` become a carousel. `existing_post_id` boosts a post instead.
-- `audiences create`: lookalikes need `source_audience_id`; `filters` uses the same keys as `people list`.
-- `stats get ad_delivery`: `source` is `whop:<campaign>:<group>:<ad>`, or with `:*`. Attribution unifies under that path.
-- `events list` needs `--from` and `--to` no more than 30 days apart, or an `identifier`. `wv` presets: `--last 7d`, `--this month`.
-- `experiments` returns 403 outside Whop. `notifications create` reaches your app's members, not strangers.
-
-## Webhooks that close the loop
-
-`payment.succeeded`, `membership.activated`, `membership.trial_ending_soon`, `membership.cancel_at_period_end_changed`, `ad_campaign.payment_failed`, `ad.updated` (review status), `payment.affiliate_reward_created`, `export.completed`.
-
-```bash
-wv webhooks create --url https://example.com/hooks --events '["payment.succeeded","ad.updated","ad_campaign.payment_failed"]'
-```
+| Launch day | `wv gtm launch <prod_id> --budget 40 --creative file_x --plan` | `references/launch.md` |
+| Winback | `wv gtm winback <adcamp_id> --budget 15 --plan` | `references/winback.md` |
+| Lookalike scale | audiences and groups by hand, then `wv gtm rank <adcamp_id> --target N` | `references/scale.md` |
+| Creators do the distribution | `wv products update`, `wv bounties create` | `references/creators.md` |
+| Monday report | `wv gtm --format json`, `economic-intelligence` | `references/report.md` |
+
+## Deciding and failing
+
+- `references/decide.md`: the rubric `wv gtm rank` runs. A target before the first read, three days and fifty results before judging, pause over 2× the target, scale under it, one change per campaign per day, duplicate instead of editing.
+- `references/failures.md`: every exit code and `code` the CLI and `wv` return, the recorded message, and the fix. On any 4 or 5, run `wv doctor --format json` before retrying.
+- `references/commands.md`: the generated command map, the semantics the schema does not say, and the webhooks that close the loop.

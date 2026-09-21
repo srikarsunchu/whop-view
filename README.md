@@ -24,7 +24,7 @@ git clone https://github.com/srikarsunchu/whop-view && cd whop-view && pnpm inst
 
 Needs Node 22 or newer and a working `whop` on your PATH. Then use `wv` anywhere you would type `whop`.
 
-`pnpm skill` regenerates the command reference inside the [`whop-gtm`](skills/whop-gtm/SKILL.md) skill from the live `whop` (every GTM verb, whether it reads, writes, or moves money, and its required flags) and copies the skill into `~/.claude/skills`. An agent that runs the Whop CLI then learns the go-to-market loop, runs `wv doctor --format json` before it starts, reads `wv agent <group>` for flags, and routes every write through `wv`. Whop's own `whop skills add` ships one generic skill with nothing about ads, audiences, bounties, or stats.
+`pnpm skill` regenerates the command reference inside the [`whop-gtm`](skills/whop-gtm/SKILL.md) skill from the live `whop` and copies the skill into `~/.claude/skills`. The skill is a 7 KB `SKILL.md` of rules and a map, plus one reference per playbook with its "done when", the decide rubric, and the failure map, loaded only when needed. An agent that runs the Whop CLI then learns the go-to-market loop, runs `wv doctor --format json` before it starts, reads `wv agent <group>` for flags, and routes every write through `wv`. `pnpm eval` runs five scenarios through `claude -p` against a fake `whop` and judges what the agent did; the last run is in [`evals/results.md`](skills/whop-gtm/evals/results.md). Whop's own `whop skills add` ships one generic skill with nothing about ads, audiences, bounties, or stats.
 
 ## Before and after
 
@@ -416,9 +416,15 @@ Manifest: `wv agent <group>` prints one Markdown page per command group from `--
 
 Playbooks as one plan: `wv gtm launch <prod_id> --budget 40 --creative file_x` plans a promo code, a checkout link for the product's default plan, a Meta campaign, and one ad pointed at that checkout link, as four steps with one approval. The plan carries the commitment, the reach estimate, who pays, and every step's command with its own idempotency key; a missing page, payment method, or default plan blocks it before anything runs, and a step that fails stops the rest and names what was made. In a pipe it is the same envelope and rerun as any write, and the finished run returns the ids and the reads that prove the launch is live.
 
+`wv gtm winback <adcamp_id> --budget 15` is the second recipe: two people-filter audiences, a promo for churned customers, and one ad group in the campaign that includes the visitors and excludes the buyers. `wv gtm rank <adcamp_id> --target 8` is the decide rubric as one read: every ad group under the campaign ranked by cost per result, each with a verdict (`wait`, `hold`, `scale`, `pause`, `not delivering`, `rejected`) and the `wv` command that acts on it.
+
 ![gtm launch](demo/gtm-launch.gif)
 
-The recording is the plan on the demo account, which has no Meta page and no ads payment method yet, so the two blockers are real.
+The recording is the plan on the demo account, which has no Facebook page and no ads payment method yet, so the two blockers are real. The account also has no campaign, so the winback and rank recordings run against the test stand-in `whop` from `tests/fake-whop.sh`, which answers with a campaign and four ad groups.
+
+![gtm winback](demo/gtm-winback.gif)
+
+![gtm rank](demo/gtm-rank.gif)
 
 For a write against one record, `wv` reads the record first and the plan says what changes, so `products update` shows `title  Hypermotion → Hypermotion Pro` and `products unpublish` shows `visibility  visible → hidden`; the terminal card gets the same `Changes` section.
 
@@ -585,4 +591,4 @@ Re-records the fixtures from your own account. Read-only commands only. `pnpm fi
 pnpm demo
 ```
 
-Re-records every GIF above. The eight agent tapes (`agent-gate`, `agent-plan`, `doctor-json`, `agent-manifest`, `agent-index`, `approve`, `exit-codes`, `gtm-launch`) run against production reads only; the gate never sends the write, and the `approve` tape reruns a plan with a token minted for a different product so the refusal is what gets recorded. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them. The `sandbox-status` and `logs-follow` tapes start `scripts/mock-api.ts` on port 8931 themselves, a stand-in for the sandbox host that answers `accounts get me` and grows an app's log by one line every couple of seconds; `pnpm demo:mock` runs it on its own. The `sandbox-ads` tape expects a richer mock on the same port that was never committed, so it records against whatever answers there.
+Re-records every GIF above. The eight agent tapes (`agent-gate`, `agent-plan`, `doctor-json`, `agent-manifest`, `agent-index`, `approve`, `exit-codes`, `gtm-launch`) run against production reads only; the gate never sends the write, and the `approve` tape reruns a plan with a token minted for a different product so the refusal is what gets recorded. `gtm-winback` and `gtm-rank` point `WV_WHOP_BIN` at `demo/_fake/whop`, a copy of the test stand-in, since the account has no campaign to rank. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them. The `sandbox-status` and `logs-follow` tapes start `scripts/mock-api.ts` on port 8931 themselves, a stand-in for the sandbox host that answers `accounts get me` and grows an app's log by one line every couple of seconds; `pnpm demo:mock` runs it on its own. The `sandbox-ads` tape expects a richer mock on the same port that was never committed, so it records against whatever answers there.

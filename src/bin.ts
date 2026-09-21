@@ -23,11 +23,13 @@ import { detailView } from "./views/detail.ts";
 import { amountMatcher, changesFor, confirmView, currentSummary, describeMethod, flagsToRecord, limitFor, moneyOf, refusedView, speedOf, type Balance, type ConfirmInput, type RefusedInput, type WhopLimit } from "./views/confirm.ts";
 import { money } from "./format.ts";
 import { adPlanView, adRefusedView, budgetOf, commitment, isAdPlan, jsonFlags, reachArgv, treeFromArgv, type AdPlanInput, type AdTree, type Reach } from "./views/adplan.ts";
-import { doneChecks } from "./views/launch.ts";
 import { errorView } from "./views/error.ts";
 import { helpView, parseHelp } from "./views/help.ts";
 import { manifest, manifestData, manifestIndex, manifestIndexData, type VerbSchema, type VerbsByGroup } from "./views/manifest.ts";
-import { adGroupFor, buildLaunch, launchData, launchDoneView, launchView, parseLaunchArgs, substitute, type LaunchPlan, type LaunchReads, type StepKey } from "./views/launch.ts";
+import { adGroupFor, buildLaunch, parseLaunchArgs, type LaunchReads } from "./views/launch.ts";
+import { buildWinback, parseWinbackArgs, winbackGroup, type WinbackReads } from "./views/winback.ts";
+import { rankData, rankView, type RankInput } from "./views/rank.ts";
+import { recipeData, recipeDoneView, recipeView, substitute, type RecipePlan } from "./views/recipe.ts";
 import { randomUUID } from "node:crypto";
 import { homeView } from "./views/home.ts";
 import { gtmData, gtmView, type GtmInput } from "./views/gtm.ts";
@@ -125,6 +127,7 @@ async function main(argvIn: string[]) {
   // `wv doctor --format json` in a terminal is the agent face on purpose. `--format` would otherwise exec `whop doctor`, which is not a command.
   if (DATA_SCREENS.has(argv[0]) && wantsJson(argv)) process.exit(await screenJson(argv[0], mode, env));
   if (argv[0] === "agent" && wantsJson(argv)) process.exit((await execute(argv, theme, { mode })).code);
+  if (argv[0] === "gtm" && argv[1] === "rank" && wantsJson(argv)) process.exit(await rankJson(argv, mode, env));
   // `--plan` never writes, so it is safe without a terminal and must never fall through to a real `whop` create.
   // `memberships check <key>` is wv's verb over `memberships get <key>`; a pipe gets the get.
   if (shouldPassthrough(argv) && !plan) passthrough(argv0IsCheck(argv) ? ["memberships", "get", ...argv.slice(2)] : argv, env);
@@ -161,7 +164,8 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
     print(lines!);
     process.exit(0);
   }
-  if (argv[0] === "gtm" && argv[1] === "launch") return launchPiped(argv, mode, env, plan);
+  if (argv[0] === "gtm" && (argv[1] === "launch" || argv[1] === "winback")) return recipePiped(argv, mode, env, plan);
+  if (argv[0] === "gtm" && argv[1] === "rank") process.exit(await rankJson(argv, mode, env));
   // Two screens are data as well as pictures. The rest draw and need a terminal.
   if (DATA_SCREENS.has(argv[0])) process.exit(await screenJson(argv[0], mode, env));
   if (OURS.has(argv[0])) emit(wvErrorEnvelope(argv, mode, { code: "NEEDS_TERMINAL", message: copy.agent.needsTerminal(argv[0]) }), 2);
@@ -224,60 +228,90 @@ async function agentManifest(group?: string, json = false): Promise<string[] | n
   return json ? asJson(manifestData(input)) : manifest(input);
 }
 
-/** `--idempotency-key <base>` on the launch argv, minted here when absent, so every step's key survives into the rerun. */
-function launchArgvWithKey(argv: string[]): string[] {
+/** `--idempotency-key <base>` on a recipe argv, minted here when absent, so every step's key survives into the rerun. */
+function recipeArgvWithKey(argv: string[]): string[] {
   return argv.some((a) => a === "--idempotency-key" || a.startsWith("--idempotency-key=")) ? argv : [...argv, "--idempotency-key", randomUUID()];
 }
 
+const recordOf = (p: Parsed): Rec | undefined => (p.ok && "record" in p.payload ? p.payload.record : undefined);
+const rowsOf = (p: Parsed): Rec[] | undefined => (p.ok && p.payload.kind === "page" ? p.payload.rows : undefined);
+const reachOf = (p: Parsed | undefined): Reach | undefined => {
+  if (!p) return undefined;
+  if (!p.ok) return { error: p.error.message };
+  const r = recordOf(p);
+  return r ? { lower: typeof r.users_lower_bound === "number" ? r.users_lower_bound : undefined, upper: typeof r.users_upper_bound === "number" ? r.users_upper_bound : undefined } : undefined;
+};
+
 /** The reads behind the launch card: identity, the product, ads preferences, connected pages, and one reach estimate. */
 async function launchReads(opts: NonNullable<ReturnType<typeof parseLaunchArgs>["opts"]>, env: NodeJS.ProcessEnv, mode: Mode, live: boolean): Promise<LaunchReads> {
-  const record = async (argv: string[]): Promise<Rec | undefined> => {
-    const { parsed } = await run(argv, env);
-    return parsed.ok && "record" in parsed.payload ? parsed.payload.record : undefined;
-  };
   const wantsAds = opts.budget !== undefined;
-  const group = adGroupFor(opts, "");
-  const estimate = wantsAds ? reachArgv(group, "meta") : undefined;
-  const [acct, product, preferences, socialParsed, reachParsed] = await Promise.all([
+  const estimate = wantsAds ? reachArgv(adGroupFor(opts, ""), "meta") : undefined;
+  const [acct, product, preferences, social, reach] = await Promise.all([
     identity(env),
-    record(["products", "get", opts.product]),
-    record(["accounts", "preferences"]),
+    run(["products", "get", opts.product], env),
+    run(["accounts", "preferences"], env),
     wantsAds ? run(["social-accounts", "list"], env) : undefined,
     estimate ? run(estimate, env) : undefined,
   ]);
-  const social = socialParsed?.parsed.ok && socialParsed.parsed.payload.kind === "page" ? socialParsed.parsed.payload.rows : undefined;
-  let reach: Reach | undefined;
-  if (reachParsed) {
-    const r = reachParsed.parsed;
-    if (!r.ok) reach = { error: r.error.message };
-    else if ("record" in r.payload) reach = { lower: typeof r.payload.record.users_lower_bound === "number" ? r.payload.record.users_lower_bound : undefined, upper: typeof r.payload.record.users_upper_bound === "number" ? r.payload.record.users_upper_bound : undefined };
+  return { product: recordOf(product.parsed), preferences: recordOf(preferences.parsed), social: social ? rowsOf(social.parsed) : undefined, reach: reachOf(reach?.parsed), accountTitle: acct?.title, accountId: acct?.id, mode, cap: live && wantsAds ? adCapFrom() : undefined };
+}
+
+/** The reads behind the winback card: identity, the campaign, ads preferences, who was seen in the window, connected pages, reach. */
+async function winbackReads(opts: NonNullable<ReturnType<typeof parseWinbackArgs>["opts"]>, env: NodeJS.ProcessEnv, mode: Mode, live: boolean): Promise<WinbackReads> {
+  const wantsGroup = opts.budget !== undefined;
+  const estimate = wantsGroup ? reachArgv({ ...winbackGroup(opts), audiences: undefined }, "meta") : undefined;
+  const [acct, campaign, preferences, people, social, reach] = await Promise.all([
+    identity(env),
+    opts.campaign ? run(["ad-campaigns", "get", opts.campaign], env) : undefined,
+    run(["accounts", "preferences"], env),
+    run(["people", "list", "--last_seen_within_days", String(opts.days), "--has_purchased", "false", "--first", "100"], env),
+    wantsGroup ? run(["social-accounts", "list"], env) : undefined,
+    estimate ? run(estimate, env) : undefined,
+  ]);
+  const seen = rowsOf(people.parsed);
+  const more = people.parsed.ok && people.parsed.payload.kind === "page" && people.parsed.payload.page.has_next_page;
+  return {
+    preferences: recordOf(preferences.parsed),
+    social: social ? rowsOf(social.parsed) : undefined,
+    campaign: campaign ? recordOf(campaign.parsed) : undefined,
+    campaignError: campaign && !campaign.parsed.ok ? campaign.parsed.error.message.split("\n")[0] : undefined,
+    visitors: seen ? { seen: seen.length, more: !!more } : undefined,
+    reach: reachOf(reach?.parsed),
+    accountTitle: acct?.title, accountId: acct?.id, mode,
+    cap: live && wantsGroup ? adCapFrom() : undefined,
+  };
+}
+
+/** One recipe by name: parse its flags, gather its reads, build its plan. `error` is a refusal in words before any read. */
+async function buildRecipe(argv: string[], env: NodeJS.ProcessEnv, mode: Mode, live: boolean): Promise<{ plan?: RecipePlan; error?: string }> {
+  if (argv[1] === "winback") {
+    const parsed = parseWinbackArgs(argv);
+    if (!parsed.opts) return { error: parsed.error };
+    return { plan: buildWinback(argv, parsed.opts, await winbackReads(parsed.opts, env, mode, live)) };
   }
-  return { product, preferences, social, reach, accountTitle: acct?.title, accountId: acct?.id, mode, cap: live && wantsAds ? adCapFrom() : undefined };
+  const parsed = parseLaunchArgs(argv);
+  if (!parsed.opts) return { error: parsed.error };
+  return { plan: buildLaunch(argv, parsed.opts, await launchReads(parsed.opts, env, mode, live)) };
 }
 
 /** Runs the plan's steps in order, feeding each result into the next. Stops at the first failure. */
-async function runLaunch(plan: LaunchPlan, env: NodeJS.ProcessEnv, onStep?: (key: StepKey) => void): Promise<{ results: Partial<Record<StepKey, Rec>>; failed?: { step: StepKey; message: string; code: string } }> {
-  const results: Partial<Record<StepKey, Rec>> = {};
+async function runRecipe(plan: RecipePlan, env: NodeJS.ProcessEnv, onStep?: (label: string) => void): Promise<{ results: Partial<Record<string, Rec>>; failed?: { step: string; message: string; code: string } }> {
+  const results: Partial<Record<string, Rec>> = {};
   for (const step of plan.steps) {
     if (step.skipped) continue;
-    onStep?.(step.key);
+    onStep?.(step.label);
     const { parsed } = await run(substitute(step.argv, results), env);
     if (!parsed.ok) return { results, failed: { step: step.key, message: parsed.error.message.split("\n")[0], code: parsed.error.code } };
-    results[step.key] = "record" in parsed.payload ? parsed.payload.record : {};
+    results[step.key] = recordOf(parsed) ?? {};
   }
   return { results };
 }
 
-/** `wv gtm launch` in a terminal: the card, one typed approval for the whole sequence, then the run. */
-async function launchTerminal(argvIn: string[], theme: Theme, mode: Mode, env: NodeJS.ProcessEnv, planOnly: boolean): Promise<Outcome> {
+/** A recipe in a terminal: the card, one typed approval for the whole sequence, then the run. */
+async function recipeTerminal(argvIn: string[], theme: Theme, mode: Mode, env: NodeJS.ProcessEnv, planOnly: boolean): Promise<Outcome> {
   const split = splitApprove(argvIn);
   const yesFlag = split.argv.includes("--yes");
-  const argv = launchArgvWithKey(split.argv.filter((a) => a !== "--yes"));
-  const parsed = parseLaunchArgs(argv);
-  if (!parsed.opts) {
-    print(errorView({ code: "VALIDATION_ERROR", message: parsed.error ?? "" }, theme));
-    return { code: 2 };
-  }
+  const argv = recipeArgvWithKey(split.argv.filter((a) => a !== "--yes"));
   if (split.token !== undefined) {
     const verdict = checkApproval(split.token, argv, mode, approveSecret());
     if (verdict !== "ok") {
@@ -287,24 +321,28 @@ async function launchTerminal(argvIn: string[], theme: Theme, mode: Mode, env: N
   }
   const approved = yesFlag || split.token !== undefined;
   const live = mode !== "sandbox" && !planOnly;
-  const spin = spinner(copy.spinner.launch, theme);
-  const reads = await launchReads(parsed.opts, env, mode, live).finally(() => spin.stop());
-  const plan = buildLaunch(argv, parsed.opts, reads);
+  const spin = spinner(argv[1] === "winback" ? copy.spinner.winback : copy.spinner.launch, theme);
+  const built = await buildRecipe(argv, env, mode, live).finally(() => spin.stop());
+  if (!built.plan) {
+    print(errorView({ code: "VALIDATION_ERROR", message: built.error ?? "" }, theme));
+    return { code: 2 };
+  }
+  const plan = built.plan;
   if (planOnly) {
-    print(launchView(plan, theme, { planOnly: true }));
+    print(recipeView(plan, theme, { planOnly: true }));
     return { code: 0 };
   }
   if (plan.blockers.length) {
-    print(launchView(plan, theme));
+    print(recipeView(plan, theme));
     return { code: 2 };
   }
   if (!approved) {
-    print(launchView(plan, theme));
-    const budget = live ? plan.opts.budget : undefined;
-    const shown = budget !== undefined ? money(budget, plan.currency).replace(/^[^\d]+/, "") : "";
-    const accept = budget !== undefined ? { test: amountMatcher(budget), hint: copy.confirm.amountNo(shown) } : undefined;
+    print(recipeView(plan, theme));
+    const typed = live ? plan.typedAmount : undefined;
+    const shown = typed ? money(typed.amount, typed.currency).replace(/^[^\d]+/, "") : "";
+    const accept = typed ? { test: amountMatcher(typed.amount), hint: copy.confirm.amountNo(shown) } : undefined;
     const timeoutSeconds = live ? timeoutFrom() : undefined;
-    const answer = await prompt(budget !== undefined ? copy.launch.typeBudget(shown) : copy.confirm.question, theme, { timeoutMs: timeoutSeconds ? timeoutSeconds * 1000 : undefined, accept });
+    const answer = await prompt(typed ? copy.recipe.typeAmount(shown, plan.name) : copy.confirm.question, theme, { timeoutMs: timeoutSeconds ? timeoutSeconds * 1000 : undefined, accept });
     if (answer !== "yes") {
       print([" " + (answer === "timeout" && timeoutSeconds ? copy.confirm.expired(timeoutSeconds) : copy.confirm.aborted)]);
       return { code: 130 };
@@ -312,45 +350,77 @@ async function launchTerminal(argvIn: string[], theme: Theme, mode: Mode, env: N
     print([""]);
   }
   const stepSpin = spinner("", theme);
-  const run0 = await runLaunch(plan, env, (k) => stepSpin.update(copy.spinner.launchStep(copy.launch.stepLabels[k]))).finally(() => stepSpin.stop());
-  print(launchDoneView(plan, run0.results, run0.failed, theme));
-  return { code: run0.failed ? 1 : 0, group: "gtm" };
+  const r = await runRecipe(plan, env, (label) => stepSpin.update(copy.spinner.launchStep(label))).finally(() => stepSpin.stop());
+  print(recipeDoneView(plan, r.results, r.failed, theme));
+  return { code: r.failed ? 1 : 0, group: "gtm" };
 }
 
-/** `wv gtm launch` in a pipe: one envelope for the whole sequence, one rerun, then the results as data. */
-async function launchPiped(argvIn: string[], mode: Mode, env: NodeJS.ProcessEnv, planOnly: boolean): Promise<never> {
+/** A recipe in a pipe: one envelope for the whole sequence, one rerun, then the results as data. */
+async function recipePiped(argvIn: string[], mode: Mode, env: NodeJS.ProcessEnv, planOnly: boolean): Promise<never> {
   const split = splitApprove(argvIn);
   const yesFlag = split.argv.includes("--yes");
-  const argv = launchArgvWithKey(split.argv.filter((a) => a !== "--yes"));
-  const parsed = parseLaunchArgs(argv);
-  if (!parsed.opts) emit(wvErrorEnvelope(argv, mode, { code: "VALIDATION_ERROR", message: parsed.error ?? "" }), 2);
-  const opts = parsed.opts!;
+  const argv = recipeArgvWithKey(split.argv.filter((a) => a !== "--yes"));
   if (split.token !== undefined && !planOnly) {
     const verdict = checkApproval(split.token, argv, mode, approveSecret());
     if (verdict !== "ok") emit(approvalEnvelope(argv, mode, verdict), 2);
   }
   const approved = yesFlag || split.token !== undefined;
   const live = mode !== "sandbox" && !planOnly;
-  const plan = buildLaunch(argv, opts, await launchReads(opts, env, mode, live));
-  const data = launchData(plan);
+  const built = await buildRecipe(argv, env, mode, live);
+  if (!built.plan) emit(wvErrorEnvelope(argv, mode, { code: "VALIDATION_ERROR", message: built.error ?? "" }), 2);
+  const plan = built.plan!;
+  const data = recipeData(plan);
   if (planOnly) emit(planEnvelope(argv, mode, data), 0);
-  if (plan.blockers.length) emit(envelopeWith(argv, mode, { ok: false, error: { code: "LAUNCH_BLOCKED", message: copy.launch.blockedMessage, hint: plan.blockers.join(" ") }, plan: data }), 2);
+  if (plan.blockers.length) emit(envelopeWith(argv, mode, { ok: false, error: { code: `${plan.name.toUpperCase()}_BLOCKED`, message: copy.recipe.blockedMessage(plan.name), hint: plan.blockers.join(" ") }, plan: data }), 2);
   if (!approved) {
     const ttlSeconds = approveTtlFrom();
     emit(confirmationEnvelope(argv, mode, data, { token: mintApproval(argv, mode, approveSecret(), Math.floor(Date.now() / 1000) + ttlSeconds), ttlSeconds }), 2);
   }
-  const r = await runLaunch(plan, env);
+  const r = await runRecipe(plan, env);
   const results: Rec = {};
-  for (const [k, v] of Object.entries(r.results)) results[k] = { id: v?.id, code: v?.code, status: v?.status, purchase_url: v?.purchase_url };
+  for (const [k, v] of Object.entries(r.results)) results[k] = { id: v?.id, code: v?.code, name: v?.name, status: v?.status, purchase_url: v?.purchase_url };
   const body: Omit<AgentEnvelope, "meta"> & Rec = r.failed
-    ? { ok: false, error: { code: r.failed.code, message: r.failed.message, hint: copy.launch.resume }, results, failed: r.failed.step, rerun: ["wv", ...argv, "--yes"] }
-    : { ok: true, results, next: doneChecksData(plan, r.results) };
+    ? { ok: false, error: { code: r.failed.code, message: r.failed.message, hint: copy.recipe.resume }, results, failed: r.failed.step, rerun: ["wv", ...argv, "--yes"] }
+    : { ok: true, results, next: plan.done(r.results).map((c) => ({ what: c.label, run: c.argv })) };
   return emit(envelopeWith(argv, mode, body), r.failed ? agentExitCode(1, JSON.stringify(r.failed)) : 0);
 }
 
-const doneChecksData = (plan: LaunchPlan, results: Partial<Record<StepKey, Rec>>) => doneChecks(plan, results).map((c) => ({ what: c.label, run: c.argv }));
-
 const envelopeWith = (argv: string[], mode: Mode, body: Omit<AgentEnvelope, "meta"> & Rec): AgentEnvelope => ({ ...body, meta: { command: argv.slice(0, 2).join(" "), wrapper: "wv", mode } });
+
+/** `wv gtm rank <campaign> [--target N]`: the campaign and its ad groups with their delivery numbers. */
+async function rankReads(argv: string[], env: NodeJS.ProcessEnv, mode: Mode): Promise<RankInput | { error: string }> {
+  const id = argv[2] && !argv[2].startsWith("--") ? argv[2] : undefined;
+  if (!id) return { error: copy.rank.needsCampaign };
+  const ti = argv.indexOf("--target");
+  const target = ti >= 0 ? Number(argv[ti + 1]) : undefined;
+  if (target !== undefined && !(Number.isFinite(target) && target > 0)) return { error: copy.launch.badNumber("--target", argv[ti + 1] ?? "") };
+  const cmds = [["ad-campaigns", "get", id], ["ad-groups", "list", "--ad_campaign_id", id, "--order", "cost_per_result", "--direction", "asc"], ["accounts", "preferences"]];
+  const [acct, campaign, groups, prefs] = await Promise.all([identity(env), ...cmds.map((c) => run(c, env))]);
+  const currency = typeof recordOf(prefs.parsed)?.ads_reporting_currency === "string" ? String(recordOf(prefs.parsed)!.ads_reporting_currency) : "usd";
+  return { campaignId: id, campaign: recordOf(campaign.parsed), groups: groups.parsed, target, currency, accountTitle: acct?.title, accountId: acct?.id, mode, commands: cmds.slice(0, 2) };
+}
+
+async function rank(argv: string[], theme: Theme, mode: Mode, env: NodeJS.ProcessEnv): Promise<Outcome> {
+  const spin = spinner(copy.spinner.rank, theme);
+  const input = await rankReads(argv, env, mode).finally(() => spin.stop());
+  if ("error" in input) {
+    print(errorView({ code: "VALIDATION_ERROR", message: input.error }, theme));
+    return { code: 2 };
+  }
+  print(rankView(input, theme));
+  return { code: input.groups.ok ? 0 : 1, group: "gtm" };
+}
+
+async function rankJson(argv: string[], mode: Mode, env: NodeJS.ProcessEnv): Promise<number> {
+  const clean = argv.filter((a, i) => !(a === "--format" || a.startsWith("--format=") || argv[i - 1] === "--format"));
+  const input = await rankReads(clean, env, mode);
+  if ("error" in input) {
+    process.stdout.write(serialize(wvErrorEnvelope(clean, mode, { code: "VALIDATION_ERROR", message: input.error })));
+    return 2;
+  }
+  process.stdout.write(JSON.stringify({ ok: input.groups.ok, ...rankData(input), meta: { command: "gtm rank", wrapper: "wv", mode } }, null, 2) + "\n");
+  return input.groups.ok ? 0 : 1;
+}
 
 /** wv screens that have a JSON face: `--format json`, or any pipe. */
 const DATA_SCREENS = new Set(["doctor", "gtm"]);
@@ -459,7 +529,8 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
     return { code: 0 };
   }
   if (group === "home") return home(theme, mode);
-  if (group === "gtm" && verb === "launch") return launchTerminal(argv, theme, mode, env, !!opts.plan);
+  if (group === "gtm" && (verb === "launch" || verb === "winback")) return recipeTerminal(argv, theme, mode, env, !!opts.plan);
+  if (group === "gtm" && verb === "rank") return rank(argv, theme, mode, env);
   if (group === "gtm") return gtm(theme, mode);
   if (group === "doctor") return doctor(theme, mode);
   if (group === "sandbox") {

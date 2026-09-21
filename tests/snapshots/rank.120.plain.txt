@@ -1,0 +1,16 @@
+ Hypermotion › biz_VraUMckluH8dzV › production › rank › Launch · Hypermotion
+
+ ad group             delivery  age    spend  results     cpr   roas  verdict
+ US 25-44 · purchase  active    11d  $420.00       60   $7.00  3.10×  scale
+ lal 3%               active    16d  $600.00       55  $18.50  0.40×  pause
+ lal 1%               learning   1d   $90.00        4  $22.50      —  wait
+ broad                issues     2d    $0.00        0       —      —  not delivering
+
+   Target $8.00 per result. A group waits until 3 days and 50 results; over 2× the target it is a pause, under the
+   target a scale. One change per campaign per day; duplicate a winner instead of editing it.
+
+ scale  wv ads list --ad_group_id adgrp_a1 --format json
+ pause  wv ad-groups pause adgrp_c1
+ json  whop ad-campaigns get adcamp_x1 --format json
+ json  whop ad-groups list --ad_campaign_id adcamp_x1 --order cost_per_result --direction asc --format json
+

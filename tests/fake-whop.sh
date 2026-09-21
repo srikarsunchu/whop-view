@@ -1,0 +1,43 @@
+#!/bin/sh
+# A stand-in whop for tests and skill evals: echoes argv to stderr (and to $WV_FAKE_LOG when set), answers the
+# reads the gate needs from tests/fixtures, and answers writes with ids. WV_FAKE_READY adds a page and a payment
+# method; WV_FAKE_PAGED pages products list; WV_FAKE_METHODS swaps the payout methods fixture; WV_FAKE_CAMPAIGN_FAILS
+# fails the campaign create; WV_FAKE_QUIET drops the stderr echo for demo recordings. Used by tests/passthrough.test.ts and scripts/eval-skill.ts.
+[ -n "$WV_FAKE_LOG" ] && echo "$*" >> "$WV_FAKE_LOG"
+if [ -z "$WV_FAKE_QUIET" ]; then
+  echo "ARGS: $*" >&2
+  echo "BASE: ${WHOP_API_BASE_URL:-unset} KEY: ${WHOP_API_KEY:-unset}" >&2
+fi
+fx() { cat "${WV_FAKE_FIXTURES}/$1"; exit 0; }
+if [ "$1" = "--llms-full" ]; then
+  printf '# whop\n\n## whop products\n\n### whop products frobnicate\n\nFrobnicate Product\n\n> Confirm with the user before executing this destructive command.\n\n### whop products list\n\nList Products\n'
+  exit 0
+fi
+case "$*" in *--schema*) [ -f "${WV_FAKE_FIXTURES}/schema.$1.$2.json" ] && fx "schema.$1.$2.json"; echo '{"code":"COMMAND_NOT_FOUND","message":"no schema"}'; exit 1 ;; esac
+case "$1 $2" in
+  "products list")
+    case "$*" in
+      *--after*c2*) fx products.list.json ;;
+      *--format*json*--full-output*) [ -n "$WV_FAKE_PAGED" ] && fx products.list.page1.json; fx products.list.json ;;
+      *) fx products.list.plain.txt ;;
+    esac ;;
+  "products get") fx products.get.json ;;
+  "auth status") fx auth.status.json ;;
+  "people list") fx people.list.json ;;
+  "ledgers report") fx ledgers.report.json ;;
+  "payouts methods") fx "${WV_FAKE_METHODS:-payouts.methods.limits.json}" ;;
+  "accounts preferences") [ -n "$WV_FAKE_READY" ] && { echo '{"ok":true,"data":{"ads_payment_methods":[{"id":"pm_1","brand":"visa","last4":"4242"}],"ads_reporting_currency":"usd","economic_intelligence":true},"meta":{"command":"accounts preferences","duration":"1ms"}}'; exit 0; }; fx accounts.preferences.json ;;
+  "social-accounts list") [ -n "$WV_FAKE_READY" ] && { echo '{"ok":true,"data":{"data":[{"id":"sacc_1","platform":"facebook","name":"Hypermotion","username":"hypermotion"}],"page_info":{"start_cursor":null,"end_cursor":null,"has_next_page":false,"has_previous_page":false}},"meta":{"command":"social-accounts list","duration":"1ms"}}'; exit 0; }; fx social-accounts.list.json ;;
+  "audiences create") case "$*" in *customers*) echo '{"ok":true,"data":{"id":"adaud_customers","name":"customers","status":"pending"},"meta":{"command":"audiences create","duration":"1ms"}}' ;; *) echo '{"ok":true,"data":{"id":"adaud_visitors","name":"visited 30d, no purchase","status":"pending"},"meta":{"command":"audiences create","duration":"1ms"}}' ;; esac; exit 0 ;;
+  "ad-groups create") echo '{"ok":true,"data":{"id":"adgrp_1","title":"winback 30d","status":"active"},"meta":{"command":"ad-groups create","duration":"1ms"}}'; exit 0 ;;
+  "ad-campaigns get") echo '{"ok":true,"data":{"id":"adcamp_1","title":"Launch · Hypermotion","status":"active","delivery_status":"active"},"meta":{"command":"ad-campaigns get","duration":"1ms"}}'; exit 0 ;;
+  "ad-groups list") echo '{"ok":true,"data":{"data":[{"id":"adgrp_a","title":"US 25-44","status":"active","delivery_status":"active","spend":420,"results":60,"cost_per_result":7,"return_on_ad_spend":3.1,"created_at":"2026-09-10T00:00:00Z"},{"id":"adgrp_b","title":"lal 1%","status":"active","delivery_status":"learning","spend":90,"results":4,"cost_per_result":22.5,"created_at":"2026-09-20T00:00:00Z"},{"id":"adgrp_c","title":"lal 3%","status":"active","delivery_status":"active","spend":600,"results":55,"cost_per_result":18.5,"return_on_ad_spend":0.4,"created_at":"2026-09-05T00:00:00Z"},{"id":"adgrp_d","title":"broad","status":"active","delivery_status":"active","spend":0,"results":0,"created_at":"2026-09-19T00:00:00Z"}],"page_info":{"start_cursor":null,"end_cursor":null,"has_next_page":false,"has_previous_page":false}},"meta":{"command":"ad-groups list","duration":"1ms"}}'; exit 0 ;;
+  "promo-codes create") echo '{"ok":true,"data":{"id":"promo_1","code":"LAUNCH20","status":"active"},"meta":{"command":"promo-codes create","duration":"1ms"}}'; exit 0 ;;
+  "checkout-configurations create") echo '{"ok":true,"data":{"id":"chk_1","purchase_url":"https://whop.com/checkout/chk_1"},"meta":{"command":"checkout-configurations create","duration":"1ms"}}'; exit 0 ;;
+  "ad-campaigns create") [ -n "$WV_FAKE_CAMPAIGN_FAILS" ] && { echo '{"ok":false,"error":{"code":"HTTP_422","message":"No ads payment method"},"meta":{"command":"ad-campaigns create","duration":"1ms"}}'; exit 1; }; echo '{"ok":true,"data":{"id":"adcamp_1","status":"paused"},"meta":{"command":"ad-campaigns create","duration":"1ms"}}'; exit 0 ;;
+  "ads create") echo '{"ok":true,"data":{"id":"ad_1","status":"in_review"},"meta":{"command":"ads create","duration":"1ms"}}'; exit 0 ;;
+  "ad-groups estimate_reach") echo '{"ok":false,"error":{"code":"HTTP_400","message":"no estimate"},"meta":{"command":"ad-groups estimate_reach","duration":"1ms"}}'; exit 1 ;;
+  "payouts create"|"products update"|"products frobnicate") echo '{"ok":true,"data":{"id":"fake_1"},"meta":{"command":"'"$1 $2"'","duration":"1ms"}}'; exit 0 ;;
+esac
+echo '{"code":"COMMAND_NOT_FOUND","message":"nope"}'
+exit 1

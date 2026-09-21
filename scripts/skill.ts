@@ -1,4 +1,4 @@
-// Regenerates the command reference inside skills/whop-gtm/SKILL.md from the live `whop`: every GTM group's
+// Regenerates the command reference inside skills/whop-gtm/references/commands.md from the live `whop`: every GTM group's
 // verbs, their kind (read, write, money, destructive), and the flags the schema marks required. Flag names
 // drift with the CLI; the skill points at `wv agent <group>` for the rest. Run by `pnpm skill`.
 import { readFileSync, writeFileSync } from "node:fs";
@@ -35,13 +35,13 @@ for (const group of GROUPS) {
 }
 lines.push(END);
 
-const file = join(import.meta.dirname, "..", "skills", "whop-gtm", "SKILL.md");
+const file = join(import.meta.dirname, "..", "skills", "whop-gtm", "references", "commands.md");
 const text = readFileSync(file, "utf8");
 const a = text.indexOf(START);
 const b = text.indexOf(END);
 if (a < 0 || b < 0) {
-  console.error(`SKILL.md has no ${START} … ${END} markers`);
+  console.error(`references/commands.md has no ${START} … ${END} markers`);
   process.exit(1);
 }
 writeFileSync(file, text.slice(0, a) + lines.join("\n") + text.slice(b + END.length));
-console.log(`SKILL.md: command reference regenerated for ${GROUPS.length} groups`);
+console.log(`references/commands.md: command reference regenerated for ${GROUPS.length} groups`);
