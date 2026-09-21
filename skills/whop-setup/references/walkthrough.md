@@ -1,6 +1,6 @@
 # First hour
 
-Part of the whop-setup skill; `references/gate.md` has the rules. The loop is: `wv setup`, do step 1, `wv setup`, do the next, until green.
+Part of the whop-setup skill; `references/gate.md` has the rules. The loop is: `wv setup`, do step 1, `wv setup`, do the next, until green. Someone asking what the steps are gets this list read back to them with who does what; the steps start when they say so.
 
 ```bash
 whop login                                   # interactive; opens a browser
