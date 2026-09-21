@@ -14,7 +14,7 @@ import { homeView } from "../src/views/home.ts";
 import { seriesView } from "../src/views/series.ts";
 import { summaryView } from "../src/views/summary.ts";
 import { adPlanView, adRefusedView, type AdPlanInput } from "../src/views/adplan.ts";
-import { gtmView } from "../src/views/gtm.ts";
+import { gtmView, type GtmInput } from "../src/views/gtm.ts";
 import { doctorView, DOCTOR_ACTIONS, type DoctorInput } from "../src/views/doctor.ts";
 import { sandboxMissingKeyView, sandboxStatusView } from "../src/views/sandbox.ts";
 import { followHeader, followStopped, logLines, logsView } from "../src/views/logs.ts";
@@ -100,6 +100,22 @@ const GTM_COMMANDS = [
   ["social-accounts", "list"],
   ["accounts", "preferences"],
 ];
+
+/** The recorded account's gtm screen, shared by the snapshot and the JSON face test. */
+export const GTM: GtmInput = {
+  accountTitle: "Hypermotion",
+  accountId: "biz_VraUMckluH8dzV",
+  from: "2026-09-14",
+  to: "2026-09-20",
+  series: { page_visits: envelope("stats.page_visits"), new_users: envelope("stats.new_users"), gross_revenue: envelope("stats.gross_revenue"), ad_spend: envelope("stats.ad_spend") },
+  people: envelope("people.list"),
+  audiences: envelope("audiences.list"),
+  campaigns: envelope("ad-campaigns.list"),
+  promoCodes: envelope("promo-codes.list"),
+  social: envelope("social-accounts.list"),
+  preferences: envelope("accounts.preferences"),
+  commands: GTM_COMMANDS,
+};
 
 /** An envelope built in the test, for shapes this account cannot record (webhooks need an API-key login). */
 export const synth = (data: unknown) => parseEnvelope(JSON.stringify({ ok: true, data, meta: { command: "synthetic", duration: "1ms" } }));
@@ -194,24 +210,7 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   doctor: (t) => doctorView(DOCTOR, t),
   "doctor.ready": (t) => doctorView(DOCTOR_READY, t),
   "doctor.signed_out": (t) => doctorView({ ...DOCTOR, accountTitle: undefined, accountId: undefined, permissions: undefined, auth: synth({ loggedIn: false }), profiles: synth({ active: null, profiles: [] }), webhooks: envelope("error.webhooks_oauth") }, t),
-  gtm: (t) =>
-    gtmView(
-      {
-        accountTitle: "Hypermotion",
-        accountId: "biz_VraUMckluH8dzV",
-        from: "2026-09-14",
-        to: "2026-09-20",
-        series: { page_visits: envelope("stats.page_visits"), new_users: envelope("stats.new_users"), gross_revenue: envelope("stats.gross_revenue"), ad_spend: envelope("stats.ad_spend") },
-        people: envelope("people.list"),
-        audiences: envelope("audiences.list"),
-        campaigns: envelope("ad-campaigns.list"),
-        promoCodes: envelope("promo-codes.list"),
-        social: envelope("social-accounts.list"),
-        preferences: envelope("accounts.preferences"),
-        commands: GTM_COMMANDS,
-      },
-      t,
-    ),
+  gtm: (t) => gtmView(GTM, t),
   "adplan.ads.nested": (t) => adPlanView(AD_PLAN, t),
   "adplan.ads.plan_only": (t) => adPlanView({ ...AD_PLAN, planOnly: true, cap: undefined, timeoutSeconds: undefined }, t),
   "adplan.ads.no_page": (t) => adPlanView({ ...AD_PLAN, social: [], paysFrom: undefined, reach: { error: "No Meta ad account available for reach estimates" } }, t),

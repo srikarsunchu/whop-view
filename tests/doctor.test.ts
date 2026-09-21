@@ -1,8 +1,9 @@
 // The doctor's pure parts: each check's verdict from real and synthetic envelopes, and the exit rule.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { blocked, checks, lastSuccess, missingActions, profilesOf, type Check } from "../src/views/doctor.ts";
-import { DOCTOR, DOCTOR_READY, envelope, synth } from "./render.ts";
+import { blocked, checks, doctorData, lastSuccess, missingActions, profilesOf, type Check } from "../src/views/doctor.ts";
+import { gaps, gtmData, peopleSummary } from "../src/views/gtm.ts";
+import { DOCTOR, DOCTOR_READY, GTM, envelope, synth } from "./render.ts";
 
 const byKey = (list: Check[]) => Object.fromEntries(list.map((c) => [c.key, c]));
 
@@ -83,4 +84,34 @@ test("doctor: helpers read auth list, permissions check, and deliveries", () => 
   assert.equal(missingActions(undefined).length, 0);
   assert.equal(lastSuccess(DOCTOR_READY.deliveries.hook_x1AbCdEfGh), "2026-09-18T09:00:00Z");
   assert.equal(lastSuccess(undefined), undefined);
+});
+
+test("doctor --format json: ok is the exit rule, blocking names the checks behind it, fixes stay argv", () => {
+  const d = doctorData(DOCTOR) as { ok: boolean; blocking: string[]; checks: Check[]; commands: string[][]; dashboard: string };
+  assert.equal(d.ok, false);
+  assert.deepEqual(d.blocking, ["identity"]);
+  assert.equal(d.checks.length, 9);
+  assert.deepEqual(d.checks.find((c) => c.key === "identity")?.fix, ["whop", "verifications", "create", "--account_id", "biz_VraUMckluH8dzV"]);
+  assert.deepEqual(d.commands[0], ["whop", "auth", "status", "--format", "json"]);
+  assert.match(d.dashboard, /biz_VraUMckluH8dzV/);
+  const ready = doctorData(DOCTOR_READY) as { ok: boolean; blocking: string[] };
+  assert.equal(ready.ok, true);
+  assert.deepEqual(ready.blocking, []);
+  assert.doesNotThrow(() => JSON.parse(JSON.stringify(d)), "the data must round-trip as JSON");
+});
+
+test("gtm --format json: every read as plain data, the people summary, and the same gaps the screen shows", () => {
+  const g = gtmData(GTM) as { ok: boolean; series: Record<string, { points: unknown[] }>; people: { seen: number; attributed: number; data: unknown[] }; gaps: unknown[]; audiences: { data: unknown[] }; window: { from: string; to: string } };
+  assert.equal(g.ok, true);
+  assert.deepEqual(g.window, { from: "2026-09-14", to: "2026-09-20" });
+  assert.ok(Array.isArray(g.series.page_visits.points));
+  const people = peopleSummary(GTM.people);
+  assert.equal(g.people.seen, people.seen);
+  assert.equal(g.people.attributed, people.attributed);
+  assert.ok(Array.isArray(g.people.data));
+  assert.deepEqual(g.gaps, gaps(GTM, people));
+  assert.ok(g.gaps.length >= 1, "the recorded account has launch gaps");
+  const broken = gtmData({ ...GTM, campaigns: envelope("error.gated") }) as { ok: boolean; campaigns: { error: { code: string } } };
+  assert.equal(broken.ok, false);
+  assert.equal(broken.campaigns.error.code, "HTTP_403");
 });

@@ -1,7 +1,7 @@
 // One screen for the go-to-market loop: funnel numbers over a window, who is here, audiences, live
 // campaigns, offers, and the one-time gaps that block a launch. Every number is a `whop` command
 // the footer teaches. Reads only.
-import type { Parsed, Rec } from "../envelope.ts";
+import { plain, type Parsed, type Rec } from "../envelope.ts";
 import { money, num, shortDate } from "../format.ts";
 import { footer } from "../primitives/footer.ts";
 import { kv, type KvRow } from "../primitives/kv.ts";
@@ -137,6 +137,29 @@ function offerRows(p: Parsed): KvRow[] {
     const bits = [statusLabel(str(c.status) ?? ""), `${off} ${copy.gtm.off}`, who, typeof c.uses === "number" ? copy.gtm.uses(c.uses, c.unlimited_stock ? undefined : Number(c.stock)) : "", str(c.expires_at) ? copy.gtm.expires(shortDate(c.expires_at as string)) : ""].filter(Boolean);
     return { key: str(c.code) ?? str(c.id) ?? "", value: bits.join(" · "), role: statusRole(str(c.status) ?? "") };
   });
+}
+
+/** The screen as data: `wv gtm --format json`. Every envelope the screen read, the people summary, and the gaps with their fixes. */
+export function gtmData(input: GtmInput): Rec {
+  const people = peopleSummary(input.people);
+  const series: Rec = {};
+  for (const [metric, p] of Object.entries(input.series)) series[metric] = plain(p);
+  const failed = [...Object.values(input.series), input.people, input.audiences, input.campaigns, input.promoCodes, input.social, input.preferences].filter((p) => !p.ok).length;
+  return {
+    ok: failed === 0,
+    account: input.accountId || input.accountTitle ? { id: input.accountId, title: input.accountTitle } : undefined,
+    mode: input.mode ?? "production",
+    window: { from: input.from, to: input.to },
+    series,
+    people: { seen: people.seen, attributed: people.attributed, ...plain(input.people) },
+    audiences: plain(input.audiences),
+    campaigns: plain(input.campaigns),
+    promo_codes: plain(input.promoCodes),
+    social_accounts: plain(input.social),
+    preferences: plain(input.preferences),
+    gaps: gaps(input, people),
+    commands: input.commands.map((c) => teach(c)),
+  };
 }
 
 export function gtmView(input: GtmInput, theme: Theme): string[] {

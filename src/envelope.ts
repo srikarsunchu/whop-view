@@ -98,3 +98,21 @@ export function classify(data: unknown): Payload {
   if (Array.isArray(data.data)) return { kind: "page", rows: data.data.filter(isObj), page: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } };
   return { kind: "other", record: data };
 }
+
+/** A parsed envelope as plain data, for the agent face of a wv screen. Errors keep their code and message. */
+export function plain(p: Parsed): Rec {
+  if (!p.ok) return { error: { code: p.error.code, message: p.error.message } };
+  const pl = p.payload;
+  switch (pl.kind) {
+    case "page":
+      return { data: pl.rows, page_info: pl.page, ...(pl.extra ?? {}) };
+    case "series":
+      return { points: pl.points, currency: pl.currency };
+    case "report":
+      return { report_type: pl.reportType, rows: pl.rows, total: pl.total };
+    case "summary":
+      return { total: pl.total, groups: pl.groups };
+    default:
+      return pl.record;
+  }
+}

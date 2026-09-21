@@ -402,7 +402,7 @@ export const copy = {
   agent: {
     confirm: (cmd: string, mode: Mode) => `${cmd} writes to ${mode}. wv did not run it.`,
     confirmHint: "Show the plan to the person. Rerun the command in `rerun` to run it, or add --plan to see the plan and run nothing.",
-    needsTerminal: (what: string) => `wv ${what} draws a screen and needs a terminal. Pass --format json for the data.`,
+    needsTerminal: (what: string) => `wv ${what} draws a screen and needs a terminal. wv doctor and wv gtm answer JSON in a pipe.`,
   },
 };
 

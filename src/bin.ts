@@ -25,8 +25,8 @@ import { adPlanView, adRefusedView, budgetOf, commitment, isAdPlan, jsonFlags, r
 import { errorView } from "./views/error.ts";
 import { helpView, parseHelp } from "./views/help.ts";
 import { homeView } from "./views/home.ts";
-import { gtmView } from "./views/gtm.ts";
-import { blocked, checks, doctorView, DOCTOR_ACTIONS } from "./views/doctor.ts";
+import { gtmData, gtmView, type GtmInput } from "./views/gtm.ts";
+import { blocked, checks, doctorData, doctorView, DOCTOR_ACTIONS, type DoctorInput } from "./views/doctor.ts";
 import { seriesView } from "./views/series.ts";
 import { summaryView } from "./views/summary.ts";
 import { prompt } from "./primitives/prompt.ts";
@@ -113,6 +113,8 @@ async function main(argvIn: string[]) {
   const json = assembleFor(dates.argv);
   const argv = json.argv;
 
+  // `wv doctor --format json` in a terminal is the agent face on purpose. `--format` would otherwise exec `whop doctor`, which is not a command.
+  if (DATA_SCREENS.has(argv[0]) && wantsJson(argv)) process.exit(await screenJson(argv[0], mode, env));
   // `--plan` never writes, so it is safe without a terminal and must never fall through to a real `whop` create.
   // `memberships check <key>` is wv's verb over `memberships get <key>`; a pipe gets the get.
   if (shouldPassthrough(argv) && !plan) passthrough(argv0IsCheck(argv) ? ["memberships", "get", ...argv.slice(2)] : argv, env);
@@ -142,10 +144,9 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
   const json = assembleFor(dates.argv);
   if (json.error) emit(wvErrorEnvelope(argvIn, mode, json.error), 2);
   const argv = json.argv;
-  if (OURS.has(argv[0])) {
-    process.stderr.write(`wv: ${copy.session.needsTerminal(argv[0])}\n`);
-    process.exit(2);
-  }
+  // Two screens are data as well as pictures. The rest draw and need a terminal.
+  if (DATA_SCREENS.has(argv[0])) process.exit(await screenJson(argv[0], mode, env));
+  if (OURS.has(argv[0])) emit(wvErrorEnvelope(argv, mode, { code: "NEEDS_TERMINAL", message: copy.agent.needsTerminal(argv[0]) }), 2);
   // `whop` rejects `--yes` as an unknown flag. It is wv's, and it never reaches the child.
   const yes = argv.includes("--yes");
   const args = argv.filter((a) => a !== "--yes");
@@ -164,6 +165,24 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
     emit(confirmationEnvelope(args, mode, moneyPlan(gate.input)), 2);
   }
   passthrough(argv0IsCheck(args) ? ["memberships", "get", ...args.slice(2)] : args, env);
+}
+
+/** wv screens that have a JSON face: `--format json`, or any pipe. */
+const DATA_SCREENS = new Set(["doctor", "gtm"]);
+const wantsJson = (argv: string[]) => argv.some((a, i) => a === "--format=json" || (a === "--format" && argv[i + 1] === "json"));
+
+/** Prints a screen's data as JSON and returns the exit code the screen would have used. */
+async function screenJson(screen: string, mode: Mode, env: NodeJS.ProcessEnv): Promise<number> {
+  const theme = makeTheme({});
+  if (screen === "doctor") {
+    const input = await gatherDoctor(theme, env, mode);
+    const data = doctorData(input);
+    process.stdout.write(JSON.stringify({ ...data, meta: { command: "doctor", wrapper: "wv", mode } }, null, 2) + "\n");
+    return data.ok ? 0 : 1;
+  }
+  const { input, failed } = await gatherGtm(theme, env, mode);
+  process.stdout.write(JSON.stringify({ ...gtmData(input), meta: { command: "gtm", wrapper: "wv", mode } }, null, 2) + "\n");
+  return failed ? 1 : 0;
 }
 
 export interface ExecuteOptions {
@@ -538,7 +557,12 @@ async function home(theme: Theme, mode: Mode): Promise<Outcome> {
 
 /** `wv gtm`: the loop on one screen. Eleven reads in parallel, every one taught in the footer. */
 async function gtm(theme: Theme, mode: Mode): Promise<Outcome> {
-  const env = whopEnv(mode);
+  const { input, failed } = await gatherGtm(theme, whopEnv(mode), mode);
+  print(gtmView(input, theme));
+  return { code: failed ? 1 : 0 };
+}
+
+async function gatherGtm(theme: Theme, env: NodeJS.ProcessEnv, mode: Mode): Promise<{ input: GtmInput; failed: boolean }> {
   const from = isoDay(daysAgo(7));
   const to = isoDay(daysAgo(1));
   const metrics = ["page_visits", "new_users", "gross_revenue", "ad_spend"];
@@ -557,8 +581,7 @@ async function gtm(theme: Theme, mode: Mode): Promise<Outcome> {
   const series: Record<string, Parsed> = {};
   metrics.forEach((m, i) => (series[m] = results[i].parsed));
   const [people, audiences, campaigns, promoCodes, social, preferences] = results.slice(metrics.length).map((r) => r.parsed);
-  print(gtmView({ accountTitle: acct?.title, accountId: acct?.id, mode, from, to, series, people, audiences, campaigns, promoCodes, social, preferences, commands: cmds }, theme));
-  return { code: results.some((r) => r.code) ? 1 : 0 };
+  return { input: { accountTitle: acct?.title, accountId: acct?.id, mode, from, to, series, people, audiences, campaigns, promoCodes, social, preferences, commands: cmds }, failed: results.some((r) => r.code !== 0) };
 }
 
 /**
@@ -567,7 +590,12 @@ async function gtm(theme: Theme, mode: Mode): Promise<Outcome> {
  * check fails, so a script can gate on it.
  */
 async function doctor(theme: Theme, mode: Mode): Promise<Outcome> {
-  const env = whopEnv(mode);
+  const input = await gatherDoctor(theme, whopEnv(mode), mode);
+  print(doctorView(input, theme));
+  return { code: blocked(checks(input)) ? 1 : 0 };
+}
+
+async function gatherDoctor(theme: Theme, env: NodeJS.ProcessEnv, mode: Mode): Promise<DoctorInput> {
   const spin = spinner(copy.spinner.doctor, theme);
   const authCmd = ["auth", "status"];
   const auth = await run(authCmd, env);
@@ -594,14 +622,12 @@ async function doctor(theme: Theme, mode: Mode): Promise<Outcome> {
   spin.stop();
   const deliveries: Record<string, Parsed> = {};
   hooks.forEach((h, i) => (deliveries[String(h.id)] = deliveryResults[i].parsed));
-  const input = {
+  return {
     accountTitle, accountId, mode,
     auth: auth.parsed, profiles: profiles.parsed, permissions: permissions?.parsed, verifications: verifications.parsed, methods: methods.parsed,
     people: people.parsed, social: social.parsed, preferences: preferences.parsed, products: products.parsed, webhooks: webhooks.parsed, deliveries,
     commands: [authCmd, ...cmds.slice(0, 1), ...(permCmd ? [permCmd] : []), ...cmds.slice(1), ...deliveryCmds],
   };
-  print(doctorView(input, theme));
-  return { code: blocked(checks(input)) ? 1 : 0 };
 }
 
 /**

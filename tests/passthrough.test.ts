@@ -223,3 +223,10 @@ test("agent gate: a wv refusal before any whop call is the same envelope on stdo
   assert.equal(file.status, 2);
   assert.equal(envelopeOf(file).error?.code, "JSON_FLAGS");
 });
+
+test("agent: a screen that only draws is NEEDS_TERMINAL on stdout, exit 2", () => {
+  const r = wv(["home"], gateEnv());
+  assert.equal(r.status, 2);
+  assert.equal(envelopeOf(r).error?.code, "NEEDS_TERMINAL");
+  assert.equal(r.stderr.includes("ARGS:"), false);
+});

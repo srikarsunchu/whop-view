@@ -204,6 +204,20 @@ export const blocked = (list: Check[]) => list.some((c) => c.blocking && c.level
 
 const SYMBOL: Record<Level, [string, Role]> = { ok: ["✓", "good"], warn: ["!", "warn"], fail: ["✗", "bad"] };
 
+/** The screen as data: `wv doctor --format json`. `ok` is the exit rule, `blocking` names the checks behind it. */
+export function doctorData(input: DoctorInput): Rec {
+  const list = checks(input);
+  return {
+    ok: !blocked(list),
+    blocking: list.filter((c) => c.blocking && c.level === "fail").map((c) => c.key),
+    checks: list,
+    account: input.accountId || input.accountTitle ? { id: input.accountId, title: input.accountTitle } : undefined,
+    mode: input.mode ?? "production",
+    dashboard: dashboardUrl(input.accountId),
+    commands: input.commands.map((c) => teach(c)),
+  };
+}
+
 export function doctorView(input: DoctorInput, theme: Theme): string[] {
   const list = checks(input);
   const out: string[] = [];
