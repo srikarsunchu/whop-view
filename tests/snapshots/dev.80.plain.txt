@@ -1,0 +1,29 @@
+ Frame › biz_VraUMckluH8dzV › production › dev › Frame
+
+   app   Frame  app_HKnLpw6UGGEqk6
+   type  b2c app · hidden · not verified
+   url   not deployed yet · whop apps deploy
+
+ Builds
+ No builds yet. whop apps deploy makes the first.
+
+ Domains
+ No custom domains. wv domains create --app_id <app> --domain <host>.
+
+ Webhooks
+ HTTP_403 OAuth token is not authorized for the developer:manage_webhook scope.
+ This resource requires an API-key login (`whop login --api-key`). · This login
+ is an OAuth token, which cannot manage webhooks.
+
+ No error lines in the last 24 hours.
+
+ deploy  whop apps deploy
+ logs  wv apps logs app_HKnLpw6UGGEqk6 --follow
+ fix  whop auth switch sandbox
+ webhook  wv dev hook 'https://<your host>/hooks' --plan
+ json  whop apps list --format json
+ json  whop auth list --format json
+ json  whop webhooks list --include_app_webhooks true --format json
+ json  whop app-builds list --app_id app_HKnLpw6UGGEqk6 --format json
+ json  whop domains list --app_id app_HKnLpw6UGGEqk6 --format json
+

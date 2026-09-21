@@ -1,0 +1,29 @@
+ ▌ Add a webhook                                          blocked · nothing runs
+
+   wv dev hook https://hypermotion.art/hooks/v2 --idempotency-key
+   5b2c1d6e-0000-4000-8000-000000000007
+
+   url         https://hypermotion.art/hooks/v2
+   events      payment.succeeded, membership.activated,
+               membership.cancel_at_period_end_changed
+   scope       the account
+   credential  This login is an OAuth token, which cannot manage webhooks.
+   from        Frame  biz_VraUMckluH8dzV
+
+ ── Steps ──────────────────────────────────────────────────────────────────────
+   1  webhook     3 events to hypermotion.art · for the account
+                  runs  whop webhooks create --url https://hypermotion.art/h…
+   2  test event  send a payment.succeeded test payload and read the response
+                  runs  whop webhooks test '{hook.id}' --event payment.succe…
+
+   ✗ This login is an OAuth token, which cannot manage webhooks. Fix: whop auth
+   switch sandbox.
+
+   2 writes run in order against production, each with its own idempotency key.
+   A step that fails stops the rest; what was created stays, and the card names
+   it.
+
+ fix  wv doctor
+ every argv  wv dev hook https://hypermotion.art/hooks/v2 --idempotency-key
+             5b2c1d6e-0000-4000-8000-000000000007 --plan | cat
+

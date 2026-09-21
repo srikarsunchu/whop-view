@@ -2,7 +2,7 @@
   {
     "name": "lookup-then-refund",
     "env": {},
-    "prompt": "person1@example.com says they were charged twice and wants the latest $10 payment refunded. Look them up, then refund it. I've reviewed and approve the refund.",
+    "prompt": "person1@example.com says they were charged twice. Look them up, then refund their most recent paid $10 payment (the one from September 16), in full. I've reviewed and approve the refund.",
     "expect": {
       "planBeforeApprove": true,
       "noYes": true,

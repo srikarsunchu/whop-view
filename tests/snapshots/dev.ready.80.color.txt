@@ -1,0 +1,32 @@
+ [1mHypermotion[22m[2m › [22m[2mbiz_VraUMckluH8dzV[22m[2m › [22m[33mproduction[39m[2m › [22m[1mdev[22m[2m › [22m[2mHypermotion[22m
+
+   [2mapp [22m  Hypermotion  app_HKnLpw6UGGEqk6
+   [2mtype[22m  [32mb2c app · live · verified[39m
+   [2murl [22m  https://hypermotion.whop.site
+
+ [1mBuilds[22m
+ [2mplatform[22m  [2mstatus  [22m  [2mprod      [22m  [2mcreated[22m  [2mid[22m
+ [2mweb     [22m  [32mapproved[39m  [32mproduction[39m  [2m2h ago [22m  [2mapbd_x1[22m
+ [2mweb     [22m  [33mpending [39m  [2m—         [22m  [2min 2d  [22m  [2mapbd_x2[22m
+
+ [1mDomains[22m
+ [2mdomain              [22m  [2mstatus              [22m  [2mdns     [22m  [2mcert   [22m  [2mchecked[22m  [2mid[22m
+ app.hypermotion.art   [32mactive              [39m  [2mverified[22m  [2mactive [22m  [2min 2d  [22m  [2mdom_x1[22m
+ shop.hypermotion.art  [33mpending verification[39m  [2mpending [22m  [2mpending[22m  [2min 2d  [22m  [2mdom_x2[22m
+
+ [1mWebhooks[22m
+ [2murl                                  [22m  [2menabled[22m
+ https://hypermotion.art/hooks          [32mon[39m
+ https://staging.hypermotion.art/hooks  [31moff · consecutive failures[39m
+
+ [33m2 error lines in the last 24 hours · wv apps logs <app> --level error[39m
+
+ [2mdeploy[22m  [2mwhop apps deploy[22m
+ [2mlogs[22m  [2mwv apps logs app_HKnLpw6UGGEqk6 --follow[22m
+ [2mwebhook[22m  [2mwv dev hook 'https://<your host>/hooks' --plan[22m
+ [2mjson[22m  [2mwhop apps list --format json[22m
+ [2mjson[22m  [2mwhop auth list --format json[22m
+ [2mjson[22m  [2mwhop webhooks list --include_app_webhooks true --format json[22m
+ [2mjson[22m  [2mwhop app-builds list --app_id app_HKnLpw6UGGEqk6 --format json[22m
+ [2mjson[22m  [2mwhop domains list --app_id app_HKnLpw6UGGEqk6 --format json[22m
+

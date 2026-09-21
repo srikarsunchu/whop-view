@@ -14,6 +14,7 @@ import { recipeView } from "../src/views/recipe.ts";
 import { rankView } from "../src/views/rank.ts";
 import { balanceOf, buildClose, moneyView, parseCloseArgs } from "../src/views/money.ts";
 import { buildDispute, buildRefund, lookupView, parseDisputeArgs, parseRefundArgs } from "../src/views/support.ts";
+import { buildHook, devView, parseHookArgs } from "../src/views/dev.ts";
 import { errorView } from "../src/views/error.ts";
 import { helpView, parseHelp } from "../src/views/help.ts";
 import { homeView } from "../src/views/home.ts";
@@ -168,7 +169,18 @@ export const DISPUTE_READY = buildDispute(DISPUTE_ARGV, parseDisputeArgs(DISPUTE
 export const DISPUTE_LATE = buildDispute(DISPUTE_ARGV, parseDisputeArgs(DISPUTE_ARGV).opts!, { dispute: record0("disputes.get"), accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion", now: Date.parse("2026-09-25T12:00:00Z") });
 
 export const synth = (data: unknown) => parseEnvelope(JSON.stringify({ ok: true, data, meta: { command: "synthetic", duration: "1ms" } }));
-const synthPage = (rows: unknown[]) => synth({ data: rows, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } });
+export const synthPage = (rows: unknown[]) => synth({ data: rows, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } });
+
+const DEV_APP = (() => { const p = envelope("apps.list"); return p.ok && p.payload.kind === "page" ? p.payload.rows[0] : {}; })();
+const DEV_COMMANDS = [["apps", "list"], ["auth", "list"], ["webhooks", "list", "--include_app_webhooks", "true"], ["app-builds", "list", "--app_id", "app_HKnLpw6UGGEqk6"], ["domains", "list", "--app_id", "app_HKnLpw6UGGEqk6"]];
+export const DEV = { accountTitle: "Frame", accountId: "biz_VraUMckluH8dzV", apps: envelope("apps.list"), app: DEV_APP, builds: synthPage([]), domains: synthPage([]), webhooks: envelope("error.webhooks_oauth"), errors: envelope("apps.logs"), profiles: envelope("auth.list"), permissions: envelope("permissions.check"), now: LAUNCH_NOW.getTime(), commands: DEV_COMMANDS };
+const DEV_PROFILES = synth({ active: "prod-key", profiles: [{ name: "prod-key", method: "api_key" }] });
+const DEV_GRANTED = synthPage([{ action: "developer:manage_webhook", granted: true }]);
+export const DEV_READY = { ...DEV, accountTitle: "Hypermotion", app: { ...DEV_APP, name: "Hypermotion", status: "live", hosted_url: "https://hypermotion.whop.site", verified: true }, builds: synthPage([{ id: "apbd_x1", platform: "web", status: "approved", is_production: true, created_at: "2026-09-19T10:00:00Z" }, { id: "apbd_x2", platform: "web", status: "pending", is_production: false, created_at: "2026-09-21T09:00:00Z" }]), domains: synthPage([{ id: "dom_x1", domain: "app.hypermotion.art", status: "active", dns_status: "verified", certificate_status: "active", last_checked_at: "2026-09-21T11:00:00Z" }, { id: "dom_x2", domain: "shop.hypermotion.art", status: "pending_verification", dns_status: "pending", certificate_status: "pending", last_checked_at: "2026-09-21T11:00:00Z" }]), webhooks: synthPage([{ id: "hook_x1", url: "https://hypermotion.art/hooks", enabled: true, events: ["payment.succeeded", "membership.activated"], consecutive_failures: 0 }, { id: "hook_x2", url: "https://staging.hypermotion.art/hooks", enabled: false, disabled_reason: "consecutive_failures", events: ["payment.succeeded"], consecutive_failures: 12, failing_since: "2026-09-18T00:00:00Z" }]), errors: synthPage([{ level: "error", message: "boom" }, { level: "error", message: "boom again" }]), profiles: DEV_PROFILES, permissions: DEV_GRANTED };
+const HOOK_ARGV = ["dev", "hook", "https://hypermotion.art/hooks/v2", "--idempotency-key", "5b2c1d6e-0000-4000-8000-000000000007"];
+export const HOOK_READY = buildHook(HOOK_ARGV, parseHookArgs(HOOK_ARGV).opts!, { profiles: DEV_PROFILES, permissions: DEV_GRANTED, webhooks: DEV_READY.webhooks, accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion" });
+export const HOOK_BLOCKED = buildHook(HOOK_ARGV, parseHookArgs(HOOK_ARGV).opts!, { profiles: envelope("auth.list"), permissions: envelope("permissions.check"), webhooks: envelope("error.webhooks_oauth"), accountId: "biz_VraUMckluH8dzV", accountTitle: "Frame" });
+
 
 const DOCTOR_COMMANDS = [
   ["auth", "status"],
@@ -334,6 +346,10 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "confirm.payout.sandbox": (t) => confirmView({ ...PAYOUT, mode: "sandbox", destination: "Chase checking ••••4242  potk_x1", balance: { available: 418.56, currency: "usd" } }, t),
   "confirm.payout.over_cap": (t) => refusedView({ ...PAYOUT, argv: ["payouts", "create", "--amount", "2000", "--currency", "usd", "--payout_method_id", "potk_x1"], reason: "cap", destination: "Chase checking ••••4242  potk_x1", balance: { available: 2418.56, currency: "usd" }, cap: 500 }, t),
   "confirm.payout.over_balance": (t) => refusedView({ ...PAYOUT, reason: "balance", destination: "Chase checking ••••4242  potk_x1", balance: { available: 18.56, currency: "usd" }, cap: 500 }, t),
+  dev: (t) => devView(DEV, t),
+  "dev.ready": (t) => devView(DEV_READY, t),
+  "hook.ready": (t) => recipeView(HOOK_READY, t),
+  "hook.blocked": (t) => recipeView(HOOK_BLOCKED, t),
   "support.lookup": (t) => lookupView(LOOKUP, t),
   "support.lookup.miss": (t) => lookupView({ ...LOOKUP, key: "nobody@example.com", user: undefined, person: undefined, member: undefined }, t),
   "refund.ready": (t) => recipeView(REFUND_READY, t),

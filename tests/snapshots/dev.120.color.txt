@@ -1,0 +1,28 @@
+ [1mFrame[22m[2m › [22m[2mbiz_VraUMckluH8dzV[22m[2m › [22m[33mproduction[39m[2m › [22m[1mdev[22m[2m › [22m[2mFrame[22m
+
+   [2mapp [22m  Frame  app_HKnLpw6UGGEqk6
+   [2mtype[22m  [2mb2c app · hidden · not verified[22m
+   [2murl [22m  [2mnot deployed yet · whop apps deploy[22m
+
+ [1mBuilds[22m
+ [2mNo builds yet. whop apps deploy makes the first.[22m
+
+ [1mDomains[22m
+ [2mNo custom domains. wv domains create --app_id <app> --domain <host>.[22m
+
+ [1mWebhooks[22m
+ [33mHTTP_403 OAuth token is not authorized for the developer:manage_webhook scope. This resource requires an API-key login[39m
+ [33m(`whop login --api-key`). · This login is an OAuth token, which cannot manage webhooks.[39m
+
+ [2mNo error lines in the last 24 hours.[22m
+
+ [2mdeploy[22m  [2mwhop apps deploy[22m
+ [2mlogs[22m  [2mwv apps logs app_HKnLpw6UGGEqk6 --follow[22m
+ [2mfix[22m  [2mwhop auth switch sandbox[22m
+ [2mwebhook[22m  [2mwv dev hook 'https://<your host>/hooks' --plan[22m
+ [2mjson[22m  [2mwhop apps list --format json[22m
+ [2mjson[22m  [2mwhop auth list --format json[22m
+ [2mjson[22m  [2mwhop webhooks list --include_app_webhooks true --format json[22m
+ [2mjson[22m  [2mwhop app-builds list --app_id app_HKnLpw6UGGEqk6 --format json[22m
+ [2mjson[22m  [2mwhop domains list --app_id app_HKnLpw6UGGEqk6 --format json[22m
+

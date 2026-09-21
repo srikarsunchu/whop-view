@@ -128,8 +128,8 @@ function personRows(input: LookupInput): KvRow[] {
 function membershipTable(input: LookupInput, theme: Theme): string[] {
   const c = copy.support;
   const list = rows(input.memberships);
-  if (!list) return [" " + paint(theme, input.memberships.ok ? "muted" : "warn", errLine(input.memberships) || copy.detail.empty)];
-  if (!list.length) return [" " + paint(theme, "muted", c.noMemberships)];
+  if (!list) return wrap(errLine(input.memberships) || copy.detail.empty, theme.width - 1).map((l) => " " + paint(theme, input.memberships.ok ? "muted" : "warn", l));
+  if (!list.length) return wrap(c.noMemberships, theme.width - 1).map((l) => " " + paint(theme, "muted", l));
   const cols: TableColumn[] = [
     { key: "product", label: c.cols.product, align: "left", priority: 0, max: 30 },
     { key: "status", label: c.cols.status, align: "left", priority: 1 },
@@ -152,8 +152,8 @@ function membershipTable(input: LookupInput, theme: Theme): string[] {
 function paymentTable(input: LookupInput, theme: Theme): string[] {
   const c = copy.support;
   const list = rows(input.payments);
-  if (!list) return [" " + paint(theme, input.payments.ok ? "muted" : "warn", errLine(input.payments) || copy.detail.empty)];
-  if (!list.length) return [" " + paint(theme, "muted", c.noPayments)];
+  if (!list) return wrap(errLine(input.payments) || copy.detail.empty, theme.width - 1).map((l) => " " + paint(theme, input.payments.ok ? "muted" : "warn", l));
+  if (!list.length) return wrap(c.noPayments, theme.width - 1).map((l) => " " + paint(theme, "muted", l));
   const cols: TableColumn[] = [
     { key: "amount", label: c.cols.amount, align: "right", priority: 0 },
     { key: "status", label: c.cols.status, align: "left", priority: 1 },
@@ -189,7 +189,7 @@ function caseTable(input: LookupInput, theme: Theme): string[] {
     return out;
   }
   const all = [...disputes.map((d) => ({ kind: d.inquiry === true ? c.inquiry : c.chargeback, rec: d, due: str(d.evidence_due_at) })), ...cases.map((k) => ({ kind: c.case, rec: k, due: str(k.response_due_at) }))];
-  if (!all.length) return [" " + paint(theme, "muted", c.noCases)];
+  if (!all.length) return wrap(c.noCases, theme.width - 1).map((l) => " " + paint(theme, "muted", l));
   const now = input.now ?? Date.now();
   const cols: TableColumn[] = [
     { key: "kind", label: c.cols.kind, align: "left", priority: 2 },
@@ -475,4 +475,3 @@ export function disputeChecks(id: string, _results: Partial<Record<string, Rec>>
 
 export const refundData = (plan: RefundPlan): Rec => recipeData(plan);
 export const disputeData = (plan: DisputePlan): Rec => recipeData(plan);
-void wrap;

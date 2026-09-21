@@ -539,3 +539,37 @@ test("support dispute: evidence then submit as one plan; locked, late, or empty 
   assert.match(locked.error?.hint ?? "", /under review/);
   assert.equal(wroteTo(locked, "disputes submit"), false);
 });
+
+// `wv dev`: the app loop as data, and `wv dev hook`: create, test, prove, refused on an OAuth login.
+test("dev: the screen as data names why webhooks are unreadable on an oauth login, and the hook plan is blocked by it", () => {
+  const r = wv(["dev"], gateEnv());
+  assert.equal(r.status, 0, r.stdout);
+  const d = JSON.parse(r.stdout) as { app: { id: string }; webhookAccess: { ok: boolean; fix: string[] }; builds: unknown[]; domains: unknown[] };
+  assert.equal(d.app.id, "app_HKnLpw6UGGEqk6");
+  assert.equal(d.webhookAccess.ok, false);
+  assert.deepEqual(d.webhookAccess.fix, ["whop", "auth", "switch", "sandbox"]);
+  assert.equal(d.builds.length, 2);
+  assert.equal(d.domains.length, 1);
+  const blocked = wv(["dev", "hook", "https://example.com/hooks"], gateEnv());
+  assert.equal(blocked.status, 2);
+  assert.equal(envelopeOf(blocked).error?.code, "HOOK_BLOCKED");
+  assert.match(envelopeOf(blocked).error?.hint ?? "", /OAuth token/);
+  assert.equal(wroteTo(blocked, "webhooks create"), false);
+});
+
+test("dev hook: on an api-key profile the approved rerun creates the webhook, then tests it with the hook's id", () => {
+  const env = gateEnv({ WV_FAKE_READY: "1" });
+  const asked = envelopeOf(wv(["dev", "hook", "https://example.com/hooks", "--events", "payment.succeeded,invoice.paid", "--idempotency-key", "base"], env));
+  assert.equal(asked.error?.code, "CONFIRMATION_REQUIRED", JSON.stringify(asked));
+  const ran = wv(asked.rerun!.slice(1), env);
+  assert.equal(ran.status, 0, ran.stdout + ran.stderr);
+  const args = ran.stderr.split("\n").filter((l) => l.startsWith("ARGS: webhooks")).map((l) => l.slice(6));
+  assert.match(args.find((a) => a.startsWith("webhooks create")) ?? "", /--url https:\/\/example.com\/hooks --events \["payment.succeeded","invoice.paid"\] --idempotency-key base-hook/);
+  assert.match(args.find((a) => a.startsWith("webhooks test")) ?? "", /^webhooks test hook_2 --event payment.succeeded/, "the created hook's id fed the test");
+  const done = envelopeOf(ran) as ReturnType<typeof envelopeOf> & { results: Record<string, { id?: string }>; next: { run: string[] }[] };
+  assert.equal(done.results.hook.id, "hook_2");
+  assert.ok(done.next.some((n) => n.run.join(" ").includes("webhooks deliveries hook_2")));
+  const dup = envelopeOf(wv(["dev", "hook", "https://hypermotion.art/hooks"], env));
+  assert.equal(dup.error?.code, "HOOK_BLOCKED");
+  assert.match(dup.error?.hint ?? "", /already exists: hook_1/);
+});

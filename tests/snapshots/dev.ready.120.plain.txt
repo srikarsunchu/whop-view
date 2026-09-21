@@ -1,0 +1,32 @@
+ Hypermotion › biz_VraUMckluH8dzV › production › dev › Hypermotion
+
+   app   Hypermotion  app_HKnLpw6UGGEqk6
+   type  b2c app · live · verified
+   url   https://hypermotion.whop.site
+
+ Builds
+ platform  status    prod        created  id
+ web       approved  production  2h ago   apbd_x1
+ web       pending   —           in 2d    apbd_x2
+
+ Domains
+ domain                status                dns       cert     checked  id
+ app.hypermotion.art   active                verified  active   in 2d    dom_x1
+ shop.hypermotion.art  pending verification  pending   pending  in 2d    dom_x2
+
+ Webhooks
+ url                                    enabled                     events  failures                   id
+ https://hypermotion.art/hooks          on                               2  —                          hook_x1
+ https://staging.hypermotion.art/hooks  off · consecutive failures       1  12 failing · since 2d ago  hook_x2
+
+ 2 error lines in the last 24 hours · wv apps logs <app> --level error
+
+ deploy  whop apps deploy
+ logs  wv apps logs app_HKnLpw6UGGEqk6 --follow
+ webhook  wv dev hook 'https://<your host>/hooks' --plan
+ json  whop apps list --format json
+ json  whop auth list --format json
+ json  whop webhooks list --include_app_webhooks true --format json
+ json  whop app-builds list --app_id app_HKnLpw6UGGEqk6 --format json
+ json  whop domains list --app_id app_HKnLpw6UGGEqk6 --format json
+

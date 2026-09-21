@@ -24,7 +24,7 @@ git clone https://github.com/srikarsunchu/whop-view && cd whop-view && pnpm inst
 
 Needs Node 22 or newer and a working `whop` on your PATH. Then use `wv` anywhere you would type `whop`.
 
-`pnpm skill` installs three skills into `~/.claude/skills`: [`whop-gtm`](skills/whop-gtm/SKILL.md) for go-to-market, [`whop-money`](skills/whop-money/SKILL.md) for treasury, and [`whop-support`](skills/whop-support/SKILL.md) for tickets. Each is a short `SKILL.md` of rules and a map plus references loaded only when a playbook runs: one per playbook with its "done when", a failure map with the recorded messages and fixes, a command map regenerated from the live `whop`, and [`gate.md`](skills/_shared/gate.md), the rules every wv skill shares. An agent that runs the Whop CLI then learns the go-to-market loop, runs `wv doctor --format json` before it starts, reads `wv agent <group>` for flags, and routes every write through `wv`. `pnpm eval [skill]` runs each skill's scenarios through `claude -p` against a fake `whop` and judges what the agent did; the last runs are in each skill's `evals/results.md`. Whop's own `whop skills add` ships one generic skill with nothing about ads, audiences, bounties, or stats.
+`pnpm skill` installs four skills into `~/.claude/skills`: [`whop-gtm`](skills/whop-gtm/SKILL.md) for go-to-market, [`whop-money`](skills/whop-money/SKILL.md) for treasury, [`whop-support`](skills/whop-support/SKILL.md) for tickets, and [`whop-dev`](skills/whop-dev/SKILL.md) for apps and webhooks. Each is a short `SKILL.md` of rules and a map plus references loaded only when a playbook runs: one per playbook with its "done when", a failure map with the recorded messages and fixes, a command map regenerated from the live `whop`, and [`gate.md`](skills/_shared/gate.md), the rules every wv skill shares. An agent that runs the Whop CLI then learns the go-to-market loop, runs `wv doctor --format json` before it starts, reads `wv agent <group>` for flags, and routes every write through `wv`. `pnpm eval [skill]` runs each skill's scenarios through `claude -p` against a fake `whop` and judges what the agent did; the last runs are in each skill's `evals/results.md`. Whop's own `whop skills add` ships one generic skill with nothing about ads, audiences, bounties, or stats.
 
 ## Before and after
 
@@ -377,6 +377,16 @@ One customer on one screen from any key, and the two writes that cost money as r
 
 Both recordings run against the test stand-in, since the demo account has no dispute and the real customers' emails should not be in a GIF.
 
+### `dev`
+
+The app loop on one screen, and a webhook proven live. `wv dev` shows the app, its builds with the production one marked, its domains with DNS and certificate state, the account's webhooks with their failure streaks, and the last day's error lines; on an OAuth login it says why webhooks are unreadable and names the saved API-key profile to switch to. `wv dev hook https://host/hooks` creates the webhook and sends a test event as one plan, refused before anything runs when the credential cannot manage webhooks, the URL is not https, or a webhook already exists for it.
+
+![dev](demo/dev.gif)
+
+![dev hook](demo/dev-hook.gif)
+
+Both recordings run against the test stand-in with an API-key profile, since the demo login is OAuth and its webhooks answer 403, which is exactly what the live screen says.
+
 ## What agents see
 
 Reads: the bytes are whop's. `wv products list | cat` is byte-identical to `whop products list`, and there is a test for it, so a script or a skill written against `whop` works unchanged with `wv` in its place. What changes is around the bytes:
@@ -611,4 +621,4 @@ Re-records the fixtures from your own account. Read-only commands only. `pnpm fi
 pnpm demo
 ```
 
-Re-records every GIF above. The eight agent tapes (`agent-gate`, `agent-plan`, `doctor-json`, `agent-manifest`, `agent-index`, `approve`, `exit-codes`, `gtm-launch`) run against production reads only; the gate never sends the write, and the `approve` tape reruns a plan with a token minted for a different product so the refusal is what gets recorded. `gtm-winback` and `gtm-rank` point `WV_WHOP_BIN` at `demo/_fake/whop`, a copy of the test stand-in, since the account has no campaign to rank. `money` and `money-close` are live reads; `support-lookup` and `support-dispute` use the stand-in. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them. The `sandbox-status` and `logs-follow` tapes start `scripts/mock-api.ts` on port 8931 themselves, a stand-in for the sandbox host that answers `accounts get me` and grows an app's log by one line every couple of seconds; `pnpm demo:mock` runs it on its own. The `sandbox-ads` tape expects a richer mock on the same port that was never committed, so it records against whatever answers there.
+Re-records every GIF above. The eight agent tapes (`agent-gate`, `agent-plan`, `doctor-json`, `agent-manifest`, `agent-index`, `approve`, `exit-codes`, `gtm-launch`) run against production reads only; the gate never sends the write, and the `approve` tape reruns a plan with a token minted for a different product so the refusal is what gets recorded. `gtm-winback` and `gtm-rank` point `WV_WHOP_BIN` at `demo/_fake/whop`, a copy of the test stand-in, since the account has no campaign to rank. `money` and `money-close` are live reads; `support-lookup`, `support-dispute`, `dev`, and `dev-hook` use the stand-in. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them. The `sandbox-status` and `logs-follow` tapes start `scripts/mock-api.ts` on port 8931 themselves, a stand-in for the sandbox host that answers `accounts get me` and grows an app's log by one line every couple of seconds; `pnpm demo:mock` runs it on its own. The `sandbox-ads` tape expects a richer mock on the same port that was never committed, so it records against whatever answers there.

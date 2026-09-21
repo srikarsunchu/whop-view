@@ -112,7 +112,7 @@ export function rankView(input: RankInput, theme: Theme): string[] {
   }
   const ranked = rankGroups(input);
   if (!ranked.length) {
-    out.push(" " + paint(theme, "muted", c.noGroups), "");
+    out.push(...wrap(c.noGroups, theme.width - 1).map((l) => " " + paint(theme, "muted", l)), "");
     return out;
   }
   const cols: TableColumn[] = [

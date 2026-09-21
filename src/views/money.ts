@@ -140,8 +140,8 @@ function methodRows(input: MoneyInput): KvRow[] {
 function payoutTable(input: MoneyInput, theme: Theme): string[] {
   const c = copy.money;
   const list = rows(input.payouts);
-  if (!list) return [" " + paint(theme, input.payouts.ok ? "muted" : "warn", errLine(input.payouts) || copy.detail.empty)];
-  if (!list.length) return [" " + paint(theme, "muted", c.noPayouts)];
+  if (!list) return wrap(errLine(input.payouts) || copy.detail.empty, theme.width - 1).map((l) => " " + paint(theme, input.payouts.ok ? "muted" : "warn", l));
+  if (!list.length) return wrap(c.noPayouts, theme.width - 1).map((l) => " " + paint(theme, "muted", l));
   const cols: TableColumn[] = [
     { key: "amount", label: c.cols.amount, align: "right", priority: 0 },
     { key: "status", label: c.cols.status, align: "left", priority: 1 },

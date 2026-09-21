@@ -31,6 +31,7 @@ import { buildWinback, parseWinbackArgs, winbackGroup, type WinbackReads } from 
 import { rankData, rankView, type RankInput } from "./views/rank.ts";
 import { balanceOf, buildClose, moneyData, moneyView, parseCloseArgs, type MoneyInput } from "./views/money.ts";
 import { buildDispute, buildRefund, classifyKey, disputesFor, lookupData, lookupView, parseDisputeArgs, parseRefundArgs, userFrom, type LookupInput } from "./views/support.ts";
+import { buildHook, devData, devView, parseHookArgs, WEBHOOK_ACTION, type DevInput } from "./views/dev.ts";
 import { recipeData, recipeDoneView, recipeView, substitute, type RecipePlan } from "./views/recipe.ts";
 import { randomUUID } from "node:crypto";
 import { homeView } from "./views/home.ts";
@@ -46,7 +47,7 @@ import type { Parsed, Rec } from "./envelope.ts";
 const print = (lines: string[]) => process.stdout.write(lines.join("\n") + "\n");
 
 /** Words that are wv's, not whop's. */
-const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox", "agent", "money", "support"]);
+const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox", "agent", "money", "support", "dev"]);
 
 export interface Outcome {
   code: number;
@@ -127,7 +128,7 @@ async function main(argvIn: string[]) {
   const argv = json.argv;
 
   // `wv doctor --format json` in a terminal is the agent face on purpose. `--format` would otherwise exec `whop doctor`, which is not a command.
-  if (DATA_SCREENS.has(argv[0]) && wantsJson(argv)) process.exit(await screenJson(argv[0], mode, env));
+  if (DATA_SCREENS.has(argv[0]) && wantsJson(argv)) process.exit(await screenJson(argv[0], mode, env, argv.filter((a, i) => !(a === "--format" || a.startsWith("--format=") || argv[i - 1] === "--format"))));
   if (argv[0] === "agent" && wantsJson(argv)) process.exit((await execute(argv, theme, { mode })).code);
   if (argv[0] === "gtm" && argv[1] === "rank" && wantsJson(argv)) process.exit(await rankJson(argv, mode, env));
   if (argv[0] === "support" && argv[1] === "lookup" && wantsJson(argv)) process.exit(await lookupJson(argv, mode, env));
@@ -167,11 +168,11 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
     print(lines!);
     process.exit(0);
   }
-  if ((argv[0] === "gtm" && (argv[1] === "launch" || argv[1] === "winback")) || (argv[0] === "money" && argv[1] === "close") || (argv[0] === "support" && (argv[1] === "refund" || argv[1] === "dispute"))) return recipePiped(argv, mode, env, plan);
+  if ((argv[0] === "gtm" && (argv[1] === "launch" || argv[1] === "winback")) || (argv[0] === "money" && argv[1] === "close") || (argv[0] === "support" && (argv[1] === "refund" || argv[1] === "dispute")) || (argv[0] === "dev" && argv[1] === "hook")) return recipePiped(argv, mode, env, plan);
   if (argv[0] === "support" && argv[1] === "lookup") process.exit(await lookupJson(argv, mode, env));
   if (argv[0] === "gtm" && argv[1] === "rank") process.exit(await rankJson(argv, mode, env));
   // Two screens are data as well as pictures. The rest draw and need a terminal.
-  if (DATA_SCREENS.has(argv[0])) process.exit(await screenJson(argv[0], mode, env));
+  if (DATA_SCREENS.has(argv[0])) process.exit(await screenJson(argv[0], mode, env, argv));
   if (OURS.has(argv[0])) emit(wvErrorEnvelope(argv, mode, { code: "NEEDS_TERMINAL", message: copy.agent.needsTerminal(argv[0]) }), 2);
   // `whop` rejects `--yes` and `--approve` as unknown flags. They are wv's, and they never reach the child.
   const { argv: unapproved, token } = splitApprove(argv);
@@ -288,6 +289,13 @@ async function winbackReads(opts: NonNullable<ReturnType<typeof parseWinbackArgs
 
 /** One recipe by name: parse its flags, gather its reads, build its plan. `error` is a refusal in words before any read. */
 async function buildRecipe(argv: string[], env: NodeJS.ProcessEnv, mode: Mode, live: boolean): Promise<{ plan?: RecipePlan; error?: string }> {
+  if (argv[0] === "dev" && argv[1] === "hook") {
+    const parsed = parseHookArgs(argv);
+    if (!parsed.opts) return { error: parsed.error };
+    const acct = await identity(env);
+    const [profiles, permissions, webhooks] = await Promise.all([run(["auth", "list"], env), acct?.id ? run(["permissions", "check", "--resource_id", acct.id, "--actions", WEBHOOK_ACTION], env) : undefined, run(["webhooks", "list", "--include_app_webhooks", "true"], env)]);
+    return { plan: buildHook(argv, parsed.opts, { profiles: profiles.parsed, permissions: permissions?.parsed, webhooks: webhooks.parsed, accountTitle: acct?.title, accountId: acct?.id, mode }) };
+  }
   if (argv[0] === "support" && argv[1] === "refund") {
     const parsed = parseRefundArgs(argv);
     if (!parsed.opts) return { error: parsed.error };
@@ -344,7 +352,7 @@ async function recipeTerminal(argvIn: string[], theme: Theme, mode: Mode, env: N
   }
   const approved = yesFlag || split.token !== undefined;
   const live = mode !== "sandbox" && !planOnly;
-  const spin = spinner(argv[0] === "support" ? (argv[1] === "refund" ? copy.spinner.refund : copy.spinner.dispute) : argv[0] === "money" ? copy.spinner.close : argv[1] === "winback" ? copy.spinner.winback : copy.spinner.launch, theme);
+  const spin = spinner(argv[0] === "dev" ? copy.spinner.hook : argv[0] === "support" ? (argv[1] === "refund" ? copy.spinner.refund : copy.spinner.dispute) : argv[0] === "money" ? copy.spinner.close : argv[1] === "winback" ? copy.spinner.winback : copy.spinner.launch, theme);
   const built = await buildRecipe(argv, env, mode, live).finally(() => spin.stop());
   if (!built.plan) {
     print(errorView({ code: "VALIDATION_ERROR", message: built.error ?? "" }, theme));
@@ -524,13 +532,49 @@ async function lookupJson(argv: string[], mode: Mode, env: NodeJS.ProcessEnv): P
   return input.user ? 0 : 1;
 }
 
+/** `wv dev [app_id]`: the apps, then the named or first app's builds, domains, and last day of errors, plus the account's webhooks and the credential. */
+async function gatherDev(appId: string | undefined, theme: Theme, env: NodeJS.ProcessEnv, mode: Mode): Promise<DevInput> {
+  const spin = spinner(copy.spinner.dev, theme);
+  const acct = await identity(env);
+  const commands: string[][] = [["apps", "list"], ["auth", "list"], ["webhooks", "list", "--include_app_webhooks", "true"]];
+  const permCmd = acct?.id ? ["permissions", "check", "--resource_id", acct.id, "--actions", WEBHOOK_ACTION] : undefined;
+  if (permCmd) commands.push(permCmd);
+  const [apps, profiles, webhooks, permissions] = await Promise.all([run(["apps", "list"], env), run(["auth", "list"], env), run(["webhooks", "list", "--include_app_webhooks", "true"], env), permCmd ? run(permCmd, env) : undefined]);
+  const list = rowsOf(apps.parsed) ?? [];
+  const app = appId ? list.find((a) => a.id === appId) ?? { id: appId } : list[0];
+  let builds: Parsed | undefined;
+  let domains: Parsed | undefined;
+  let errors: Parsed | undefined;
+  if (app?.id) {
+    const id = String(app.id);
+    const since = new Date(Date.now() - 86_400_000).toISOString().replace(/\.\d{3}Z$/, "Z");
+    const cmds = [["app-builds", "list", "--app_id", id], ["domains", "list", "--app_id", id], ["apps", "logs", id, "--level", "error", "--created_after", since]];
+    commands.push(...cmds);
+    [builds, domains, errors] = (await Promise.all(cmds.map((c) => run(c, env)))).map((r) => r.parsed);
+  }
+  spin.stop();
+  return { accountTitle: acct?.title, accountId: acct?.id, mode, apps: apps.parsed, app: app?.id ? app : undefined, builds, domains, webhooks: webhooks.parsed, errors, profiles: profiles.parsed, permissions: permissions?.parsed, commands };
+}
+
+async function devScreen(argv: string[], theme: Theme, mode: Mode): Promise<Outcome> {
+  const input = await gatherDev(argv[1] && !argv[1].startsWith("--") ? argv[1] : undefined, theme, whopEnv(mode), mode);
+  print(devView(input, theme));
+  return { code: input.apps.ok ? 0 : 1, group: "dev" };
+}
+
 /** wv screens that have a JSON face: `--format json`, or any pipe. */
-const DATA_SCREENS = new Set(["doctor", "gtm", "money"]);
+const DATA_SCREENS = new Set(["doctor", "gtm", "money", "dev"]);
 const wantsJson = (argv: string[]) => argv.some((a, i) => a === "--format=json" || (a === "--format" && argv[i + 1] === "json"));
 
 /** Prints a screen's data as JSON and returns the exit code the screen would have used. */
-async function screenJson(screen: string, mode: Mode, env: NodeJS.ProcessEnv): Promise<number> {
+async function screenJson(screen: string, mode: Mode, env: NodeJS.ProcessEnv, argv: string[] = []): Promise<number> {
   const theme = makeTheme({});
+  if (screen === "dev") {
+    const input = await gatherDev(argv[1] && !argv[1].startsWith("--") ? argv[1] : undefined, theme, env, mode);
+    const data = devData(input);
+    process.stdout.write(JSON.stringify({ ...data, meta: { command: "dev", wrapper: "wv", mode } }, null, 2) + "\n");
+    return data.ok ? 0 : 1;
+  }
   if (screen === "doctor") {
     const input = await gatherDoctor(theme, env, mode);
     const data = doctorData(input);
@@ -665,7 +709,8 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
     return { code: 0 };
   }
   if (group === "home") return home(theme, mode);
-  if ((group === "gtm" && (verb === "launch" || verb === "winback")) || (group === "money" && verb === "close") || (group === "support" && (verb === "refund" || verb === "dispute"))) return recipeTerminal(argv, theme, mode, env, !!opts.plan);
+  if ((group === "gtm" && (verb === "launch" || verb === "winback")) || (group === "money" && verb === "close") || (group === "support" && (verb === "refund" || verb === "dispute")) || (group === "dev" && verb === "hook")) return recipeTerminal(argv, theme, mode, env, !!opts.plan);
+  if (group === "dev") return devScreen(argv, theme, mode);
   if (group === "support") return lookup(argv, theme, mode, env);
   if (group === "money") return moneyScreen(theme, mode);
   if (group === "gtm" && verb === "rank") return rank(argv, theme, mode, env);

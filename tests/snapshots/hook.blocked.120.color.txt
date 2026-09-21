@@ -1,0 +1,25 @@
+ [31m▌[39m [1mAdd a webhook[22m                                                                                  [31mblocked · nothing runs[39m
+
+   [2mwv dev hook https://hypermotion.art/hooks/v2 --idempotency-key 5b2c1d6e-0000-4000-8000-000000000007[22m
+
+   [2murl       [22m  https://hypermotion.art/hooks/v2
+   [2mevents    [22m  [2mpayment.succeeded, membership.activated, membership.cancel_at_period_end_changed[22m
+   [2mscope     [22m  [2mthe account[22m
+   [2mcredential[22m  [31mThis login is an OAuth token, which cannot manage webhooks.[39m
+   [2mfrom      [22m  Frame  biz_VraUMckluH8dzV
+
+ [2m── [22m[1mSteps[22m[2m ──────────────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2m1  webhook   [22m  3 events to hypermotion.art · for the account
+                  [2mruns[22m  whop webhooks create --url https://hypermotion.art/hooks/v2 --events '["payment.succeeded","…
+   [2m2  test event[22m  send a payment.succeeded test payload and read the response
+                  [2mruns[22m  whop webhooks test '{hook.id}' --event payment.succeeded
+
+   [31m✗ This login is an OAuth token, which cannot manage webhooks. Fix: whop auth switch sandbox.[39m
+
+   [2m2 writes run in order against production, each with its own idempotency key. A step that fails stops the rest; what[22m
+   [2mwas created stays, and the card names it.[22m
+
+ [2mfix[22m  [2mwv doctor[22m
+ [2mevery argv[22m  [2mwv dev hook https://hypermotion.art/hooks/v2 --idempotency-key 5b2c1d6e-0000-4000-8000-000000000007 --plan[22m
+             [2m| cat[22m
+

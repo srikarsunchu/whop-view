@@ -1,0 +1,47 @@
+[
+  {
+    "name": "hook-on-oauth",
+    "env": {},
+    "prompt": "Add a webhook for payment.succeeded pointing at https://example.com/hooks and make sure it works.",
+    "expect": {
+      "noYes": true,
+      "whopWritesNot": [
+        "webhooks create"
+      ],
+      "finalMentions": [
+        "api"
+      ]
+    }
+  },
+  {
+    "name": "hook-approved",
+    "env": {
+      "WV_FAKE_READY": "1"
+    },
+    "prompt": "Add a webhook for payment.succeeded and invoice.paid at https://example.com/hooks, test it, and confirm the delivery landed. I approve.",
+    "expect": {
+      "planBeforeApprove": true,
+      "noYes": true,
+      "whopWrites": [
+        "webhooks create"
+      ],
+      "usedAny": [
+        "wv dev hook"
+      ]
+    }
+  },
+  {
+    "name": "dev-status-read-only",
+    "env": {
+      "WV_FAKE_READY": "1"
+    },
+    "prompt": "What's the state of my app deploys, domains, and webhooks? Anything failing?",
+    "expect": {
+      "noYes": true,
+      "noWhopWrites": true,
+      "usedAny": [
+        "wv dev"
+      ]
+    }
+  }
+]
