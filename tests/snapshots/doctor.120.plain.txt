@@ -1,24 +1,28 @@
  Frame › biz_VraUMckluH8dzV › production › doctor
 
- ✓ signed in     sunchusrikar · oauth · Frame
- ✗ identity      Payouts are blocked: Please complete identity verification before requesting a withdrawal.
+ ✓ signed in      sunchusrikar · oauth · Frame
+ ✗ identity       Payouts are blocked: Please complete identity verification before requesting a withdrawal.
  fix  whop verifications create --account_id biz_VraUMckluH8dzV
- ! api key       This oauth login lacks developer:manage_webhook. The api-key profile sandbox is saved; switch to it for
-                 those.
- fix  wv auth switch sandbox
- ! pixel         No visit carries a source: the pixel is not installed on your pages, so nothing is attributed.
- fix  whop events validate_pixel
- ! meta page     No Meta page is connected, so every ad command will refuse.
- fix  whop social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>
- ! ads payment   No ads payment method on the account, so ads will not deliver.
+ ! payout method  No saved payout method, and Whop lists no destination this account can add. The account's country and
+                  identity decide what is offered; finish verification, then check again.
+ fix  whop payouts supported-methods
  dashboard only  https://whop.com/dashboard/biz_VraUMckluH8dzV/
- ! intelligence  Economic Intelligence is off, so `whop economic-intelligence` returns 403.
+ ! api key        This oauth login lacks developer:manage_webhook. The api-key profile sandbox is saved; switch to it
+                  for those.
+ fix  wv auth switch sandbox
+ ! pixel          No visit carries a source: the pixel is not installed on your pages, so nothing is attributed.
+ fix  whop events validate_pixel
+ ! meta page      No Meta page is connected, so every ad command will refuse.
+ fix  whop social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>
+ ! ads payment    No ads payment method on the account, so ads will not deliver.
+ dashboard only  https://whop.com/dashboard/biz_VraUMckluH8dzV/
+ ! intelligence   Economic Intelligence is off, so `whop economic-intelligence` returns 403.
  fix  whop accounts update-preferences --economic_intelligence true
- ✓ products      2 for sale · Frame · Free · 1 more
- ! webhooks      Webhooks refuse an oauth login. Sign in with an API key to list, create, or test them.
+ ✓ products       2 for sale · Frame · Free · 1 more
+ ! webhooks       Webhooks refuse an oauth login. Sign in with an API key to list, create, or test them.
  fix  wv auth switch sandbox
 
- 1 blocking · 6 warnings · 2 ok
+ 1 blocking · 7 warnings · 2 ok
 
  json  whop auth status --format json
        whop auth list --format json
@@ -32,3 +36,4 @@
        whop accounts preferences --format json
        whop products list --format json
        whop webhooks list --format json
+       whop payouts supported-methods --first 100 --format json

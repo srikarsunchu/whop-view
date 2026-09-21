@@ -7,9 +7,11 @@
  [2m── [22m[1mHypermotion  prod_iQ2Zub6GFQS5Q[22m[2m ────────────────────────────────────────────[22m
    [2mvisible                [22m  [32mfor sale · 2 members · whop.com/frame-creator[39m
    [2mFlex — 300 credits     [22m  [2m$10.00 · one time · hidden · 2 members ·[22m
-                            [2mplan_NrjXyj6yTetff[22m
+                            [2mplan_NrjXyj6yTetff · from DE: $11.90 · $1.90 tax[22m
+                            [2m(19%)[22m
    [2mCreator — 1,000 credits[22m  — · renewal · visible · 0 members ·
-                            plan_ozEZmitgc8tjB
+                            plan_ozEZmitgc8tjB · from DE: $34.51 · $5.51 tax
+                            (19%)
 
  [1mOffers[22m
  [2mcode    [22m  [2moff[22m  [2mwho            [22m  [2m          uses[22m  [2mexpires[22m  [2mid[22m
@@ -20,9 +22,12 @@
                        [2mcampaign=launch-20260921[22m
 
  [2mprice[22m  [2mwv store price plan_oLCTaWVWJc79O --to <amount> --plan[22m
- [2mfrom a country[22m  [2mwv store --from '<CC>'[22m
  [2mjson[22m  [2mwhop products list --format json[22m
  [2mjson[22m  [2mwhop plans list --format json[22m
  [2mjson[22m  [2mwhop promo-codes list --status active --format json[22m
  [2mjson[22m  [2mwhop checkout-configurations list --format json[22m
+ [2mjson[22m  [2mwhop plans calculate_tax plan_NrjXyj6yTetff --address '{"country":"DE"}'[22m
+       [2m--format json[22m
+ [2mjson[22m  [2mwhop plans calculate_tax plan_ozEZmitgc8tjB --address '{"country":"DE"}'[22m
+       [2m--format json[22m
 

@@ -7,9 +7,11 @@
  ── Hypermotion  prod_iQ2Zub6GFQS5Q ────────────────────────────────────────────
    visible                  for sale · 2 members · whop.com/frame-creator
    Flex — 300 credits       $10.00 · one time · hidden · 2 members ·
-                            plan_NrjXyj6yTetff
+                            plan_NrjXyj6yTetff · from DE: $11.90 · $1.90 tax
+                            (19%)
    Creator — 1,000 credits  — · renewal · visible · 0 members ·
-                            plan_ozEZmitgc8tjB
+                            plan_ozEZmitgc8tjB · from DE: $34.51 · $5.51 tax
+                            (19%)
 
  Offers
  code      off  who                        uses  expires  id
@@ -20,9 +22,12 @@
                        campaign=launch-20260921
 
  price  wv store price plan_oLCTaWVWJc79O --to <amount> --plan
- from a country  wv store --from '<CC>'
  json  whop products list --format json
  json  whop plans list --format json
  json  whop promo-codes list --status active --format json
  json  whop checkout-configurations list --format json
+ json  whop plans calculate_tax plan_NrjXyj6yTetff --address '{"country":"DE"}'
+       --format json
+ json  whop plans calculate_tax plan_ozEZmitgc8tjB --address '{"country":"DE"}'
+       --format json
 

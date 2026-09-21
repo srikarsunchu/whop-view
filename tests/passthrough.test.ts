@@ -40,6 +40,60 @@ test("piped stdout: --format json passes through without --full-output being add
   assert.match(r.stderr, /^ARGS: products list --format json$/m);
 });
 
+test("piped stdout: --format human renders the table in a pipe, and whop is asked for json underneath", () => {
+  const fake = fakeWhop();
+  const r = wv(["products", "list", "--format", "human", "--width", "80"], { WV_WHOP_BIN: fake, NO_COLOR: "1" });
+  assert.equal(r.status, 0);
+  assert.match(r.stderr, /^ARGS: products list --format json --full-output$/m, "human is wv's format, not whop's");
+  assert.notEqual(r.stdout, fixture("products.list.plain.txt"), "the pipe gets the rendering, not whop's bytes");
+  const first = JSON.parse(fixture("products.list.json")).data.data[0];
+  assert.ok(r.stdout.includes(String(first.title)), "the table names the first product");
+  assert.doesNotMatch(r.stdout, /\x1b\[/, "no color in a pipe unless FORCE_COLOR");
+});
+
+test("piped stdout: wv money swap is a plan with a quote and both balances, and nothing runs without a yes", () => {
+  const fake = fakeWhop();
+  const log = join(mkdtempSync(join(tmpdir(), "wv-log-")), "argv.log");
+  const r = wv(["money", "swap", "--from", "usd", "--to", "eur", "--amount", "5"], { WV_WHOP_BIN: fake, WV_FAKE_LOG: log });
+  assert.equal(r.status, 2);
+  const env = JSON.parse(r.stdout);
+  assert.equal(env.error.code, "CONFIRMATION_REQUIRED");
+  assert.equal(env.plan.kind, "swap");
+  assert.equal(env.plan.quote.rate, 0.87);
+  assert.equal(env.plan.quote.amountOut, 4.35);
+  assert.deepEqual(env.plan.after, { from: 13.56, to: 22.91 }, "18.56 in the fixture, 5 out; 18.56 in, 4.35 in");
+  assert.equal(env.plan.steps.length, 1);
+  assert.match(env.plan.steps[0].command, /^whop swaps create --account_id \S+ --from_token usd --to_token eur --amount 5 --idempotency-key/);
+  const ran = readFileSync(log, "utf8");
+  assert.match(ran, /^swaps quote --amount 5 --from_token usd --to_token eur/m, "the quote runs at plan time");
+  assert.doesNotMatch(ran, /^swaps create/m, "the swap does not");
+});
+
+test("piped stdout: wv swaps create on a fiat pair is the swap recipe, quote and balances included", () => {
+  const fake = fakeWhop();
+  const r = wv(["swaps", "create", "--from_token", "usd", "--to_token", "eur", "--amount", "5", "--account_id", "biz_x"], { WV_WHOP_BIN: fake });
+  assert.equal(r.status, 2);
+  const env = JSON.parse(r.stdout);
+  assert.equal(env.error.code, "CONFIRMATION_REQUIRED");
+  assert.equal(env.plan.kind, "swap", "the raw verb gets the quote-first plan");
+  assert.equal(env.plan.quote.amountOut, 4.35);
+  assert.match(env.rerun.join(" "), /^wv money swap --from usd --to eur --amount 5 --idempotency-key \S+ --approve/, "the rerun is the recipe spelling");
+  // A crypto swap keeps the raw verb and the generic gate.
+  const crypto = wv(["swaps", "create", "--from_token", "USDT", "--to_token", "0x1b64b9025eebb9a6239575df9ea4b9ac46d4d193", "--amount", "5", "--slippage_bps", "50"], { WV_WHOP_BIN: fake });
+  assert.equal(JSON.parse(crypto.stdout).plan.kind, "write");
+});
+
+test("piped stdout: wv store --from asks Whop the price from that country and puts it on the plan", () => {
+  const fake = fakeWhop();
+  const r = wv(["store", "--from", "de"], { WV_WHOP_BIN: fake });
+  assert.equal(r.status, 0);
+  const d = JSON.parse(r.stdout);
+  assert.equal(d.from, "DE");
+  const priced = d.products.flatMap((p: { plans: { id: string; localized?: { total: number; tax: number } }[] }) => p.plans).find((p: { id: string }) => p.id === "plan_NrjXyj6yTetff");
+  assert.deepEqual([priced.localized.total, priced.localized.tax], [11.9, 1.9]);
+  assert.match(r.stderr, /^ARGS: plans calculate_tax plan_NrjXyj6yTetff --address \{"country":"DE"\} --format json --full-output$/m);
+});
+
 test("piped stdout: --sandbox is stripped before the exec and the child sees the sandbox host and key", () => {
   const fake = fakeWhop();
   const r = wv(["--sandbox", "products", "list"], { WV_WHOP_BIN: fake, WV_SANDBOX_KEY: "whop_test", WHOP_API_BASE_URL: "", WHOP_API_KEY: "" });

@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { blocked, checks, doctorData, lastSuccess, missingActions, profilesOf, type Check } from "../src/views/doctor.ts";
 import { gaps, gtmData, peopleSummary } from "../src/views/gtm.ts";
-import { DOCTOR, DOCTOR_READY, GTM, envelope, synth } from "./render.ts";
+import { DOCTOR, DOCTOR_READY, GTM, envelope, synth, synthPage } from "./render.ts";
 
 const byKey = (list: Check[]) => Object.fromEntries(list.map((c) => [c.key, c]));
 
@@ -90,7 +90,7 @@ test("doctor --format json: ok is the exit rule, blocking names the checks behin
   const d = doctorData(DOCTOR) as { ok: boolean; blocking: string[]; checks: Check[]; commands: string[][]; dashboard: string };
   assert.equal(d.ok, false);
   assert.deepEqual(d.blocking, ["identity"]);
-  assert.equal(d.checks.length, 9);
+  assert.equal(d.checks.length, 10);
   assert.deepEqual(d.checks.find((c) => c.key === "identity")?.fix, ["whop", "verifications", "create", "--account_id", "biz_VraUMckluH8dzV"]);
   assert.deepEqual(d.commands[0], ["whop", "auth", "status", "--format", "json"]);
   assert.match(d.dashboard, /biz_VraUMckluH8dzV/);
@@ -114,4 +114,22 @@ test("gtm --format json: every read as plain data, the people summary, and the s
   const broken = gtmData({ ...GTM, campaigns: envelope("error.gated") }) as { ok: boolean; campaigns: { error: { code: string } } };
   assert.equal(broken.ok, false);
   assert.equal(broken.campaigns.error.code, "HTTP_403");
+});
+
+test("doctor: the payout method check says where the money would go, and what Whop would let this account add", () => {
+  const recorded = byKey(checks(DOCTOR));
+  assert.equal(recorded.payoutMethod.level, "warn");
+  assert.equal(recorded.payoutMethod.blocking, false, "a missing method costs the payout, not the sale");
+  assert.match(recorded.payoutMethod.detail, /lists no destination this account can add/, "recorded: supported-methods is empty for this account");
+  assert.deepEqual(recorded.payoutMethod.fix, ["whop", "payouts", "supported-methods"]);
+  const ready = byKey(checks(DOCTOR_READY));
+  assert.equal(ready.payoutMethod.level, "ok");
+  assert.match(ready.payoutMethod.detail, /1 saved · Chase checking/);
+  const offered = byKey(checks({ ...DOCTOR, supportedMethods: synthPage([{ id: "podst_1", name: "Bank account", country: "BR", currency: "brl" }, { id: "podst_2", name: "PIX", country: "BR" }]) }));
+  assert.match(offered.payoutMethod.detail, /offers 2 destinations this account can add: Bank account BR, PIX BR/);
+  assert.deepEqual(offered.payoutMethod.fix, ["whop", "payouts", "create-method", "--help"]);
+  const unread = byKey(checks({ ...DOCTOR, supportedMethods: undefined }));
+  assert.match(unread.payoutMethod.detail, /supported-methods lists what/);
+  const failed = byKey(checks({ ...DOCTOR, supportedMethods: envelope("error.gated") }));
+  assert.match(failed.payoutMethod.detail, /could not be read · HTTP_403/);
 });

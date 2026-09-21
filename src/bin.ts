@@ -29,10 +29,10 @@ import { manifest, manifestData, manifestIndex, manifestIndexData, type VerbSche
 import { adGroupFor, buildLaunch, parseLaunchArgs, type LaunchReads } from "./views/launch.ts";
 import { buildWinback, parseWinbackArgs, winbackGroup, type WinbackReads } from "./views/winback.ts";
 import { rankData, rankView, type RankInput } from "./views/rank.ts";
-import { balanceOf, buildClose, moneyData, moneyView, parseCloseArgs, type MoneyInput } from "./views/money.ts";
+import { balanceOf, buildClose, buildSwap, currenciesOf, moneyData, moneyView, parseCloseArgs, parseSwapArgs, type MoneyInput } from "./views/money.ts";
 import { buildDispute, buildRefund, classifyKey, disputesFor, lookupData, lookupView, parseDisputeArgs, parseRefundArgs, userFrom, type LookupInput } from "./views/support.ts";
 import { buildHook, devData, devView, parseHookArgs, WEBHOOK_ACTION, type DevInput } from "./views/dev.ts";
-import { buildPrice, buildPublish, parsePriceArgs, parsePublishArgs, storeData, storeView, type StoreInput } from "./views/store.ts";
+import { taxablePlans, buildPrice, buildPublish, parsePriceArgs, parsePublishArgs, storeData, storeView, type StoreInput } from "./views/store.ts";
 import { REPORT_METRICS, reportData, reportMarkdown, reportView, type ReportInput } from "./views/report.ts";
 import { setupData, setupView } from "./views/setup.ts";
 import { recipeData, recipeDoneView, recipeView, substitute, type RecipePlan } from "./views/recipe.ts";
@@ -66,19 +66,49 @@ export interface Outcome {
   next?: string[];
 }
 
-/** Splits wv's own flags out of argv. */
-export function ownFlags(argvIn: string[]): { argv: string[]; width?: number; sandbox: boolean; plan: boolean; follow: boolean; all: boolean; md: boolean } {
+/**
+ * `wv swaps create --from_token usd --to_token eur --amount 5` on a fiat pair is `wv money swap`: the same write,
+ * but the plan quotes first and shows both balances. Crypto pairs (addresses, chains, slippage) stay the raw verb.
+ */
+export function swapAlias(argv: string[]): string[] {
+  if (argv[0] !== "swaps" || argv[1] !== "create") return argv;
+  const flag = (name: string) => {
+    const i = argv.findIndex((a) => a === name || a.startsWith(name + "="));
+    if (i < 0) return undefined;
+    return argv[i].includes("=") ? argv[i].slice(name.length + 1) : argv[i + 1];
+  };
+  const from = flag("--from_token");
+  const to = flag("--to_token");
+  const amount = flag("--amount");
+  const fiat = (v?: string) => !!v && /^[a-z]{3}$/i.test(v);
+  if (!fiat(from) || !fiat(to) || !amount) return argv;
+  if (argv.some((a) => /^--(from_chain|to_chain|slippage_bps|to_amount)(=|$)/.test(a))) return argv;
+  const key = flag("--idempotency-key");
+  const approve = flag("--approve");
+  return ["money", "swap", "--from", from!, "--to", to!, "--amount", amount, ...(key ? ["--idempotency-key", key] : []), ...(approve ? ["--approve", approve] : []), ...(argv.includes("--yes") ? ["--yes"] : [])];
+}
+
+/**
+ * Splits wv's own flags out of argv. `--format human` is wv's sixth format beside whop's toon, json, yaml, md, and
+ * jsonl: the terminal rendering, asked for by name, so a pipe gets the table instead of whop's bytes.
+ */
+export function ownFlags(argvIn: string[]): { argv: string[]; width?: number; sandbox: boolean; plan: boolean; follow: boolean; all: boolean; md: boolean; human: boolean } {
   let width: number | undefined;
   let sandbox = false;
   let plan = false;
   let follow = false;
   let all = false;
   let md = false;
+  let human = false;
   const argv: string[] = [];
   for (let i = 0; i < argvIn.length; i++) {
     const a = argvIn[i];
     if (a === "--width") width = Number(argvIn[++i]);
     else if (a.startsWith("--width=")) width = Number(a.slice(8));
+    else if (a === "--format" && argvIn[i + 1] === "human") {
+      human = true;
+      i++;
+    } else if (a === "--format=human") human = true;
     else if (a === "--sandbox") sandbox = true;
     else if (a === "--plan") plan = true;
     else if (a === "--follow" || a === "-f") follow = true;
@@ -86,7 +116,7 @@ export function ownFlags(argvIn: string[]): { argv: string[]; width?: number; sa
     else if (a === "--md") md = true;
     else argv.push(a);
   }
-  return { argv, width: width !== undefined && Number.isFinite(width) && width > 0 ? Math.floor(width) : undefined, sandbox, plan, follow, all, md };
+  return { argv, width: width !== undefined && Number.isFinite(width) && width > 0 ? Math.floor(width) : undefined, sandbox, plan, follow, all, md, human };
 }
 
 /** Per-payout cap from `WV_PAYOUT_CAP`, in whole currency units. `none` turns it off. Default $500, like Link. */
@@ -125,7 +155,7 @@ async function main(argvIn: string[]) {
   if (argvIn[0] === "mcp" && argvIn[1] === "add") passthrough(mcpAddArgv(argvIn.slice(2)), whopEnv(modeFrom(false)));
   if (argvIn[0] === "mcp" && argvIn[1] === "doctor") process.exit(await mcpDoctorRun(argvIn.slice(2)));
   const own = ownFlags(argvIn);
-  const { width, sandbox, plan, follow, all, md } = own;
+  const { width, sandbox, plan, follow, all, md, human } = own;
   const theme = makeTheme({ width });
   // Date presets are wv's flags too: resolve them before a pipe execs `whop`, and refuse a range Whop would.
   const dates = resolveDates(own.argv);
@@ -134,9 +164,12 @@ async function main(argvIn: string[]) {
   // whop's own write list, so the gate knows a verb the hand list has never heard of. Cached a day; empty is fine.
   if (own.argv.length >= 2 && !own.argv[1].startsWith("--")) loadWhopWrites(cachedLlmsFull());
   // No terminal: an agent or a script. Errors and the gate come back as JSON on stdout; everything else execs `whop`.
-  if (!process.stdout.isTTY) return agentMain(own.argv, mode, env, plan, all, md);
+  // `--format human` is the exception: the person asked for the rendering by name, so a pipe gets it too. The
+  // session still needs a terminal, so an empty argv keeps the pipe's answer.
+  const isTTY = !!process.stdout.isTTY || (human && own.argv.length > 0);
+  if (!isTTY) return agentMain(own.argv, mode, env, plan, all, md);
   const json = assembleFor(dates.argv);
-  const argv = json.argv;
+  const argv = swapAlias(json.argv);
 
   // `wv doctor --format json` in a terminal is the agent face on purpose. `--format` would otherwise exec `whop doctor`, which is not a command.
   if (argv[0] === "report" && (md || wantsJson(argv))) process.exit(await reportRun(theme, env, mode, md ? "md" : "json"));
@@ -146,7 +179,7 @@ async function main(argvIn: string[]) {
   if (argv[0] === "support" && argv[1] === "lookup" && wantsJson(argv)) process.exit(await lookupJson(argv, mode, env));
   // `--plan` never writes, so it is safe without a terminal and must never fall through to a real `whop` create.
   // `memberships check <key>` is wv's verb over `memberships get <key>`; a pipe gets the get.
-  if (shouldPassthrough(argv) && !plan) passthrough(argv0IsCheck(argv) ? ["memberships", "get", ...argv.slice(2)] : argv, env);
+  if (shouldPassthrough(argv, process.env, isTTY) && !plan) passthrough(argv0IsCheck(argv) ? ["memberships", "get", ...argv.slice(2)] : argv, env);
 
   // Sandbox mode with no key: say so once, before anything runs, and offer to keep a key in wv's config.
   if (mode === "sandbox" && argv[0] !== "sandbox" && !sandboxKey().key) await offerSandboxKey(theme);
@@ -185,7 +218,7 @@ export interface AgentOptions {
 }
 
 const textReply = (e: AgentEnvelope, code: number): TextReply => ({ kind: "text", text: serialize(e), code });
-const isRecipe = (argv: string[]) => (argv[0] === "gtm" && (argv[1] === "launch" || argv[1] === "winback")) || (argv[0] === "money" && argv[1] === "close") || (argv[0] === "support" && (argv[1] === "refund" || argv[1] === "dispute")) || (argv[0] === "dev" && argv[1] === "hook") || (argv[0] === "store" && (argv[1] === "price" || argv[1] === "publish"));
+const isRecipe = (argv: string[]) => (argv[0] === "gtm" && (argv[1] === "launch" || argv[1] === "winback")) || (argv[0] === "money" && (argv[1] === "close" || argv[1] === "swap")) || (argv[0] === "support" && (argv[1] === "refund" || argv[1] === "dispute")) || (argv[0] === "dev" && argv[1] === "hook") || (argv[0] === "store" && (argv[1] === "price" || argv[1] === "publish"));
 
 /**
  * The agent face, pure. `argvIn` is wv argv with wv's own flags already split out by `ownFlags`. A wv refusal
@@ -200,7 +233,7 @@ export async function agentReply(argvIn: string[], opts: AgentOptions): Promise<
   if (dates.error) return textReply(wvErrorEnvelope(argvIn, mode, dates.error), 2);
   const json = assembleFor(dates.argv);
   if (json.error) return textReply(wvErrorEnvelope(argvIn, mode, json.error), 2);
-  const argv = json.argv;
+  const argv = swapAlias(json.argv);
   // The manifest is Markdown for a program; it prints the same in a pipe and a terminal.
   if (argv[0] === "agent") {
     const lines = await agentManifest(argv[1], wantsJson(argv));
@@ -383,6 +416,15 @@ async function buildRecipe(argv: string[], env: NodeJS.ProcessEnv, mode: Mode, l
     const [acct, dispute] = await Promise.all([identity(env), run(["disputes", "get", parsed.opts.dispute], env)]);
     return { plan: buildDispute(argv, parsed.opts, { dispute: recordOf(dispute.parsed), disputeError: dispute.parsed.ok ? undefined : dispute.parsed.error.message.split("\n")[0], accountTitle: acct?.title, accountId: acct?.id, mode }) };
   }
+  if (argv[0] === "money" && argv[1] === "swap") {
+    const parsed = parseSwapArgs(argv);
+    if (!parsed.opts) return { error: parsed.error };
+    const o = parsed.opts;
+    // The quote is compute-only (no funds move), so it runs at plan time; the swap is the one step.
+    const balanceCmd = (c: string) => ["ledgers", "report", "--report_type", "balance_summary", "--currency", c];
+    const [acct, quote, from, to] = await Promise.all([identity(env), run(["swaps", "quote", "--amount", String(o.amount), "--from_token", o.from, "--to_token", o.to], env), run(balanceCmd(o.from), env), run(balanceCmd(o.to), env)]);
+    return { plan: buildSwap(argv, o, { quote: quote.parsed, from: balanceOf(o.from, from.parsed), to: balanceOf(o.to, to.parsed), accountTitle: acct?.title, accountId: acct?.id, mode }) };
+  }
   if (argv[0] === "money") {
     const parsed = parseCloseArgs(argv);
     if (!parsed.opts) return { error: parsed.error };
@@ -427,7 +469,7 @@ async function recipeTerminal(argvIn: string[], theme: Theme, mode: Mode, env: N
   }
   const approved = yesFlag || split.token !== undefined;
   const live = mode !== "sandbox" && !planOnly;
-  const spin = spinner(argv[0] === "store" ? (argv[1] === "price" ? copy.spinner.price : copy.spinner.publish) : argv[0] === "dev" ? copy.spinner.hook : argv[0] === "support" ? (argv[1] === "refund" ? copy.spinner.refund : copy.spinner.dispute) : argv[0] === "money" ? copy.spinner.close : argv[1] === "winback" ? copy.spinner.winback : copy.spinner.launch, theme);
+  const spin = spinner(argv[0] === "store" ? (argv[1] === "price" ? copy.spinner.price : copy.spinner.publish) : argv[0] === "dev" ? copy.spinner.hook : argv[0] === "support" ? (argv[1] === "refund" ? copy.spinner.refund : copy.spinner.dispute) : argv[0] === "money" ? (argv[1] === "swap" ? copy.spinner.swap : copy.spinner.close) : argv[1] === "winback" ? copy.spinner.winback : copy.spinner.launch, theme);
   const built = await buildRecipe(argv, env, mode, live).finally(() => spin.stop());
   if (!built.plan) {
     print(errorView({ code: "VALIDATION_ERROR", message: built.error ?? "" }, theme));
@@ -655,16 +697,38 @@ async function reportReply(env: NodeJS.ProcessEnv, mode: Mode, face: "json" | "m
 }
 
 /** `wv store`: products, every plan, the active promo codes, and the checkout links, at once. */
-async function gatherStore(theme: Theme, env: NodeJS.ProcessEnv, mode: Mode): Promise<StoreInput> {
+/** `--from <CC>` on `wv store`: the buyer's country for a tax preview. Uppercase two letters, or nothing. */
+export function storeFrom(argv: string[]): string | undefined {
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    const v = a === "--from" ? argv[i + 1] : a.startsWith("--from=") ? a.slice(7) : undefined;
+    if (v !== undefined) return v.trim().toUpperCase() || undefined;
+  }
+  return undefined;
+}
+
+async function gatherStore(theme: Theme, env: NodeJS.ProcessEnv, mode: Mode, from?: string): Promise<StoreInput> {
   const spin = spinner(copy.spinner.store, theme);
   const cmds = [["products", "list"], ["plans", "list"], ["promo-codes", "list", "--status", "active"], ["checkout-configurations", "list"]];
   const [acct, products, plans, promoCodes, checkouts] = await Promise.all([identity(env), ...cmds.map((c) => run(c, env))]);
+  let localized: StoreInput["from"];
+  if (from) {
+    // One tax preview per priced plan, the buyer's country as the address. Compute-only on Whop's side: nothing is saved.
+    const priced = taxablePlans(rowsOf(plans.parsed) ?? []);
+    spin.update(copy.spinner.storeFrom(from, priced.length));
+    const taxCmds = priced.map((pl) => ["plans", "calculate_tax", String(pl.id), "--address", JSON.stringify({ country: from })]);
+    const results = await Promise.all(taxCmds.map((c) => run(c, env)));
+    const taxes: Record<string, Parsed> = {};
+    priced.forEach((pl, i) => (taxes[String(pl.id)] = results[i].parsed));
+    localized = { country: from, taxes };
+    cmds.push(...taxCmds);
+  }
   spin.stop();
-  return { accountTitle: acct?.title, accountId: acct?.id, mode, products: products.parsed, plans: plans.parsed, promoCodes: promoCodes.parsed, checkouts: checkouts.parsed, commands: cmds };
+  return { accountTitle: acct?.title, accountId: acct?.id, mode, products: products.parsed, plans: plans.parsed, promoCodes: promoCodes.parsed, checkouts: checkouts.parsed, from: localized, commands: cmds };
 }
 
-async function storeScreen(theme: Theme, mode: Mode): Promise<Outcome> {
-  const input = await gatherStore(theme, whopEnv(mode), mode);
+async function storeScreen(argv: string[], theme: Theme, mode: Mode): Promise<Outcome> {
+  const input = await gatherStore(theme, whopEnv(mode), mode, storeFrom(argv));
   print(storeView(input, theme));
   return { code: input.products.ok ? 0 : 1, group: "store" };
 }
@@ -721,7 +785,7 @@ async function screenReply(screen: string, mode: Mode, env: NodeJS.ProcessEnv, a
     return dataReply(data, "setup", mode, data.ok);
   }
   if (screen === "store") {
-    const data = storeData(await gatherStore(theme, env, mode));
+    const data = storeData(await gatherStore(theme, env, mode, storeFrom(argv)));
     return dataReply(data, "store", mode, data.ok);
   }
   if (screen === "dev") {
@@ -746,20 +810,17 @@ const screenJson = (screen: string, mode: Mode, env: NodeJS.ProcessEnv, argv: st
 async function gatherMoney(theme: Theme, env: NodeJS.ProcessEnv, mode: Mode): Promise<MoneyInput> {
   const spin = spinner(copy.spinner.moneyScreen, theme);
   const methodsCmd = ["payouts", "methods", "--include_limits"];
-  const cmds = [["payouts", "list", "--first", "5"], ["accounts", "reserves"], ["verifications", "list"]];
-  const [acct, methods, payouts, reserves, verifications] = await Promise.all([identity(env), run(methodsCmd, env), ...cmds.map((c) => run(c, env))]);
-  const currencies = ["usd"];
-  for (const m of methods.parsed.ok && methods.parsed.payload.kind === "page" ? methods.parsed.payload.rows : []) {
-    const c = typeof m.currency === "string" ? m.currency.toLowerCase() : "";
-    if (c && !currencies.includes(c)) currencies.push(c);
-  }
+  const cmds = [["payouts", "list", "--first", "5"], ["accounts", "reserves"], ["verifications", "list"], ["ledgers", "list", "--first", "100"]];
+  const [acct, methods, payouts, reserves, verifications, ledger] = await Promise.all([identity(env), run(methodsCmd, env), ...cmds.map((c) => run(c, env))]);
+  // One balance per currency the account holds money in, not only the ones a saved method pays: the ledger's last page and the reserves say which.
+  const currencies = currenciesOf(methods.parsed, ledger.parsed, reserves.parsed);
   const balanceCmds = currencies.map((c) => ["ledgers", "report", "--report_type", "balance_summary", "--currency", c]);
   const balances = await Promise.all(balanceCmds.map((c) => run(c, env)));
   spin.stop();
   return {
     accountTitle: acct?.title, accountId: acct?.id, mode,
     balances: balances.map((b, i) => balanceOf(currencies[i], b.parsed)),
-    methods: methods.parsed, payouts: payouts.parsed, reserves: reserves.parsed, verifications: verifications.parsed,
+    methods: methods.parsed, payouts: payouts.parsed, reserves: reserves.parsed, verifications: verifications.parsed, ledger: ledger.parsed,
     commands: [...balanceCmds, methodsCmd, ...cmds],
   };
 }
@@ -841,7 +902,7 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
     print(errorView({ code: json.error.code, message: json.error.message }, theme));
     return { code: 2 };
   }
-  const argv = json.argv;
+  const argv = swapAlias(json.argv);
   const [group, verb] = argv;
   if (!group || group === "help") {
     const target = group === "help" ? argv[1] : undefined;
@@ -860,9 +921,9 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
     return { code: 0 };
   }
   if (group === "home") return home(theme, mode);
-  if ((group === "gtm" && (verb === "launch" || verb === "winback")) || (group === "money" && verb === "close") || (group === "support" && (verb === "refund" || verb === "dispute")) || (group === "dev" && verb === "hook") || (group === "store" && (verb === "price" || verb === "publish"))) return recipeTerminal(argv, theme, mode, env, !!opts.plan);
+  if ((group === "gtm" && (verb === "launch" || verb === "winback")) || (group === "money" && (verb === "close" || verb === "swap")) || (group === "support" && (verb === "refund" || verb === "dispute")) || (group === "dev" && verb === "hook") || (group === "store" && (verb === "price" || verb === "publish"))) return recipeTerminal(argv, theme, mode, env, !!opts.plan);
   if (group === "dev") return devScreen(argv, theme, mode);
-  if (group === "store") return storeScreen(theme, mode);
+  if (group === "store") return storeScreen(argv, theme, mode);
   if (group === "report") return { code: await reportRun(theme, whopEnv(mode), mode, "tty") };
   if (group === "setup") {
     const input = await gatherDoctor(theme, whopEnv(mode), mode);
@@ -1301,10 +1362,11 @@ async function gatherDoctor(theme: Theme, env: NodeJS.ProcessEnv, mode: Mode): P
     ["accounts", "preferences"],
     ["products", "list"],
     ["webhooks", "list"],
+    ["payouts", "supported-methods", "--first", "100"],
   ];
   const permCmd = accountId ? ["permissions", "check", "--resource_id", accountId, "--actions", DOCTOR_ACTIONS.join(",")] : undefined;
   spin.update(copy.spinner.doctorReads);
-  const [[profiles, verifications, methods, people, social, preferences, products, webhooks], permissions] = await Promise.all([Promise.all(cmds.map((c) => run(c, env))), permCmd ? run(permCmd, env) : Promise.resolve(undefined)]);
+  const [[profiles, verifications, methods, people, social, preferences, products, webhooks, supportedMethods], permissions] = await Promise.all([Promise.all(cmds.map((c) => run(c, env))), permCmd ? run(permCmd, env) : Promise.resolve(undefined)]);
   const hooks = webhooks.parsed.ok && webhooks.parsed.payload.kind === "page" ? webhooks.parsed.payload.rows.slice(0, 3) : [];
   const deliveryCmds = hooks.map((h) => ["webhooks", "deliveries", String(h.id), "--first", "20"]);
   if (deliveryCmds.length) spin.update(copy.spinner.doctorDeliveries);
@@ -1316,6 +1378,7 @@ async function gatherDoctor(theme: Theme, env: NodeJS.ProcessEnv, mode: Mode): P
     accountTitle, accountId, mode,
     auth: auth.parsed, profiles: profiles.parsed, permissions: permissions?.parsed, verifications: verifications.parsed, methods: methods.parsed,
     people: people.parsed, social: social.parsed, preferences: preferences.parsed, products: products.parsed, webhooks: webhooks.parsed, deliveries,
+    supportedMethods: supportedMethods.parsed,
     commands: [authCmd, ...cmds.slice(0, 1), ...(permCmd ? [permCmd] : []), ...cmds.slice(1), ...deliveryCmds],
   };
 }

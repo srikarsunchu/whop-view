@@ -1,8 +1,8 @@
 // `wv store`: the for-sale rule, the plan grouping, and the price and publish plans.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildPrice, buildPublish, forSale, parsePriceArgs, parsePublishArgs, plansOf, priceOf, storeData } from "../src/views/store.ts";
-import { envelope, synthPage } from "./render.ts";
+import { buildPrice, buildPublish, forSale, localizedLine, parsePriceArgs, parsePublishArgs, plansOf, priceOf, storeData, taxOf, taxablePlans } from "../src/views/store.ts";
+import { STORE, STORE_FROM, envelope, synth, synthPage } from "./render.ts";
 
 const rec = (name: string) => {
   const p = envelope(name);
@@ -72,4 +72,19 @@ test("store publish: publish then a checkout link for the default plan; nothing 
   assert.match(allHidden.blockers[0], /Every plan is hidden/);
   const noLink = buildPublish(["store", "publish"], { ...opts!, link: false }, { product: { ...rec("products.get"), visibility: "hidden" }, plans });
   assert.equal(noLink.steps[1].skipped, "--no-link");
+});
+
+test("store --from: a tax preview per priced plan, read in minor units, on the plan line and in the data", () => {
+  assert.deepEqual(taxablePlans(list("plans.list")).map((p) => p.id), ["plan_NrjXyj6yTetff", "plan_ozEZmitgc8tjB"], "the $10 plan and the $29 renewal; the free plan gets no preview");
+  const de = taxOf(synth({ currency: "usd", tax_behavior: "exclusive", subtotal: 1000, tax_amount: 190, total: 1190, status: "calculated" }));
+  assert.deepEqual(de, { currency: "usd", subtotal: 10, tax: 1.9, total: 11.9, behavior: "exclusive" });
+  assert.equal(localizedLine("DE", de), "from DE: $11.90 · $1.90 tax (19%)");
+  assert.equal(localizedLine("BR", taxOf(synth({ currency: "usd", subtotal: 1000, tax_amount: 0, total: 1000 }))), "from BR: $10.00 · no tax");
+  assert.match(localizedLine("XX", taxOf(envelope("error.gated"))) ?? "", /^from XX: HTTP_403/);
+  assert.equal(localizedLine("DE", undefined), undefined, "a plan with no preview gets no tail");
+  const d = storeData(STORE_FROM) as { from?: string; products: { plans: { id: string; localized?: { country: string; total: number } }[] }[] };
+  assert.equal(d.from, "DE");
+  const priced = d.products.flatMap((p) => p.plans).find((p) => p.id === "plan_NrjXyj6yTetff")!;
+  assert.deepEqual(priced.localized, { country: "DE", currency: "usd", subtotal: 10, tax: 1.9, total: 11.9, behavior: "exclusive" });
+  assert.equal((storeData(STORE) as { from?: string }).from, undefined);
 });

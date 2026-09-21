@@ -46,6 +46,8 @@ export function stepFor(check0: Check, accountId?: string): Omit<SetupStep, "n">
       return { ...base, how: "terminal", command: check.fix ?? ["whop", "login"], then: c.auth };
     case "identity":
       return { ...base, how: "both", command: check.fix, url: dash, then: c.identity };
+    case "payoutMethod":
+      return { ...base, how: "both", command: check.fix, url: dash, then: c.payoutMethod };
     case "apikey":
       return check.fix && check.fix[0] === "wv" ? { ...base, how: "cli", command: check.fix, then: c.apikeySwitch } : { ...base, how: "both", command: check.fix, url: dash, then: c.apikeyNew };
     case "pixel":

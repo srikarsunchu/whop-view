@@ -1,0 +1,19 @@
+ [33m▌[39m [1mConvert a balance[22m                                                                                [33mwrites to production[39m
+
+   [2mwv money swap --from eur --to usd --amount 80 --idempotency-key k[22m
+
+   [2mfrom[22m  €80.00 available → €0.00
+   [2mto  [22m  $1,234.56 available → $1,326.56
+   [2mrate[22m  [2m1 eur = $1.15 · no fee[22m
+   [2mswap[22m  [33m€80.00 → $92.00[39m
+   [2mfrom[22m  Hypermotion  biz_VraUMckluH8dzV
+
+ [2m── [22m[1mSteps[22m[2m ──────────────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2m1  swap[22m  €80.00 becomes $92.00 at Whop's mid-market rate
+            [2mruns[22m  whop swaps create --account_id biz_VraUMckluH8dzV --from_token eur --to_token usd --amount 80 --id…
+
+   [2m1 write runs in order against production, each with its own idempotency key. A step that fails stops the rest; what[22m
+   [2mwas created stays, and the card names it.[22m
+
+ [2mevery argv[22m  [2mwv money swap --from eur --to usd --amount 80 --idempotency-key k --plan | cat[22m
+

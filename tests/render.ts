@@ -12,7 +12,7 @@ import { buildLaunch, launchDoneView, launchView, parseLaunchArgs } from "../src
 import { buildWinback, parseWinbackArgs } from "../src/views/winback.ts";
 import { recipeView } from "../src/views/recipe.ts";
 import { rankView } from "../src/views/rank.ts";
-import { balanceOf, buildClose, moneyView, parseCloseArgs } from "../src/views/money.ts";
+import { balanceOf, buildClose, buildSwap, moneyView, parseCloseArgs, parseSwapArgs } from "../src/views/money.ts";
 import { buildDispute, buildRefund, lookupView, parseDisputeArgs, parseRefundArgs } from "../src/views/support.ts";
 import { buildHook, devView, parseHookArgs } from "../src/views/dev.ts";
 import { buildPrice, buildPublish, parsePriceArgs, parsePublishArgs, storeView } from "../src/views/store.ts";
@@ -152,12 +152,17 @@ const RANK_GROUPS = [
 ];
 export const RANK = { campaignId: "adcamp_x1", campaign: { id: "adcamp_x1", title: "Launch · Hypermotion", status: "active" }, groups: parseEnvelope(JSON.stringify({ ok: true, data: { data: RANK_GROUPS, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } }, meta: { command: "ad-groups list", duration: "1ms" } })), target: 8, currency: "usd", accountTitle: "Hypermotion", accountId: "biz_VraUMckluH8dzV", now: LAUNCH_NOW.getTime(), commands: [["ad-campaigns", "get", "adcamp_x1"], ["ad-groups", "list", "--ad_campaign_id", "adcamp_x1", "--order", "cost_per_result", "--direction", "asc"]] };
 
-const MONEY_COMMANDS = [["ledgers", "report", "--report_type", "balance_summary", "--currency", "usd"], ["payouts", "methods", "--include_limits"], ["payouts", "list", "--first", "5"], ["accounts", "reserves"], ["verifications", "list"]];
-export const MONEY = { accountTitle: "Frame", accountId: "biz_VraUMckluH8dzV", balances: [balanceOf("usd", envelope("ledgers.report"))], methods: envelope("payouts.methods.limits"), payouts: envelope("payouts.list"), reserves: envelope("accounts.reserves"), verifications: envelope("verifications.list"), now: LAUNCH_NOW.getTime(), commands: MONEY_COMMANDS };
+const MONEY_COMMANDS = [["ledgers", "report", "--report_type", "balance_summary", "--currency", "usd"], ["payouts", "methods", "--include_limits"], ["payouts", "list", "--first", "5"], ["accounts", "reserves"], ["verifications", "list"], ["ledgers", "list", "--first", "100"]];
+export const MONEY = { accountTitle: "Frame", accountId: "biz_VraUMckluH8dzV", balances: [balanceOf("usd", envelope("ledgers.report"))], methods: envelope("payouts.methods.limits"), ledger: envelope("ledgers.list"), payouts: envelope("payouts.list"), reserves: envelope("accounts.reserves"), verifications: envelope("verifications.list"), now: LAUNCH_NOW.getTime(), commands: MONEY_COMMANDS };
 const READY_PAYOUTS = parseEnvelope(JSON.stringify({ ok: true, data: { data: [{ id: "wdrl_x1", amount: "500.00", currency: "usd", status: "completed", speed: "standard", created_at: "2026-09-01T12:00:00Z" }, { id: "wdrl_x2", amount: "120.00", currency: "usd", status: "processing", speed: "standard", created_at: "2026-09-20T12:00:00Z" }], page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } }, meta: { command: "payouts list", duration: "1ms" } }));
 export const MONEY_READY = { ...MONEY, accountTitle: "Hypermotion", balances: [{ currency: "usd", available: 1234.56, other: [{ category: "pending", amount: 40 }] }, { currency: "eur", available: 80, other: [] }], methods: envelope("payouts.methods.ready"), payouts: READY_PAYOUTS };
 const CLOSE_ARGV = ["money", "close", "--keep", "100", "--idempotency-key", "5b2c1d6e-0000-4000-8000-000000000004"];
 export const CLOSE_BLOCKED = buildClose(CLOSE_ARGV, parseCloseArgs(CLOSE_ARGV).opts!, { balance: balanceOf("usd", envelope("ledgers.report")), methods: envelope("payouts.methods.limits"), accountId: "biz_VraUMckluH8dzV", accountTitle: "Frame", cap: 500, now: LAUNCH_NOW });
+const SWAP_ARGV = ["money", "swap", "--from", "eur", "--to", "usd", "--amount", "80", "--idempotency-key", "k"];
+const QUOTE = (amountIn: number, rate = 1.15) => parseEnvelope(JSON.stringify({ ok: true, data: { object: "swap_quote", amount_in: String(amountIn), amount_out: (amountIn * rate).toFixed(2), rate: String(rate), fee_bps: 0, fee_amount: null, from_token: { symbol: "eur", decimals: 2 }, to_token: { symbol: "usd", decimals: 2 } }, meta: { command: "swaps quote", duration: "1ms" } }));
+/** EUR sold, a USD-only method: the swap is the way out. */
+export const SWAP_READY = buildSwap(SWAP_ARGV, parseSwapArgs(SWAP_ARGV).opts!, { quote: QUOTE(80), from: { currency: "eur", available: 80, other: [] }, to: { currency: "usd", available: 1234.56, other: [{ category: "pending", amount: 40 }] }, accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion" });
+export const SWAP_BLOCKED = buildSwap(SWAP_ARGV, parseSwapArgs(SWAP_ARGV).opts!, { quote: QUOTE(80), from: { currency: "eur", available: 12.5, other: [] }, to: balanceOf("usd", envelope("ledgers.report")), accountId: "biz_VraUMckluH8dzV", accountTitle: "Frame" });
 export const CLOSE_READY = buildClose(CLOSE_ARGV, parseCloseArgs(CLOSE_ARGV).opts!, { balance: { currency: "usd", available: 1234.56, other: [{ category: "pending", amount: 40 }] }, methods: envelope("payouts.methods.ready"), accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion", cap: 2000, now: LAUNCH_NOW });
 
 const LOOKUP_DISPUTES = parseEnvelope(JSON.stringify({ ok: true, data: { data: [record0("disputes.get")], page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } }, meta: { command: "disputes list", duration: "1ms" } }));
@@ -175,6 +180,7 @@ export const synth = (data: unknown) => parseEnvelope(JSON.stringify({ ok: true,
 export const synthPage = (rows: unknown[]) => synth({ data: rows, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } });
 
 const PLANS_ROWS = (() => { const p = envelope("plans.list"); return p.ok && p.payload.kind === "page" ? p.payload.rows : []; })();
+const TAX = (subtotal: number, tax: number) => parseEnvelope(JSON.stringify({ ok: true, data: { currency: "usd", tax_behavior: "exclusive", subtotal, tax_amount: tax, total: subtotal + tax, status: "calculated" }, meta: { command: "plans calculate_tax", duration: "1ms" } }));
 export const STORE = { accountTitle: "Hypermotion", accountId: "biz_VraUMckluH8dzV", products: envelope("products.list"), plans: envelope("plans.list"), promoCodes: synthPage([{ id: "promo_x1", code: "LAUNCH20", promo_type: "percentage", amount_off: 20, new_users_only: true, uses: 12, stock: 200, unlimited_stock: false, expires_at: "2026-09-28T07:00:00Z", status: "active" }]), checkouts: synthPage([{ id: "chk_x1", plan: { id: "plan_ozEZmitgc8tjB" }, purchase_url: "https://whop.com/checkout/chk_x1", metadata: { campaign: "launch-20260921" } }]), now: LAUNCH_NOW.getTime(), commands: [["products", "list"], ["plans", "list"], ["promo-codes", "list", "--status", "active"], ["checkout-configurations", "list"]] };
 const PRICE_ARGV = ["store", "price", "plan_NrjXyj6yTetff", "--to", "15", "--idempotency-key", "5b2c1d6e-0000-4000-8000-000000000008"];
 export const PRICE_READY = buildPrice(PRICE_ARGV, parsePriceArgs(PRICE_ARGV).opts!, { plan: record0("plans.get"), accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion" });
@@ -203,9 +209,13 @@ const DOCTOR_COMMANDS = [
   ["accounts", "preferences"],
   ["products", "list"],
   ["webhooks", "list"],
+  ["payouts", "supported-methods", "--first", "100"],
 ];
 
 /** The real account as recorded: identity unverified, oauth login, nothing connected. */
+/** `wv store --from DE`: the same catalog with a German buyer's price on every priced plan. `plan_NrjXyj6yTetff` is the $10 plan and `plan_ozEZmitgc8tjB` the $29 renewal; the third is free. */
+export const STORE_FROM = { ...STORE, from: { country: "DE", taxes: { plan_NrjXyj6yTetff: TAX(1000, 190), plan_ozEZmitgc8tjB: TAX(2900, 551) } }, commands: [...STORE.commands, ["plans", "calculate_tax", "plan_NrjXyj6yTetff", "--address", '{"country":"DE"}'], ["plans", "calculate_tax", "plan_ozEZmitgc8tjB", "--address", '{"country":"DE"}']] };
+
 export const DOCTOR: DoctorInput = {
   accountTitle: "Frame",
   accountId: "biz_VraUMckluH8dzV",
@@ -220,6 +230,8 @@ export const DOCTOR: DoctorInput = {
   products: envelope("products.list"),
   webhooks: envelope("error.webhooks_oauth"),
   deliveries: {},
+  /** Recorded on 2026-09-21: Whop lists no destination this account can add, with or without `--country`. */
+  supportedMethods: synthPage([]),
   commands: DOCTOR_COMMANDS,
 };
 
@@ -398,6 +410,9 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "money.ready": (t) => moneyView(MONEY_READY, t),
   "close.blocked": (t) => recipeView(CLOSE_BLOCKED, t),
   "close.ready": (t) => recipeView(CLOSE_READY, t),
+  "swap.ready": (t) => recipeView(SWAP_READY, t),
+  "swap.blocked": (t) => recipeView(SWAP_BLOCKED, t),
+  "store.from": (t) => storeView(STORE_FROM, t),
   "winback.ready": (t) => recipeView(WINBACK_READY, t),
   rank: (t) => rankView(RANK, t),
   "rank.no_target": (t) => rankView({ ...RANK, target: undefined }, t),

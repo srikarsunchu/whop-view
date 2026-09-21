@@ -23,4 +23,5 @@
  json  whop payouts list --first 5 --format json
  json  whop accounts reserves --format json
  json  whop verifications list --format json
+ json  whop ledgers list --first 100 --format json
 

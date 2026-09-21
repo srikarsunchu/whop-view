@@ -31,3 +31,14 @@ test("setup: blocking first, each step says who does it, and a green account has
   assert.equal((setupData(DOCTOR_READY) as { ok: boolean }).ok, true);
   assert.equal(stepFor({ key: "auth", label: "signed in", level: "fail", detail: "Not signed in.", fix: ["whop", "login"], blocking: true }).how, "terminal");
 });
+
+test("setup: the payout method is a step the person finishes, after the blocking ones", () => {
+  const steps = setupSteps(DOCTOR);
+  const step = steps.find((s) => s.key === "payoutMethod")!;
+  assert.equal(step.blocking, false);
+  assert.equal(step.how, "both");
+  assert.deepEqual(step.command, ["whop", "payouts", "supported-methods"], "a read stays whop");
+  assert.match(step.then, /wv payouts create-method/);
+  assert.match(step.url ?? "", /dashboard\/biz_VraUMckluH8dzV/);
+  assert.ok(steps.findIndex((s) => s.key === "identity") < steps.findIndex((s) => s.key === "payoutMethod"));
+});

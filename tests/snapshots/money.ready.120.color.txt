@@ -2,7 +2,7 @@
 
  [2m── [22m[1mBalances[22m[2m ───────────────────────────────────────────────────────────────────────────────────────────────────────────[22m
    [2musd[22m  [32m$1,234.56 available · $40.00 pending[39m
-   [2meur[22m  [32m€80.00 available[39m
+   [2meur[22m  [33m€80.00 available · no payout method in this currency[39m
 
  [2m── [22m[1mPayout limits[22m[2m ──────────────────────────────────────────────────────────────────────────────────────────────────────[22m
    [2mstandard[22m  up to $5,000.00 per payout · $5,000.00 left today
@@ -16,10 +16,12 @@
  $500.00  [32mcompleted [39m  [2mstandard[22m  [2m18d ago[22m  [2mwdrl_x1[22m
  $120.00  processing  [2mstandard[22m  [2min 24h [22m  [2mwdrl_x2[22m
 
+ [2mswap[22m  [2mwv money swap --from eur --to usd --amount 80 --plan[22m
  [2mmonth end[22m  [2mwv money close --plan[22m
  [2mjson[22m  [2mwhop ledgers report --report_type balance_summary --currency usd --format json[22m
  [2mjson[22m  [2mwhop payouts methods --include_limits --format json[22m
  [2mjson[22m  [2mwhop payouts list --first 5 --format json[22m
  [2mjson[22m  [2mwhop accounts reserves --format json[22m
  [2mjson[22m  [2mwhop verifications list --format json[22m
+ [2mjson[22m  [2mwhop ledgers list --first 100 --format json[22m
 

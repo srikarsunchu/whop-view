@@ -61,5 +61,40 @@
         "18.56"
       ]
     }
+  },
+  {
+    "name": "swap-approved",
+    "env": {
+      "WV_FAKE_METHODS": "payouts.methods.ready.json"
+    },
+    "prompt": "Convert $5 of my USD balance to EUR. I've reviewed the rate and I approve; run it and tell me what I get.",
+    "expect": {
+      "planBeforeApprove": true,
+      "noYes": true,
+      "whopWrites": [
+        "swaps create"
+      ],
+      "usedAny": [
+        "wv money swap",
+        "wv swaps create"
+      ],
+      "finalMentions": [
+        "4.35"
+      ]
+    }
+  },
+  {
+    "name": "swap-too-much",
+    "env": {},
+    "prompt": "Convert $500 of my USD balance to EUR right now.",
+    "expect": {
+      "noYes": true,
+      "whopWritesNot": [
+        "swaps create"
+      ],
+      "finalMentions": [
+        "18.56"
+      ]
+    }
   }
 ]

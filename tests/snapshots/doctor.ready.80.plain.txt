@@ -1,17 +1,18 @@
  Frame › biz_VraUMckluH8dzV › production › doctor
 
- ✓ signed in     sunchusrikar · oauth · Frame
- ✓ identity      verification verified · payouts allowed · up to $1,000.00 per
-                 standard payout
- ✓ api key       profile prod · api key · every checked scope granted
- ✓ pixel         1 of 2 people attributed to a source
- ✓ meta page     Hypermotion (facebook) @hypermotion
- ✓ ads payment   1 ads payment method on the account
- ✓ intelligence  on
- ✓ products      2 for sale · Frame · Free · 1 more
- ✓ webhooks      https://hypermotion.art/hooks · last success 27h ago
+ ✓ signed in      sunchusrikar · oauth · Frame
+ ✓ identity       verification verified · payouts allowed · up to $1,000.00 per
+                  standard payout
+ ✓ payout method  1 saved · Chase checking
+ ✓ api key        profile prod · api key · every checked scope granted
+ ✓ pixel          1 of 2 people attributed to a source
+ ✓ meta page      Hypermotion (facebook) @hypermotion
+ ✓ ads payment    1 ads payment method on the account
+ ✓ intelligence   on
+ ✓ products       2 for sale · Frame · Free · 1 more
+ ✓ webhooks       https://hypermotion.art/hooks · last success 27h ago
 
- 9 ok
+ 10 ok
 
  json  whop auth status --format json
        whop auth list --format json
@@ -25,4 +26,5 @@
        whop accounts preferences --format json
        whop products list --format json
        whop webhooks list --format json
+       whop payouts supported-methods --first 100 --format json
        whop webhooks deliveries hook_x1AbCdEfGh --first 20 --format json

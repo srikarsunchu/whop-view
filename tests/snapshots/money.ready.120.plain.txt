@@ -2,7 +2,7 @@
 
  ── Balances ───────────────────────────────────────────────────────────────────────────────────────────────────────────
    usd  $1,234.56 available · $40.00 pending
-   eur  €80.00 available
+   eur  €80.00 available · no payout method in this currency
 
  ── Payout limits ──────────────────────────────────────────────────────────────────────────────────────────────────────
    standard  up to $5,000.00 per payout · $5,000.00 left today
@@ -16,10 +16,12 @@
  $500.00  completed   standard  18d ago  wdrl_x1
  $120.00  processing  standard  in 24h   wdrl_x2
 
+ swap  wv money swap --from eur --to usd --amount 80 --plan
  month end  wv money close --plan
  json  whop ledgers report --report_type balance_summary --currency usd --format json
  json  whop payouts methods --include_limits --format json
  json  whop payouts list --first 5 --format json
  json  whop accounts reserves --format json
  json  whop verifications list --format json
+ json  whop ledgers list --first 100 --format json
 

@@ -26,4 +26,5 @@
  [2mjson[22m  [2mwhop payouts list --first 5 --format json[22m
  [2mjson[22m  [2mwhop accounts reserves --format json[22m
  [2mjson[22m  [2mwhop verifications list --format json[22m
+ [2mjson[22m  [2mwhop ledgers list --first 100 --format json[22m
 

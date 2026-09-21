@@ -1,29 +1,34 @@
  [1mFrame[22m[2m › [22m[2mbiz_VraUMckluH8dzV[22m[2m › [22m[33mproduction[39m[2m › [22m[1mdoctor[22m
 
- [32m✓[39m [1msigned in   [22m  sunchusrikar · oauth · Frame
- [31m✗[39m [1midentity    [22m  [31mPayouts are blocked: Please complete identity verification[39m
-                 [31mbefore requesting a withdrawal.[39m
+ [32m✓[39m [1msigned in    [22m  sunchusrikar · oauth · Frame
+ [31m✗[39m [1midentity     [22m  [31mPayouts are blocked: Please complete identity verification[39m
+                  [31mbefore requesting a withdrawal.[39m
  [2mfix[22m  [2mwhop verifications create --account_id biz_VraUMckluH8dzV[22m
- [33m![39m [1mapi key     [22m  [33mThis oauth login lacks developer:manage_webhook. The api-key[39m
-                 [33mprofile sandbox is saved; switch to it for those.[39m
+ [33m![39m [1mpayout method[22m  [33mNo saved payout method, and Whop lists no destination this[39m
+                  [33maccount can add. The account's country and identity decide[39m
+                  [33mwhat is offered; finish verification, then check again.[39m
+ [2mfix[22m  [2mwhop payouts supported-methods[22m
+ [2mdashboard only[22m  [2mhttps://whop.com/dashboard/biz_VraUMckluH8dzV/[22m
+ [33m![39m [1mapi key      [22m  [33mThis oauth login lacks developer:manage_webhook. The api-key[39m
+                  [33mprofile sandbox is saved; switch to it for those.[39m
  [2mfix[22m  [2mwv auth switch sandbox[22m
- [33m![39m [1mpixel       [22m  [33mNo visit carries a source: the pixel is not installed on your[39m
-                 [33mpages, so nothing is attributed.[39m
+ [33m![39m [1mpixel        [22m  [33mNo visit carries a source: the pixel is not installed on your[39m
+                  [33mpages, so nothing is attributed.[39m
  [2mfix[22m  [2mwhop events validate_pixel[22m
- [33m![39m [1mmeta page   [22m  [33mNo Meta page is connected, so every ad command will refuse.[39m
+ [33m![39m [1mmeta page    [22m  [33mNo Meta page is connected, so every ad command will refuse.[39m
  [2mfix[22m  [2mwhop social-accounts connect --platform meta_business --scopes advertise[22m
       [2m--redirect_url <url>[22m
- [33m![39m [1mads payment [22m  [33mNo ads payment method on the account, so ads will not deliver.[39m
+ [33m![39m [1mads payment  [22m  [33mNo ads payment method on the account, so ads will not deliver.[39m
  [2mdashboard only[22m  [2mhttps://whop.com/dashboard/biz_VraUMckluH8dzV/[22m
- [33m![39m [1mintelligence[22m  [33mEconomic Intelligence is off, so `whop economic-intelligence`[39m
-                 [33mreturns 403.[39m
+ [33m![39m [1mintelligence [22m  [33mEconomic Intelligence is off, so `whop economic-intelligence`[39m
+                  [33mreturns 403.[39m
  [2mfix[22m  [2mwhop accounts update-preferences --economic_intelligence true[22m
- [32m✓[39m [1mproducts    [22m  2 for sale · Frame · Free · 1 more
- [33m![39m [1mwebhooks    [22m  [33mWebhooks refuse an oauth login. Sign in with an API key to[39m
-                 [33mlist, create, or test them.[39m
+ [32m✓[39m [1mproducts     [22m  2 for sale · Frame · Free · 1 more
+ [33m![39m [1mwebhooks     [22m  [33mWebhooks refuse an oauth login. Sign in with an API key to[39m
+                  [33mlist, create, or test them.[39m
  [2mfix[22m  [2mwv auth switch sandbox[22m
 
- [31m1 blocking[39m[2m · [22m[33m6 warnings[39m[2m · [22m[32m2 ok[39m
+ [31m1 blocking[39m[2m · [22m[33m7 warnings[39m[2m · [22m[32m2 ok[39m
 
  [2mjson[22m  [2mwhop auth status --format json[22m
  [2m    [22m  [2mwhop auth list --format json[22m
@@ -37,3 +42,4 @@
  [2m    [22m  [2mwhop accounts preferences --format json[22m
  [2m    [22m  [2mwhop products list --format json[22m
  [2m    [22m  [2mwhop webhooks list --format json[22m
+ [2m    [22m  [2mwhop payouts supported-methods --first 100 --format json[22m

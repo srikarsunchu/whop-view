@@ -15,19 +15,22 @@
    people  2 people · 2 customers · 2 contactable · 0 attributed to a source
 
  ── Blockers ───────────────────────────────────────────────────────────────────
-   identity      Payouts are blocked: Please complete identity verification
-                 before requesting a withdrawal.
-   api key       This oauth login lacks developer:manage_webhook. The api-key
-                 profile sandbox is saved; switch to it for those.
-   pixel         No visit carries a source: the pixel is not installed on your
-                 pages, so nothing is attributed.
-   meta page     No Meta page is connected, so every ad command will refuse.
-   ads payment   No ads payment method on the account, so ads will not deliver.
-   intelligence  Economic Intelligence is off, so `whop economic-intelligence`
-                 returns 403.
-   webhooks      Webhooks refuse an oauth login. Sign in with an API key to
-                 list, create, or test them.
-   gap           No ads payment method on the account, so ads will not deliver.
+   identity       Payouts are blocked: Please complete identity verification
+                  before requesting a withdrawal.
+   payout method  No saved payout method, and Whop lists no destination this
+                  account can add. The account's country and identity decide
+                  what is offered; finish verification, then check again.
+   api key        This oauth login lacks developer:manage_webhook. The api-key
+                  profile sandbox is saved; switch to it for those.
+   pixel          No visit carries a source: the pixel is not installed on your
+                  pages, so nothing is attributed.
+   meta page      No Meta page is connected, so every ad command will refuse.
+   ads payment    No ads payment method on the account, so ads will not deliver.
+   intelligence   Economic Intelligence is off, so `whop economic-intelligence`
+                  returns 403.
+   webhooks       Webhooks refuse an oauth login. Sign in with an API key to
+                  list, create, or test them.
+   gap            No ads payment method on the account, so ads will not deliver.
 
  Campaigns
    Launch · Hypermotion  4 groups · 1 scale · 1 pause · 1 wait · 1 not
@@ -37,6 +40,7 @@
    reca_x1  Launch a 20% winback code for visitors who did not buy · promo code
 
  fix identity  whop verifications create --account_id biz_VraUMckluH8dzV
+ fix payout method  whop payouts supported-methods
  fix api key  wv auth switch sandbox
  fix pixel  whop events validate_pixel
  fix meta page  whop social-accounts connect --platform meta_business --scopes

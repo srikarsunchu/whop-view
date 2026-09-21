@@ -1,17 +1,18 @@
  [1mFrame[22m[2m › [22m[2mbiz_VraUMckluH8dzV[22m[2m › [22m[33mproduction[39m[2m › [22m[1mdoctor[22m
 
- [32m✓[39m [1msigned in   [22m  sunchusrikar · oauth · Frame
- [32m✓[39m [1midentity    [22m  verification verified · payouts allowed · up to $1,000.00 per
-                 standard payout
- [32m✓[39m [1mapi key     [22m  profile prod · api key · every checked scope granted
- [32m✓[39m [1mpixel       [22m  1 of 2 people attributed to a source
- [32m✓[39m [1mmeta page   [22m  Hypermotion (facebook) @hypermotion
- [32m✓[39m [1mads payment [22m  1 ads payment method on the account
- [32m✓[39m [1mintelligence[22m  on
- [32m✓[39m [1mproducts    [22m  2 for sale · Frame · Free · 1 more
- [32m✓[39m [1mwebhooks    [22m  https://hypermotion.art/hooks · last success 27h ago
+ [32m✓[39m [1msigned in    [22m  sunchusrikar · oauth · Frame
+ [32m✓[39m [1midentity     [22m  verification verified · payouts allowed · up to $1,000.00 per
+                  standard payout
+ [32m✓[39m [1mpayout method[22m  1 saved · Chase checking
+ [32m✓[39m [1mapi key      [22m  profile prod · api key · every checked scope granted
+ [32m✓[39m [1mpixel        [22m  1 of 2 people attributed to a source
+ [32m✓[39m [1mmeta page    [22m  Hypermotion (facebook) @hypermotion
+ [32m✓[39m [1mads payment  [22m  1 ads payment method on the account
+ [32m✓[39m [1mintelligence [22m  on
+ [32m✓[39m [1mproducts     [22m  2 for sale · Frame · Free · 1 more
+ [32m✓[39m [1mwebhooks     [22m  https://hypermotion.art/hooks · last success 27h ago
 
- [32m9 ok[39m
+ [32m10 ok[39m
 
  [2mjson[22m  [2mwhop auth status --format json[22m
  [2m    [22m  [2mwhop auth list --format json[22m
@@ -25,4 +26,5 @@
  [2m    [22m  [2mwhop accounts preferences --format json[22m
  [2m    [22m  [2mwhop products list --format json[22m
  [2m    [22m  [2mwhop webhooks list --format json[22m
+ [2m    [22m  [2mwhop payouts supported-methods --first 100 --format json[22m
  [2m    [22m  [2mwhop webhooks deliveries hook_x1AbCdEfGh --first 20 --format json[22m

@@ -30,12 +30,49 @@ export interface StoreInput {
   products: Parsed;
   /** `plans list`, every plan on the account. */
   plans: Parsed;
+  /** `--from <CC>`: one `plans calculate_tax` per priced plan, keyed by plan id, with the buyer's country as the address. */
+  from?: { country: string; taxes: Record<string, Parsed> };
   /** `promo-codes list --status active` */
   promoCodes: Parsed;
   /** `checkout-configurations list` */
   checkouts: Parsed;
   now?: number;
   commands: string[][];
+}
+
+/** The plans a tax preview makes sense for: anything with a price, at most eight so a large catalog is not a storm of calls. */
+export function taxablePlans(plans: Rec[]): Rec[] {
+  return plans.filter((p) => (priceOf(p.initial_price) ?? 0) > 0 || (priceOf(p.renewal_price) ?? 0) > 0).slice(0, 8);
+}
+
+/** A tax preview as Whop sends it: `subtotal`, `tax_amount`, `total` in minor units, `currency`, `tax_behavior`. */
+export interface TaxPreview {
+  currency: string;
+  subtotal?: number;
+  tax?: number;
+  total?: number;
+  behavior?: string;
+  error?: string;
+}
+
+export function taxOf(p: Parsed | undefined, currency = "usd"): TaxPreview | undefined {
+  if (!p) return undefined;
+  if (!p.ok) return { currency, error: `${p.error.code} ${p.error.message.split("\n")[0]}` };
+  // The preview has no `id`, so the classifier files it under `other`; any payload with a record will do.
+  const r = "record" in p.payload ? p.payload.record : undefined;
+  if (!r || r.subtotal === undefined) return { currency, error: copy.store.from_.noPreview };
+  const cents = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v / 100 : typeof v === "string" && v !== "" && Number.isFinite(Number(v)) ? Number(v) / 100 : undefined);
+  return { currency: typeof r.currency === "string" && r.currency ? r.currency : currency, subtotal: cents(r.subtotal), tax: cents(r.tax_amount), total: cents(r.total), behavior: typeof r.tax_behavior === "string" ? r.tax_behavior : undefined };
+}
+
+/** The plan line's tail: what a buyer in the country pays, tax included, from the preview. */
+export function localizedLine(country: string, t: TaxPreview | undefined): string | undefined {
+  const c = copy.store.from_;
+  if (!t) return undefined;
+  if (t.error) return c.failed(country, t.error);
+  if (t.total === undefined) return c.failed(country, c.noPreview);
+  const rate = t.subtotal && t.tax !== undefined ? Math.round((t.tax / t.subtotal) * 1000) / 10 : undefined;
+  return t.tax ? c.withTax(country, money(t.total, t.currency), money(t.tax, t.currency), rate) : c.noTax(country, money(t.total, t.currency));
 }
 
 /** The plans under a product, from the plans list's `product.id` or `product_id`. */
@@ -63,9 +100,10 @@ export function storeData(input: StoreInput): Rec {
     products: products
       ? products.map((p) => {
           const own = plansOf(plans, String(p.id));
-          return { id: p.id, title: p.title, visibility: p.visibility, route: p.route, member_count: p.member_count, forSale: forSale(p, own), plans: own.map((pl) => ({ id: pl.id, title: pl.title, plan_type: pl.plan_type, price: planPrice(pl as never), initial_price: priceOf(pl.initial_price), renewal_price: priceOf(pl.renewal_price), billing_period: pl.billing_period, visibility: pl.visibility, release_method: pl.release_method, member_count: pl.member_count, stock: pl.unlimited_stock === true ? "unlimited" : pl.stock, trial_period_days: pl.trial_period_days, purchase_url: pl.purchase_url })) };
+          return { id: p.id, title: p.title, visibility: p.visibility, route: p.route, member_count: p.member_count, forSale: forSale(p, own), plans: own.map((pl) => ({ id: pl.id, title: pl.title, plan_type: pl.plan_type, price: planPrice(pl as never), initial_price: priceOf(pl.initial_price), renewal_price: priceOf(pl.renewal_price), billing_period: pl.billing_period, visibility: pl.visibility, release_method: pl.release_method, member_count: pl.member_count, stock: pl.unlimited_stock === true ? "unlimited" : pl.stock, trial_period_days: pl.trial_period_days, purchase_url: pl.purchase_url, ...(input.from && input.from.taxes[String(pl.id)] ? { localized: { country: input.from.country, ...taxOf(input.from.taxes[String(pl.id)], str(pl.currency) ?? "usd") } } : {}) })) };
         })
       : { error: errLine(input.products) },
+    from: input.from?.country,
     promo_codes: rows(input.promoCodes) ?? { error: errLine(input.promoCodes) },
     checkouts: rows(input.checkouts)?.map((k) => ({ id: k.id, plan_id: isObj(k.plan) ? k.plan.id : k.plan_id, purchase_url: k.purchase_url, metadata: k.metadata, created_at: k.created_at })) ?? { error: errLine(input.checkouts) },
     commands: input.commands.map((c) => teach(c)),
@@ -85,7 +123,7 @@ function productSections(input: StoreInput, theme: Theme): KvSection[] {
     const planRows: KvRow[] = own.length
       ? own.map((pl) => ({
           key: str(pl.title) ?? String(pl.id),
-          value: [planPrice(pl as never), str(pl.plan_type)?.replace(/_/g, " ") ?? "", statusLabel(str(pl.visibility) ?? ""), pl.release_method === "waitlist" ? c.waitlist : "", num(pl.trial_period_days) ? c.trial(pl.trial_period_days as number) : "", c.members(num(pl.member_count) ?? 0), pl.unlimited_stock === true ? "" : c.stock(num(pl.stock) ?? 0), String(pl.id)].filter(Boolean).join(" · "),
+          value: [planPrice(pl as never), str(pl.plan_type)?.replace(/_/g, " ") ?? "", statusLabel(str(pl.visibility) ?? ""), pl.release_method === "waitlist" ? c.waitlist : "", num(pl.trial_period_days) ? c.trial(pl.trial_period_days as number) : "", c.members(num(pl.member_count) ?? 0), pl.unlimited_stock === true ? "" : c.stock(num(pl.stock) ?? 0), String(pl.id), input.from ? localizedLine(input.from.country, taxOf(input.from.taxes[String(pl.id)], str(pl.currency) ?? "usd")) ?? "" : ""].filter(Boolean).join(" · "),
           role: pl.visibility === "visible" ? "text" : "muted",
         }))
       : [{ key: c.plans, value: c.noPlansShort, role: "warn" }];
@@ -148,6 +186,7 @@ export function storeView(input: StoreInput, theme: Theme): string[] {
   if (unsold) lines.push([c.publish, ["wv", "store", "publish", String(unsold.id), "--plan"]]);
   const firstPlan = plans.find((p) => p.visibility === "visible") ?? plans[0];
   if (firstPlan) lines.push([c.price, ["wv", "store", "price", String(firstPlan.id), "--to", "<amount>", "--plan"]]);
+  if (!input.from && taxablePlans(plans).length) lines.push([c.from_.footer, ["wv", "store", "--from", "<CC>"]]);
   for (const cmd of input.commands) lines.push([copy.list.json, teach(cmd)]);
   out.push(...footer(lines, theme), "");
   return out;

@@ -1,8 +1,8 @@
 // `wv money` and `wv money close`: balances, limits, the method pick, the close flags and window, and the plan.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { balanceOf, buildClose, closeChecks, closeWindow, limitsOf, moneyData, parseCloseArgs, pickMethod } from "../src/views/money.ts";
-import { envelope, synth } from "./render.ts";
+import { balanceOf, buildClose, buildSwap, closeChecks, closeWindow, currenciesOf, limitsOf, moneyData, parseCloseArgs, parseSwapArgs, pickMethod, quoteOf, swapChecks, unpayable } from "../src/views/money.ts";
+import { MONEY_READY, SWAP_BLOCKED, SWAP_READY, envelope, synth, synthPage } from "./render.ts";
 
 const NOW = new Date("2026-09-21T12:00:00Z");
 
@@ -80,4 +80,51 @@ test("money data: the screen as JSON names the block and round-trips", () => {
   assert.equal(d.payoutsBlocked?.code, "kyc_completed");
   assert.equal(d.balances[0].available, 18.56);
   assert.doesNotThrow(() => JSON.parse(JSON.stringify(d)));
+});
+
+test("money: every currency the account holds, and the ones nothing can pay out", () => {
+  const usdOnly = envelope("payouts.methods.ready");
+  assert.deepEqual(currenciesOf(usdOnly), ["usd"]);
+  assert.deepEqual(currenciesOf(usdOnly, envelope("ledgers.list")), ["usd"], "the recorded ledger is all usd");
+  const eurSale = synthPage([{ id: "line_1", currency: { code: "EUR", precision: "100000000" } }, { id: "line_2", currency: { code: "usd" } }]);
+  const reserves = synthPage([{ currency: "gbp", amount: 5 }]);
+  assert.deepEqual(currenciesOf(usdOnly, eurSale, reserves), ["usd", "eur", "gbp"], "ledger and reserve currencies join, lowercased, usd first");
+  assert.deepEqual(currenciesOf(envelope("error.gated"), eurSale), ["usd", "eur"], "an unreadable methods page still leaves the ledger's currencies");
+  // A EUR balance with a USD-only method is stuck; the data names it and the screen marks it.
+  assert.deepEqual(unpayable(MONEY_READY).map((b) => b.currency), ["eur"]);
+  const d = moneyData(MONEY_READY) as { unpayable: string[]; balances: { currency: string; payable: boolean }[] };
+  assert.deepEqual(d.unpayable, ["eur"]);
+  assert.deepEqual(d.balances.map((b) => [b.currency, b.payable]), [["usd", true], ["eur", false]]);
+  // No method at all: nothing is "unpayable" in particular, the methods row already says so.
+  assert.deepEqual(unpayable({ ...MONEY_READY, methods: envelope("payouts.methods.limits") }), []);
+});
+
+test("money swap: flags, the quote, and the plan with both balances before and after", () => {
+  const { opts } = parseSwapArgs(["money", "swap", "--from", "EUR", "--to", "usd", "--amount", "80"]);
+  assert.deepEqual(opts, { from: "eur", to: "usd", amount: 80, key: undefined });
+  assert.match(parseSwapArgs(["money", "swap", "--from", "eur", "--to", "eur", "--amount", "1"]).error ?? "", /both eur/);
+  assert.match(parseSwapArgs(["money", "swap", "--from", "eur", "--to", "usd"]).error ?? "", /--amount/);
+  assert.match(parseSwapArgs(["money", "swap", "--amount", "5"]).error ?? "", /Which currencies/);
+  assert.match(parseSwapArgs(["money", "swap", "--from", "eur", "--to", "usd", "--amount", "5", "--speed", "x"]).error ?? "", /not a swap flag/);
+  const q = quoteOf(synth({ id: "q", object: "swap_quote", amount_in: "1.0", amount_out: "0.87", rate: "0.87", fee_bps: 0, fee_amount: null }));
+  assert.deepEqual(q, { amountIn: 1, amountOut: 0.87, rate: 0.87, feeBps: 0, feeAmount: undefined });
+  assert.match(quoteOf(envelope("error.gated")).error ?? "", /HTTP_403/);
+  // Ready: one step, the amount typed back, both balances move.
+  assert.deepEqual(SWAP_READY.blockers, []);
+  assert.deepEqual(SWAP_READY.steps.map((s) => s.key), ["swap"]);
+  assert.deepEqual(SWAP_READY.steps[0].argv, ["swaps", "create", "--account_id", "biz_VraUMckluH8dzV", "--from_token", "eur", "--to_token", "usd", "--amount", "80", "--idempotency-key", "k-swap"]);
+  assert.deepEqual(SWAP_READY.typedAmount, { amount: 80, currency: "eur" });
+  assert.deepEqual(SWAP_READY.after, { from: 0, to: 1326.56 });
+  assert.match(SWAP_READY.summary.find((r) => r.key === "rate")?.value ?? "", /1 eur = \$1\.15 · no fee/);
+  assert.match(SWAP_READY.summary.find((r) => r.key === "from")?.value ?? "", /€80\.00 available → €0\.00/);
+  // Blocked: more than the balance holds.
+  assert.equal(SWAP_BLOCKED.blockers.length, 1);
+  assert.match(SWAP_BLOCKED.blockers[0], /€80\.00 is more than the €12\.50 available/);
+  // A failed quote blocks; a fee warns; sandbox types nothing back.
+  const noQuote = buildSwap(["money", "swap"], opts!, { quote: envelope("error.gated"), from: { currency: "eur", available: 100, other: [] }, to: { currency: "usd", available: 0, other: [] } });
+  assert.match(noQuote.blockers[0], /would not quote/);
+  const fee = buildSwap(["money", "swap"], opts!, { quote: synth({ id: "q", amount_in: "80", amount_out: "91", rate: "1.15", fee_bps: 25, fee_amount: "0.2" }), from: { currency: "eur", available: 100, other: [] }, to: { currency: "usd", available: 0, other: [] }, mode: "sandbox" });
+  assert.match(fee.warnings[0], /25 bps/);
+  assert.equal(fee.typedAmount, undefined);
+  assert.deepEqual(swapChecks({ swap: { id: "swap_1" } }).map((c) => c.label), ["swap", "balances after"]);
 });

@@ -1,41 +1,49 @@
- Frame › biz_VraUMckluH8dzV › production › setup › 2 of 9 green
+ Frame › biz_VraUMckluH8dzV › production › setup › 2 of 10 green
 
-   1  identity      blocks selling · wv starts it, you finish in a browser
-                    why   Payouts are blocked: Please complete identity verification before requesting a withdrawal.
-                    then  The command starts identity verification; Whop finishes it in the dashboard with your
-                          documents. Payouts stay blocked until it clears.
-                    run   wv verifications create --account_id biz_VraUMckluH8dzV
-                    open  https://whop.com/dashboard/biz_VraUMckluH8dzV/
-   2  api key       wv runs it, you approve
-                    why   This oauth login lacks developer:manage_webhook. The api-key profile sandbox is saved; switch
-                          to it for those.
-                    then  Switch to the saved API-key profile; webhooks and a few developer reads need it. Switch back
-                          after if you prefer the OAuth login day to day.
-                    run   wv auth switch sandbox
-   3  pixel         wv starts it, you finish in a browser
-                    why   No visit carries a source: the pixel is not installed on your pages, so nothing is attributed.
-                    then  Add the Whop pixel to the head of every page people land on, then validate; until then nothing
-                          is attributed and audiences stay empty.
-                    run   whop events validate_pixel
-                    open  https://docs.whop.com/developer/ads/pixel
-   4  meta page     wv starts it, you finish in a browser
-                    why   No Meta page is connected, so every ad command will refuse.
-                    then  The command returns a URL; open it and connect the Facebook page ads will run under. Whop owns
-                          the ad account; you connect the page.
-                    run   wv social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>
-   5  ads payment   you, in the dashboard
-                    why   No ads payment method on the account, so ads will not deliver.
-                    then  Add an ads payment method under settings, or fund the balance with wv deposits create; ads
-                          will not deliver without one.
-                    open  https://whop.com/dashboard/biz_VraUMckluH8dzV/
-   6  intelligence  wv runs it, you approve
-                    why   Economic Intelligence is off, so `whop economic-intelligence` returns 403.
-                    then  Turn on Economic Intelligence so whop economic-intelligence answers instead of 403.
-                    run   wv accounts update-preferences --economic_intelligence true
-   7  webhooks      wv runs it, you approve
-                    why   Webhooks refuse an oauth login. Sign in with an API key to list, create, or test them.
-                    then  Create and test a webhook to your server; needs the API-key profile from the step above.
-                    run   wv dev hook https://<your host>/hooks --plan
+   1  identity       blocks selling · wv starts it, you finish in a browser
+                     why   Payouts are blocked: Please complete identity verification before requesting a withdrawal.
+                     then  The command starts identity verification; Whop finishes it in the dashboard with your
+                           documents. Payouts stay blocked until it clears.
+                     run   wv verifications create --account_id biz_VraUMckluH8dzV
+                     open  https://whop.com/dashboard/biz_VraUMckluH8dzV/
+   2  payout method  wv starts it, you finish in a browser
+                     why   No saved payout method, and Whop lists no destination this account can add. The account's
+                           country and identity decide what is offered; finish verification, then check again.
+                     then  List what Whop lets this account add, then save one with wv payouts create-method or in the
+                           dashboard. Money in a currency no method delivers has to be swapped first (wv money swap).
+                     run   whop payouts supported-methods
+                     open  https://whop.com/dashboard/biz_VraUMckluH8dzV/
+   3  api key        wv runs it, you approve
+                     why   This oauth login lacks developer:manage_webhook. The api-key profile sandbox is saved; switch
+                           to it for those.
+                     then  Switch to the saved API-key profile; webhooks and a few developer reads need it. Switch back
+                           after if you prefer the OAuth login day to day.
+                     run   wv auth switch sandbox
+   4  pixel          wv starts it, you finish in a browser
+                     why   No visit carries a source: the pixel is not installed on your pages, so nothing is
+                           attributed.
+                     then  Add the Whop pixel to the head of every page people land on, then validate; until then
+                           nothing is attributed and audiences stay empty.
+                     run   whop events validate_pixel
+                     open  https://docs.whop.com/developer/ads/pixel
+   5  meta page      wv starts it, you finish in a browser
+                     why   No Meta page is connected, so every ad command will refuse.
+                     then  The command returns a URL; open it and connect the Facebook page ads will run under. Whop
+                           owns the ad account; you connect the page.
+                     run   wv social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>
+   6  ads payment    you, in the dashboard
+                     why   No ads payment method on the account, so ads will not deliver.
+                     then  Add an ads payment method under settings, or fund the balance with wv deposits create; ads
+                           will not deliver without one.
+                     open  https://whop.com/dashboard/biz_VraUMckluH8dzV/
+   7  intelligence   wv runs it, you approve
+                     why   Economic Intelligence is off, so `whop economic-intelligence` returns 403.
+                     then  Turn on Economic Intelligence so whop economic-intelligence answers instead of 403.
+                     run   wv accounts update-preferences --economic_intelligence true
+   8  webhooks       wv runs it, you approve
+                     why   Webhooks refuse an oauth login. Sign in with an API key to list, create, or test them.
+                     then  Create and test a webhook to your server; needs the API-key profile from the step above.
+                     run   wv dev hook https://<your host>/hooks --plan
 
    Do the steps in order, blocking ones first. Every run line is a write that shows its plan before it runs; every open
    line is a page only you can complete. Then wv setup again until it is green.

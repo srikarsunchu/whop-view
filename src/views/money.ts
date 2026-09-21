@@ -19,6 +19,8 @@ import { recipeData, stepKey, type RecipePlan, type RecipeRow, type RecipeStep }
 const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
 const num = (v: unknown): number | undefined => (typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && v !== "" && Number.isFinite(Number(v)) ? Number(v) : undefined);
 const rows = (p: Parsed | undefined): Rec[] | undefined => (p && p.ok && p.payload.kind === "page" ? p.payload.rows : undefined);
+const isObj = (v: unknown): v is Rec => !!v && typeof v === "object" && !Array.isArray(v);
+const recordOf = (p: Parsed | undefined): Rec | undefined => (p && p.ok && "record" in p.payload ? p.payload.record : undefined);
 const errLine = (p: Parsed) => (p.ok ? "" : `${p.error.code} ${p.error.message.split("\n")[0]}`);
 
 /** One currency's balance from `ledgers report --report_type balance_summary --currency <c>`. */
@@ -59,8 +61,40 @@ export interface MoneyInput {
   reserves: Parsed;
   /** `verifications list` */
   verifications: Parsed;
+  /** `ledgers list --first 100`: where the currencies the ledger holds come from. */
+  ledger?: Parsed;
   now?: number;
   commands: string[][];
+}
+
+/**
+ * Every currency the account holds money in: `usd`, the currency of every saved method, every currency on the
+ * ledger's last page, and every reserve. The ledger is the one read that sees a EUR sale on an account whose only
+ * method pays USD; without it the screen would show one balance and hide the rest.
+ */
+export function currenciesOf(methods: Parsed, ledger?: Parsed, reserves?: Parsed): string[] {
+  const out = ["usd"];
+  const add = (v: unknown) => {
+    const c = typeof v === "string" ? v.toLowerCase() : "";
+    if (c && !out.includes(c)) out.push(c);
+  };
+  for (const m of rows(methods) ?? []) add(m.currency);
+  for (const l of rows(ledger) ?? []) add(isObj(l.currency) ? l.currency.code : l.currency);
+  for (const r of rows(reserves) ?? []) add(r.currency);
+  return out;
+}
+
+/** The currencies a saved method can pay out. A balance in any other currency has to be swapped first. */
+export function payableCurrencies(methods: Parsed): Set<string> {
+  return new Set((rows(methods) ?? []).map((m) => (typeof m.currency === "string" ? m.currency.toLowerCase() : "")).filter(Boolean));
+}
+
+/** Balances nothing can pay out: money sitting in a currency no saved method delivers. */
+export function unpayable(input: MoneyInput): Balance[] {
+  const payable = payableCurrencies(input.methods);
+  // With no method at all every balance is stuck, and the methods row already says so; a swap would not help.
+  if (!payable.size) return [];
+  return input.balances.filter((b) => !b.error && (b.available ?? 0) > 0 && !payable.has(b.currency.toLowerCase()));
 }
 
 /** The two speeds' limits, with the block behind a zero, from the `limits` sibling on the methods page. */
@@ -84,11 +118,14 @@ export function pickMethod(methods: Rec[], id?: string): { method?: Rec; reason?
 export function moneyData(input: MoneyInput): Rec {
   const limits = limitsOf(input.methods);
   const methods = rows(input.methods) ?? [];
+  const payable = payableCurrencies(input.methods);
   return {
     ok: input.balances.every((b) => !b.error) && input.methods.ok,
     account: input.accountId || input.accountTitle ? { id: input.accountId, title: input.accountTitle } : undefined,
     mode: input.mode ?? "production",
-    balances: input.balances,
+    balances: input.balances.map((b) => ({ ...b, payable: payable.has(b.currency.toLowerCase()) })),
+    /** Currencies with money in them that no saved method delivers; each needs a swap first. */
+    unpayable: unpayable(input).map((b) => b.currency),
     limits,
     /** Whop blocks payouts when the standard limit carries an error code; that is the identity check. */
     payoutsBlocked: limits.standard?.code ? { code: limits.standard.code, message: limits.standard.message } : undefined,
@@ -102,10 +139,15 @@ export function moneyData(input: MoneyInput): Rec {
 
 function balanceRows(input: MoneyInput): KvRow[] {
   const c = copy.money;
+  const payable = payableCurrencies(input.methods);
+  const anyMethod = payable.size > 0;
   return input.balances.map((b) => {
     if (b.error) return { key: b.currency, value: b.error, role: "warn" as Role };
     const parts = [b.available === undefined ? copy.detail.empty : `${money(b.available, b.currency)} ${c.available}`, ...b.other.map((o) => `${money(o.amount, b.currency)} ${o.category.replace(/_/g, " ")}`)];
-    return { key: b.currency, value: parts.join(" · "), role: (b.available ?? 0) > 0 ? "good" : "muted" };
+    // A balance no saved method delivers is marked; the footer names the swap. Silent when there is no method at all, since the methods row already says so.
+    const stuck = anyMethod && (b.available ?? 0) > 0 && !payable.has(b.currency.toLowerCase());
+    if (stuck) parts.push(c.noMethodFor);
+    return { key: b.currency, value: parts.join(" · "), role: stuck ? "warn" : (b.available ?? 0) > 0 ? "good" : "muted" };
   });
 }
 
@@ -186,6 +228,8 @@ export function moneyView(input: MoneyInput, theme: Theme): string[] {
   }
   const lines: FooterLine[] = [];
   if (l.standard?.code) lines.push([copy.doctor.fix, ["whop", "verifications", "create", "--account_id", input.accountId ?? "<biz_id>"]]);
+  const target = [...payableCurrencies(input.methods)][0] ?? "usd";
+  for (const b of unpayable(input)) if (payableCurrencies(input.methods).size) lines.push([c.swap, ["wv", "money", "swap", "--from", b.currency, "--to", target, "--amount", String(b.available ?? 0), "--plan"]]);
   lines.push([c.close, ["wv", "money", "close", "--plan"]]);
   for (const cmd of input.commands) lines.push([copy.list.json, teach(cmd)]);
   out.push(...footer(lines, theme), "");
@@ -341,6 +385,137 @@ export function closeChecks(results: Partial<Record<string, Rec>>): { label: str
   const out: { label: string; argv: string[] }[] = [];
   if (results.export?.id) out.push({ label: c.export, argv: ["whop", "exports", "get", String(results.export.id), "--format", "json"] });
   if (results.payout?.id) out.push({ label: c.payout, argv: ["whop", "payouts", "get", String(results.payout.id), "--format", "json"] });
+  out.push({ label: c.balance, argv: ["wv", "money"] });
+  return out;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// `wv money swap --from eur --to usd --amount 80`: a quote first, then one fiat swap at the quoted rate.
+
+export interface SwapOptions {
+  from: string;
+  to: string;
+  amount: number;
+  key?: string;
+}
+
+export const SWAP_FLAGS = ["--from", "--to", "--amount", "--idempotency-key"];
+
+export function parseSwapArgs(argv: string[]): { opts?: SwapOptions; error?: string } {
+  const c = copy.money.swap_;
+  const rest = argv[0] === "money" && argv[1] === "swap" ? argv.slice(2) : argv;
+  const flags: Record<string, string> = {};
+  for (let i = 0; i < rest.length; i++) {
+    const a = rest[i];
+    if (!a.startsWith("--")) return { error: copy.launch.extraArg(a) };
+    const eq = a.indexOf("=");
+    const name = eq > 0 ? a.slice(0, eq) : a;
+    if (!SWAP_FLAGS.includes(name)) return { error: c.unknownFlag(name) };
+    flags[name] = eq > 0 ? a.slice(eq + 1) : (rest[++i] ?? "");
+  }
+  const from = (flags["--from"] ?? "").toLowerCase();
+  const to = (flags["--to"] ?? "").toLowerCase();
+  if (!from || !to) return { error: c.needsPair };
+  if (from === to) return { error: c.samePair(from) };
+  const amount = Number(flags["--amount"]);
+  if (flags["--amount"] === undefined || !Number.isFinite(amount) || amount <= 0) return { error: c.needsAmount };
+  return { opts: { from, to, amount, key: flags["--idempotency-key"] } };
+}
+
+/** A quote as Whop sends it: `amount_in`, `amount_out`, `rate`, `fee_bps`, `fee_amount`, strings. */
+export interface SwapQuote {
+  amountIn?: number;
+  amountOut?: number;
+  rate?: number;
+  feeBps?: number;
+  feeAmount?: number;
+  error?: string;
+}
+
+export function quoteOf(p: Parsed): SwapQuote {
+  if (!p.ok) return { error: errLine(p) };
+  const r = recordOf(p);
+  if (!r) return { error: copy.money.swap_.noQuote };
+  return { amountIn: num(r.amount_in), amountOut: num(r.amount_out), rate: num(r.rate), feeBps: num(r.fee_bps), feeAmount: num(r.fee_amount) };
+}
+
+export interface SwapReads {
+  quote: Parsed;
+  from: Balance;
+  to: Balance;
+  accountTitle?: string;
+  accountId?: string;
+  mode?: Mode;
+}
+
+export interface SwapPlan extends RecipePlan {
+  opts: SwapOptions;
+  quote: SwapQuote;
+  after: { from?: number; to?: number };
+}
+
+export function buildSwap(argv: string[], opts: SwapOptions, reads: SwapReads): SwapPlan {
+  const c = copy.money.swap_;
+  const mode = reads.mode ?? "production";
+  const key = opts.key ?? "{key}";
+  const biz = reads.accountId ?? "<biz_id>";
+  const quote = quoteOf(reads.quote);
+  const blockers: string[] = [];
+  const warnings: string[] = [];
+  const available = reads.from.available;
+  if (reads.from.error) blockers.push(copy.money.noBalance(opts.from, reads.from.error));
+  else if ((available ?? 0) < opts.amount) blockers.push(c.insufficient(money(opts.amount, opts.from), money(available ?? 0, opts.from)));
+  if (quote.error) blockers.push(c.quoteFailed(quote.error));
+  else if (quote.amountOut === undefined) blockers.push(c.noQuote);
+  if (reads.to.error) warnings.push(copy.money.noBalance(opts.to, reads.to.error));
+  if ((quote.feeBps ?? 0) > 0) warnings.push(c.fee(quote.feeBps ?? 0, quote.feeAmount !== undefined ? money(quote.feeAmount, opts.from) : undefined));
+  // The from side never shows below zero: a short balance is a blocker, and the card says so in words instead.
+  const after = {
+    from: available === undefined ? undefined : Math.max(0, Math.round((available - opts.amount) * 100) / 100),
+    to: reads.to.error || quote.amountOut === undefined ? undefined : Math.round(((reads.to.available ?? 0) + quote.amountOut) * 100) / 100,
+  };
+  const steps: RecipeStep[] = [
+    {
+      key: "swap",
+      label: c.stepLabel,
+      what: c.swapLine(money(opts.amount, opts.from), quote.amountOut !== undefined ? money(quote.amountOut, opts.to) : opts.to),
+      group: "swaps",
+      verb: "create",
+      argv: ["swaps", "create", "--account_id", biz, "--from_token", opts.from, "--to_token", opts.to, "--amount", String(opts.amount), "--idempotency-key", stepKey(key, "swap")],
+    },
+  ];
+  const line = (b: Balance, next?: number) => (b.error ? b.error : `${money(b.available ?? 0, b.currency)} ${copy.money.available}${next !== undefined ? ` → ${money(next, b.currency)}` : ""}`);
+  const summary: RecipeRow[] = [
+    { key: c.fromKey, value: line(reads.from, after.from), role: reads.from.error ? "warn" : "text" },
+    { key: c.toKey, value: line(reads.to, after.to), role: reads.to.error ? "warn" : "text" },
+    { key: c.rateKey, value: quote.error ? quote.error : quote.rate !== undefined ? c.rateLine(opts.from, money(quote.rate, opts.to), quote.feeBps ?? 0) : c.noQuote, role: quote.error ? "warn" : "muted" },
+    { key: c.amountKey, value: `${money(opts.amount, opts.from)} → ${quote.amountOut !== undefined ? money(quote.amountOut, opts.to) : copy.detail.empty}`, role: "warn" },
+  ];
+  const live = mode !== "sandbox";
+  return {
+    name: "swap",
+    title: c.title,
+    argv,
+    mode,
+    account: reads.accountId || reads.accountTitle ? { id: reads.accountId, title: reads.accountTitle } : undefined,
+    summary,
+    steps,
+    blockers,
+    warnings,
+    typedAmount: live ? { amount: opts.amount, currency: opts.from } : undefined,
+    data: { from: reads.from, to: reads.to, quote, amount: opts.amount, after },
+    done: (results) => swapChecks(results),
+    opts,
+    quote,
+    after,
+  };
+}
+
+/** "Done when": the swap is `completed` (fiat pairs fill at once; crypto finishes in the background), and both balances moved. */
+export function swapChecks(results: Partial<Record<string, Rec>>): { label: string; argv: string[] }[] {
+  const c = copy.money.swap_.check;
+  const out: { label: string; argv: string[] }[] = [];
+  if (results.swap?.id) out.push({ label: c.swap, argv: ["whop", "swaps", "get", String(results.swap.id), "--format", "json"] });
   out.push({ label: c.balance, argv: ["wv", "money"] });
   return out;
 }

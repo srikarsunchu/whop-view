@@ -10,6 +10,7 @@ import { isWrite } from "../src/status.ts";
 import { flagsToRecord } from "../src/views/confirm.ts";
 import { parseHelp } from "../src/views/help.ts";
 import { fixture } from "./render.ts";
+import { ownFlags } from "../src/bin.ts";
 import { truncate, wrap, width } from "../src/ansi.ts";
 import { sparkline } from "../src/views/home.ts";
 
@@ -176,6 +177,21 @@ test("passthrough: non-TTY, agent flags, WV_RAW, and terminal-owning commands", 
   assert.equal(shouldPassthrough(["login"], {}, true), true);
   assert.equal(shouldPassthrough(["apps", "deploy"], {}, true), true);
   assert.equal(shouldPassthrough(["apps", "list"], {}, true), false);
+});
+
+test("--format human: wv's sixth format, stripped in ownFlags so whop never sees it, and it renders in a pipe", () => {
+  const spaced = ownFlags(["products", "list", "--format", "human"]);
+  assert.equal(spaced.human, true);
+  assert.deepEqual(spaced.argv, ["products", "list"], "human never reaches whop");
+  const joined = ownFlags(["--format=human", "money"]);
+  assert.equal(joined.human, true);
+  assert.deepEqual(joined.argv, ["money"]);
+  // whop's own formats stay whop's: they pass through untouched.
+  const yaml = ownFlags(["products", "list", "--format", "yaml"]);
+  assert.equal(yaml.human, false);
+  assert.deepEqual(yaml.argv, ["products", "list", "--format", "yaml"]);
+  // With the flag stripped, the passthrough rules see a plain read; main asks them as if a terminal were there.
+  assert.equal(shouldPassthrough(spaced.argv, {}, true), false);
 });
 
 test("write verbs: money groups and destructive verbs are writes, reads are not", () => {

@@ -23,6 +23,7 @@ Nine one-time things make a Whop business able to sell, pay out, run ads, and re
 |---|---|---|---|
 | signed in | yes | person | `whop login` in a terminal |
 | identity | yes (payouts) | both | `wv verifications create --account_id <biz>` starts it; documents in the dashboard finish it |
+| payout method | no (payouts) | both | `whop payouts supported-methods` says what Whop lets this account add, from its country and identity; `wv payouts create-method …` or the dashboard saves one. Whop listing none is the non-US wall: finish identity, then check again |
 | product with a plan | yes | wv | `wv products create --title …`, then `wv plans create --product_id … --plan_type one_time --initial_price …` |
 | api key | no (developer work) | wv or both | `wv auth switch <saved api-key profile>`, or make a key in the dashboard and `whop auth login --method api-key` |
 | pixel | no (attribution, audiences) | both | the snippet in every landing page's head, then `whop events validate_pixel` |

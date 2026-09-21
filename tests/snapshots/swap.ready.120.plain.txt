@@ -1,0 +1,19 @@
+ ▌ Convert a balance                                                                                writes to production
+
+   wv money swap --from eur --to usd --amount 80 --idempotency-key k
+
+   from  €80.00 available → €0.00
+   to    $1,234.56 available → $1,326.56
+   rate  1 eur = $1.15 · no fee
+   swap  €80.00 → $92.00
+   from  Hypermotion  biz_VraUMckluH8dzV
+
+ ── Steps ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1  swap  €80.00 becomes $92.00 at Whop's mid-market rate
+            runs  whop swaps create --account_id biz_VraUMckluH8dzV --from_token eur --to_token usd --amount 80 --id…
+
+   1 write runs in order against production, each with its own idempotency key. A step that fails stops the rest; what
+   was created stays, and the card names it.
+
+ every argv  wv money swap --from eur --to usd --amount 80 --idempotency-key k --plan | cat
+

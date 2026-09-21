@@ -1,0 +1,25 @@
+ [31m▌[39m [1mConvert a balance[22m                                      [31mblocked · nothing runs[39m
+
+   [2mwv money swap --from eur --to usd --amount 80 --idempotency-key k[22m
+
+   [2mfrom[22m  €12.50 available → €0.00
+   [2mto  [22m  $18.56 available → $110.56
+   [2mrate[22m  [2m1 eur = $1.15 · no fee[22m
+   [2mswap[22m  [33m€80.00 → $92.00[39m
+   [2mfrom[22m  Frame  biz_VraUMckluH8dzV
+
+ [2m── [22m[1mSteps[22m[2m ──────────────────────────────────────────────────────────────────────[22m
+   [2m1  swap[22m  €80.00 becomes $92.00 at Whop's mid-market rate
+            [2mruns[22m  whop swaps create --account_id biz_VraUMckluH8dzV --from_t…
+
+   [31m✗ €80.00 is more than the €12.50 available. Lower --amount or wait for[39m
+   [31msettlement.[39m
+
+   [2m1 write runs in order against production, each with its own idempotency key.[22m
+   [2mA step that fails stops the rest; what was created stays, and the card names[22m
+   [2mit.[22m
+
+ [2mfix[22m  [2mwv doctor[22m
+ [2mevery argv[22m  [2mwv money swap --from eur --to usd --amount 80 --idempotency-key k[22m
+             [2m--plan | cat[22m
+

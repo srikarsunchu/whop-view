@@ -46,6 +46,8 @@ export interface DoctorInput {
   verifications: Parsed;
   /** `payouts methods --include_limits` */
   methods: Parsed;
+  /** `payouts supported-methods --first 100`: what this account could add, given its country and identity. */
+  supportedMethods?: Parsed;
   /** `people list --first 100` */
   people: Parsed;
   social: Parsed;
@@ -101,7 +103,7 @@ export function checks(input: DoctorInput): Check[] {
     out.push({ key: "auth", label: c.labels.auth, level: "ok", detail: [auth.profile, auth.method, account?.title].filter(Boolean).join(" · "), blocking: true });
   }
 
-  // 2 identity: Whop's own payout limit says whether verification is done.
+  // 2 identity: Whop's own payout limit says whether verification is done. 2b payout method: where the money would go.
   const methods = input.methods;
   const limit = methods.ok && methods.payload.kind === "page" ? limitFor(methods.payload.extra?.limits, "standard") : undefined;
   const verification = rows(input.verifications)?.[0];
@@ -115,6 +117,18 @@ export function checks(input: DoctorInput): Check[] {
     out.push({ key: "identity", label: c.labels.identity, level: "warn", detail: prefix + c.limitsUnreadable(errLine(methods)), blocking: true });
   } else {
     out.push({ key: "identity", label: c.labels.identity, level: "warn", detail: prefix + c.limitsMissing, blocking: true });
+  }
+  // A saved method means payouts have somewhere to go. None saved: what Whop would let this account add, from its country and identity.
+  {
+    const saved = rows(input.methods) ?? [];
+    const offered = input.supportedMethods ? rows(input.supportedMethods) : undefined;
+    const fix = ["whop", "payouts", "supported-methods"];
+    if (saved.length) out.push({ key: "payoutMethod", label: c.labels.payoutMethod, level: "ok", detail: c.methodSaved(saved.length, [str(saved[0].nickname), str(saved[0].institution_name), str(saved[0].currency)].filter(Boolean).join(" · ")), blocking: false });
+    else if (!input.methods.ok) out.push({ key: "payoutMethod", label: c.labels.payoutMethod, level: "warn", detail: errLine(input.methods), blocking: false });
+    else if (input.supportedMethods && !input.supportedMethods.ok) out.push({ key: "payoutMethod", label: c.labels.payoutMethod, level: "warn", detail: c.noMethodUnknown(errLine(input.supportedMethods)), fix, blocking: false });
+    else if (offered?.length) out.push({ key: "payoutMethod", label: c.labels.payoutMethod, level: "warn", detail: c.noMethodOffered(offered.length, offered.slice(0, 3).map((o) => [str(o.name) ?? str(o.title) ?? str(o.type) ?? str(o.id) ?? "", str(o.country)].filter(Boolean).join(" ")).filter(Boolean)), fix: ["whop", "payouts", "create-method", "--help"], dashboard: dashboardUrl(input.accountId), blocking: false });
+    else if (offered) out.push({ key: "payoutMethod", label: c.labels.payoutMethod, level: "warn", detail: c.noMethodNoneOffered, fix, dashboard: dashboardUrl(input.accountId), blocking: false });
+    else out.push({ key: "payoutMethod", label: c.labels.payoutMethod, level: "warn", detail: c.noMethodUnread, fix, dashboard: dashboardUrl(input.accountId), blocking: false });
   }
 
   // 3 api key profile and scopes
