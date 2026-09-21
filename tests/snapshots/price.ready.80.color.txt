@@ -1,0 +1,25 @@
+ [33m▌[39m [1mChange a price[22m                                           [33mwrites to production[39m
+
+   [2mwv store price plan_NrjXyj6yTetff --to 15 --idempotency-key
+   5b2c1d6e-0000-4000-8000-000000000008[22m
+
+   [2mproduct  [22m  [2mHypermotion  prod_iQ2Zub6GFQS5Q[22m
+   [2mplan     [22m  Flex — 300 credits · $10.00 · one time · hidden ·
+              plan_NrjXyj6yTetff
+   [2mon it now[22m  [33m2 members[39m
+   [2mprice    [22m  [33m$10.00 → $15.00[39m
+   [2mfrom     [22m  Hypermotion  biz_VraUMckluH8dzV
+
+ [2m── [22m[1mSteps[22m[2m ──────────────────────────────────────────────────────────────────────[22m
+   [2m1  price[22m  price $10.00 → $15.00
+             [2mruns[22m  whop plans update plan_NrjXyj6yTetff --initial_price 15 -…
+
+   [33m! 2 members have bought this plan at the old price; that does not change.[39m
+
+   [2m1 write runs in order against production, each with its own idempotency key.[22m
+   [2mA step that fails stops the rest; what was created stays, and the card names[22m
+   [2mit.[22m
+
+ [2mevery argv[22m  [2mwv store price plan_NrjXyj6yTetff --to 15 --idempotency-key[22m
+             [2m5b2c1d6e-0000-4000-8000-000000000008 --plan | cat[22m
+

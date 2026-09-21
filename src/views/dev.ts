@@ -58,7 +58,7 @@ export function webhookAccess(profiles: Parsed, permissions: Parsed | undefined,
   if (active?.method === "api_key" && !missing && !forbidden) return { ok: true };
   if (active?.method === "api_key" && !missing && forbidden) return { ok: false, reason: copy.dev.forbidden, fix: ["whop", "auth", "login", "--method", "api-key"] };
   const alt = p.apiKey[0];
-  return { ok: false, reason: active?.method === "api_key" ? copy.dev.keyLacksScope : copy.dev.oauth, fix: alt ? ["whop", "auth", "switch", alt.name] : ["whop", "auth", "login", "--method", "api-key"] };
+  return { ok: false, reason: active?.method === "api_key" ? copy.dev.keyLacksScope : copy.dev.oauth, fix: alt ? ["wv", "auth", "switch", alt.name] : ["whop", "auth", "login", "--method", "api-key"] };
 }
 
 export function devData(input: DevInput): Rec {

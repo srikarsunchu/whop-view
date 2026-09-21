@@ -24,7 +24,7 @@ git clone https://github.com/srikarsunchu/whop-view && cd whop-view && pnpm inst
 
 Needs Node 22 or newer and a working `whop` on your PATH. Then use `wv` anywhere you would type `whop`.
 
-`pnpm skill` installs four skills into `~/.claude/skills`: [`whop-gtm`](skills/whop-gtm/SKILL.md) for go-to-market, [`whop-money`](skills/whop-money/SKILL.md) for treasury, [`whop-support`](skills/whop-support/SKILL.md) for tickets, and [`whop-dev`](skills/whop-dev/SKILL.md) for apps and webhooks. Each is a short `SKILL.md` of rules and a map plus references loaded only when a playbook runs: one per playbook with its "done when", a failure map with the recorded messages and fixes, a command map regenerated from the live `whop`, and [`gate.md`](skills/_shared/gate.md), the rules every wv skill shares. An agent that runs the Whop CLI then learns the go-to-market loop, runs `wv doctor --format json` before it starts, reads `wv agent <group>` for flags, and routes every write through `wv`. `pnpm eval [skill]` runs each skill's scenarios through `claude -p` against a fake `whop` and judges what the agent did; the last runs are in each skill's `evals/results.md`. Whop's own `whop skills add` ships one generic skill with nothing about ads, audiences, bounties, or stats.
+`pnpm skill` installs five skills into `~/.claude/skills`: [`whop-gtm`](skills/whop-gtm/SKILL.md) for go-to-market, [`whop-money`](skills/whop-money/SKILL.md) for treasury, [`whop-support`](skills/whop-support/SKILL.md) for tickets, [`whop-dev`](skills/whop-dev/SKILL.md) for apps and webhooks, and [`whop-store`](skills/whop-store/SKILL.md) for the storefront. Each is a short `SKILL.md` of rules and a map plus references loaded only when a playbook runs: one per playbook with its "done when", a failure map with the recorded messages and fixes, a command map regenerated from the live `whop`, and [`gate.md`](skills/_shared/gate.md), the rules every wv skill shares. An agent that runs the Whop CLI then learns the go-to-market loop, runs `wv doctor --format json` before it starts, reads `wv agent <group>` for flags, and routes every write through `wv`. `pnpm eval [skill]` runs each skill's scenarios through `claude -p` against a fake `whop` and judges what the agent did; the last runs are in each skill's `evals/results.md`. Whop's own `whop skills add` ships one generic skill with nothing about ads, audiences, bounties, or stats.
 
 ## Before and after
 
@@ -387,6 +387,16 @@ The app loop on one screen, and a webhook proven live. `wv dev` shows the app, i
 
 Both recordings run against the test stand-in with an API-key profile, since the demo login is OAuth and its webhooks answer 403, which is exactly what the live screen says.
 
+### `store`
+
+The catalog on one screen, and the two storefront writes that matter as recipes. `wv store` shows every product with whether it is for sale and why not, its plans with price, type, visibility, members, stock, and trial, the active promo codes, and the checkout links. `wv store price <plan_id> --to 39` reads the plan and shows `$10.00 → $39.00` with the members on it, refusing the same price, a sub-dollar price, or an archived plan. `wv store publish <prod_id>` publishes and mints a shareable checkout link for the default plan, refusing a product with nothing to buy.
+
+![store](demo/store.gif)
+
+![store price](demo/store-price.gif)
+
+Both recordings are live reads on the demo account; the price change is shown with `--plan`, so nothing changed.
+
 ## What agents see
 
 Reads: the bytes are whop's. `wv products list | cat` is byte-identical to `whop products list`, and there is a test for it, so a script or a skill written against `whop` works unchanged with `wv` in its place. What changes is around the bytes:
@@ -621,4 +631,4 @@ Re-records the fixtures from your own account. Read-only commands only. `pnpm fi
 pnpm demo
 ```
 
-Re-records every GIF above. The eight agent tapes (`agent-gate`, `agent-plan`, `doctor-json`, `agent-manifest`, `agent-index`, `approve`, `exit-codes`, `gtm-launch`) run against production reads only; the gate never sends the write, and the `approve` tape reruns a plan with a token minted for a different product so the refusal is what gets recorded. `gtm-winback` and `gtm-rank` point `WV_WHOP_BIN` at `demo/_fake/whop`, a copy of the test stand-in, since the account has no campaign to rank. `money` and `money-close` are live reads; `support-lookup`, `support-dispute`, `dev`, and `dev-hook` use the stand-in. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them. The `sandbox-status` and `logs-follow` tapes start `scripts/mock-api.ts` on port 8931 themselves, a stand-in for the sandbox host that answers `accounts get me` and grows an app's log by one line every couple of seconds; `pnpm demo:mock` runs it on its own. The `sandbox-ads` tape expects a richer mock on the same port that was never committed, so it records against whatever answers there.
+Re-records every GIF above. The eight agent tapes (`agent-gate`, `agent-plan`, `doctor-json`, `agent-manifest`, `agent-index`, `approve`, `exit-codes`, `gtm-launch`) run against production reads only; the gate never sends the write, and the `approve` tape reruns a plan with a token minted for a different product so the refusal is what gets recorded. `gtm-winback` and `gtm-rank` point `WV_WHOP_BIN` at `demo/_fake/whop`, a copy of the test stand-in, since the account has no campaign to rank. `money`, `money-close`, `store`, and `store-price` are live reads; `support-lookup`, `support-dispute`, `dev`, and `dev-hook` use the stand-in. Needs `brew install vhs`. Homebrew's vhs 0.12 writes no GIF against ffmpeg 9, so the tapes emit frames and `scripts/gif.sh` encodes them. The `sandbox-status` and `logs-follow` tapes start `scripts/mock-api.ts` on port 8931 themselves, a stand-in for the sandbox host that answers `accounts get me` and grows an app's log by one line every couple of seconds; `pnpm demo:mock` runs it on its own. The `sandbox-ads` tape expects a richer mock on the same port that was never committed, so it records against whatever answers there.

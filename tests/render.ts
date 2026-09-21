@@ -15,6 +15,7 @@ import { rankView } from "../src/views/rank.ts";
 import { balanceOf, buildClose, moneyView, parseCloseArgs } from "../src/views/money.ts";
 import { buildDispute, buildRefund, lookupView, parseDisputeArgs, parseRefundArgs } from "../src/views/support.ts";
 import { buildHook, devView, parseHookArgs } from "../src/views/dev.ts";
+import { buildPrice, buildPublish, parsePriceArgs, parsePublishArgs, storeView } from "../src/views/store.ts";
 import { errorView } from "../src/views/error.ts";
 import { helpView, parseHelp } from "../src/views/help.ts";
 import { homeView } from "../src/views/home.ts";
@@ -170,6 +171,13 @@ export const DISPUTE_LATE = buildDispute(DISPUTE_ARGV, parseDisputeArgs(DISPUTE_
 
 export const synth = (data: unknown) => parseEnvelope(JSON.stringify({ ok: true, data, meta: { command: "synthetic", duration: "1ms" } }));
 export const synthPage = (rows: unknown[]) => synth({ data: rows, page_info: { start_cursor: null, end_cursor: null, has_next_page: false, has_previous_page: false } });
+
+const PLANS_ROWS = (() => { const p = envelope("plans.list"); return p.ok && p.payload.kind === "page" ? p.payload.rows : []; })();
+export const STORE = { accountTitle: "Hypermotion", accountId: "biz_VraUMckluH8dzV", products: envelope("products.list"), plans: envelope("plans.list"), promoCodes: synthPage([{ id: "promo_x1", code: "LAUNCH20", promo_type: "percentage", amount_off: 20, new_users_only: true, uses: 12, stock: 200, unlimited_stock: false, expires_at: "2026-09-28T07:00:00Z", status: "active" }]), checkouts: synthPage([{ id: "chk_x1", plan: { id: "plan_ozEZmitgc8tjB" }, purchase_url: "https://whop.com/checkout/chk_x1", metadata: { campaign: "launch-20260921" } }]), now: LAUNCH_NOW.getTime(), commands: [["products", "list"], ["plans", "list"], ["promo-codes", "list", "--status", "active"], ["checkout-configurations", "list"]] };
+const PRICE_ARGV = ["store", "price", "plan_NrjXyj6yTetff", "--to", "15", "--idempotency-key", "5b2c1d6e-0000-4000-8000-000000000008"];
+export const PRICE_READY = buildPrice(PRICE_ARGV, parsePriceArgs(PRICE_ARGV).opts!, { plan: record0("plans.get"), accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion" });
+const PUBLISH_ARGV = ["store", "publish", "prod_iQ2Zub6GFQS5Q", "--idempotency-key", "5b2c1d6e-0000-4000-8000-000000000009"];
+export const PUBLISH_READY = buildPublish(PUBLISH_ARGV, parsePublishArgs(PUBLISH_ARGV).opts!, { product: { ...record0("products.get"), visibility: "hidden" }, plans: PLANS_ROWS, accountId: "biz_VraUMckluH8dzV", accountTitle: "Hypermotion" });
 
 const DEV_APP = (() => { const p = envelope("apps.list"); return p.ok && p.payload.kind === "page" ? p.payload.rows[0] : {}; })();
 const DEV_COMMANDS = [["apps", "list"], ["auth", "list"], ["webhooks", "list", "--include_app_webhooks", "true"], ["app-builds", "list", "--app_id", "app_HKnLpw6UGGEqk6"], ["domains", "list", "--app_id", "app_HKnLpw6UGGEqk6"]];
@@ -346,6 +354,9 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "confirm.payout.sandbox": (t) => confirmView({ ...PAYOUT, mode: "sandbox", destination: "Chase checking ••••4242  potk_x1", balance: { available: 418.56, currency: "usd" } }, t),
   "confirm.payout.over_cap": (t) => refusedView({ ...PAYOUT, argv: ["payouts", "create", "--amount", "2000", "--currency", "usd", "--payout_method_id", "potk_x1"], reason: "cap", destination: "Chase checking ••••4242  potk_x1", balance: { available: 2418.56, currency: "usd" }, cap: 500 }, t),
   "confirm.payout.over_balance": (t) => refusedView({ ...PAYOUT, reason: "balance", destination: "Chase checking ••••4242  potk_x1", balance: { available: 18.56, currency: "usd" }, cap: 500 }, t),
+  store: (t) => storeView(STORE, t),
+  "price.ready": (t) => recipeView(PRICE_READY, t),
+  "publish.ready": (t) => recipeView(PUBLISH_READY, t),
   dev: (t) => devView(DEV, t),
   "dev.ready": (t) => devView(DEV_READY, t),
   "hook.ready": (t) => recipeView(HOOK_READY, t),

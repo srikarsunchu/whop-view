@@ -14,7 +14,7 @@
    [2m2  test event[22m  send a payment.succeeded test payload and read the response
                   [2mruns[22m  whop webhooks test '{hook.id}' --event payment.succeeded
 
-   [31m✗ This login is an OAuth token, which cannot manage webhooks. Fix: whop auth switch sandbox.[39m
+   [31m✗ This login is an OAuth token, which cannot manage webhooks. Fix: wv auth switch sandbox.[39m
 
    [2m2 writes run in order against production, each with its own idempotency key. A step that fails stops the rest; what[22m
    [2mwas created stays, and the card names it.[22m

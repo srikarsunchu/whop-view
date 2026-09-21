@@ -9,6 +9,8 @@ if [ -z "$WV_FAKE_QUIET" ]; then
   echo "BASE: ${WHOP_API_BASE_URL:-unset} KEY: ${WHOP_API_KEY:-unset}" >&2
 fi
 fx() { cat "${WV_FAKE_FIXTURES}/$1"; exit 0; }
+# `auth switch <profile>` is remembered in a file beside the log; an api-key profile makes the account "ready" for webhooks.
+[ -n "$WV_FAKE_LOG" ] && [ -f "$WV_FAKE_LOG.profile" ] && [ "$(cat "$WV_FAKE_LOG.profile")" = "sandbox" ] && WV_FAKE_READY=1
 if [ "$1" = "--llms-full" ]; then
   printf '# whop\n\n## whop products\n\n### whop products frobnicate\n\nFrobnicate Product\n\n> Confirm with the user before executing this destructive command.\n\n### whop products list\n\nList Products\n'
   exit 0
@@ -23,11 +25,18 @@ case "$1 $2" in
     esac ;;
   "products get") fx products.get.json ;;
   "auth status") fx auth.status.json ;;
+  "auth switch") [ -n "$WV_FAKE_LOG" ] && echo "$3" > "$WV_FAKE_LOG.profile"; echo '{"ok":true,"data":{"active":"'"$3"'"},"meta":{"command":"auth switch","duration":"1ms"}}'; exit 0 ;;
   "people list") fx people.list.json ;;
   "payouts list") fx payouts.list.json ;;
   "apps list") fx apps.list.json ;;
+  "plans list") fx plans.list.json ;;
+  "plans get") sed "s/plan_NrjXyj6yTetff/${3:-plan_NrjXyj6yTetff}/" "${WV_FAKE_FIXTURES}/plans.get.json"; exit 0 ;;
+  "plans update") echo '{"ok":true,"data":{"id":"'"$3"'","title":"Flex — 300 credits","initial_price":39,"renewal_price":0,"plan_type":"one_time"},"meta":{"command":"plans update","duration":"1ms"}}'; exit 0 ;;
+  "products publish") echo '{"ok":true,"data":{"id":"'"$3"'","title":"Hypermotion","visibility":"visible"},"meta":{"command":"products publish","duration":"1ms"}}'; exit 0 ;;
+  "promo-codes list") fx promo-codes.list.json ;;
+  "checkout-configurations list") echo '{"ok":true,"data":{"data":[],"page_info":{"start_cursor":null,"end_cursor":null,"has_next_page":false,"has_previous_page":false}},"meta":{"command":"checkout-configurations list","duration":"1ms"}}'; exit 0 ;;
   "apps logs") fx apps.logs.json ;;
-  "auth list") [ -n "$WV_FAKE_READY" ] && { echo '{"ok":true,"data":{"active":"prod-key","profiles":[{"name":"prod-key","method":"api_key","accountId":"biz_VraUMckluH8dzV","accountTitle":"Hypermotion"},{"name":"sunchusrikar","method":"oauth","accountId":"biz_VraUMckluH8dzV","accountTitle":"Frame"}]},"meta":{"command":"auth list","duration":"1ms"}}'; exit 0; }; fx auth.list.json ;;
+  "auth list") [ -n "$WV_FAKE_READY" ] && { echo '{"ok":true,"data":{"active":"sandbox","profiles":[{"name":"sandbox","method":"api_key","accountId":"biz_VraUMckluH8dzV","accountTitle":"Hypermotion"},{"name":"sunchusrikar","method":"oauth","accountId":"biz_VraUMckluH8dzV","accountTitle":"Frame"}]},"meta":{"command":"auth list","duration":"1ms"}}'; exit 0; }; fx auth.list.json ;;
   "permissions check") [ -n "$WV_FAKE_READY" ] && { echo '{"ok":true,"data":{"data":[{"action":"developer:manage_webhook","granted":true}]},"meta":{"command":"permissions check","duration":"1ms"}}'; exit 0; }; fx permissions.check.json ;;
   "app-builds list") echo '{"ok":true,"data":{"data":[{"id":"apbd_1","platform":"web","status":"approved","is_production":true,"created_at":"2026-09-19T10:00:00Z"},{"id":"apbd_2","platform":"web","status":"pending","is_production":false,"created_at":"2026-09-21T09:00:00Z"}],"page_info":{"start_cursor":null,"end_cursor":null,"has_next_page":false,"has_previous_page":false}},"meta":{"command":"app-builds list","duration":"1ms"}}'; exit 0 ;;
   "domains list") echo '{"ok":true,"data":{"data":[{"id":"dom_1","domain":"app.hypermotion.art","status":"active","dns_status":"verified","certificate_status":"active","last_checked_at":"2026-09-21T11:00:00Z"}],"page_info":{"start_cursor":null,"end_cursor":null,"has_next_page":false,"has_previous_page":false}},"meta":{"command":"domains list","duration":"1ms"}}'; exit 0 ;;

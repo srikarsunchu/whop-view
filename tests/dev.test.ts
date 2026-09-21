@@ -12,7 +12,7 @@ test("dev: webhooks need an api-key profile with the scope; the fix names the sa
   const oauth = webhookAccess(envelope("auth.list"), envelope("permissions.check"), envelope("error.webhooks_oauth"));
   assert.equal(oauth.ok, false);
   assert.match(oauth.reason ?? "", /OAuth token/);
-  assert.deepEqual(oauth.fix, ["whop", "auth", "switch", "sandbox"], "the recorded profiles carry one api_key profile named sandbox");
+  assert.deepEqual(oauth.fix, ["wv", "auth", "switch", "sandbox"], "the recorded profiles carry one api_key profile named sandbox");
   const ok = webhookAccess(READY_PROFILES, GRANTED, HOOKS);
   assert.deepEqual(ok, { ok: true });
   const lacking = webhookAccess(READY_PROFILES, synthPage([{ action: "developer:manage_webhook", granted: false }]), HOOKS);
@@ -47,7 +47,7 @@ test("dev hook: flags default to three events and a test of the first; the plan 
   assert.equal(ready.typedAmount, undefined);
   const oauth = buildHook(["dev", "hook"], opts!, { profiles: envelope("auth.list"), permissions: envelope("permissions.check"), webhooks: envelope("error.webhooks_oauth") });
   assert.equal(oauth.blockers.length, 1);
-  assert.match(oauth.blockers[0], /OAuth token.*Fix: whop auth switch sandbox/);
+  assert.match(oauth.blockers[0], /OAuth token.*Fix: wv auth switch sandbox/);
   const http = buildHook(["dev", "hook"], { ...opts!, url: "http://example.com/hooks" }, { profiles: READY_PROFILES, permissions: GRANTED, webhooks: HOOKS });
   assert.match(http.blockers[0], /not an https URL/);
   const dup = buildHook(["dev", "hook"], { ...opts!, url: "https://hypermotion.art/hooks" }, { profiles: READY_PROFILES, permissions: GRANTED, webhooks: HOOKS });

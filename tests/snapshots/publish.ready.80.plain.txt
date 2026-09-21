@@ -1,0 +1,26 @@
+ ▌ Publish a product                                        writes to production
+
+   wv store publish prod_iQ2Zub6GFQS5Q --idempotency-key
+   5b2c1d6e-0000-4000-8000-000000000009
+
+   product   Hypermotion  prod_iQ2Zub6GFQS5Q · hidden
+   plans     Flex — 300 credits $10.00 (hidden) · plan_oLCTaWVWJc79O — · Creator
+             — 1,000 credits —
+   link for  Creator — 1,000 credits · $29.00/mo
+   page      whop.com/frame-creator
+   from      Hypermotion  biz_VraUMckluH8dzV
+
+ ── Steps ──────────────────────────────────────────────────────────────────────
+   1  publish        Hypermotion goes visible on the store and the marketplace
+                     runs  whop products publish prod_iQ2Zub6GFQS5Q --idempo…
+   2  checkout link  a shareable checkout for Creator — 1,000 credits ·
+                     $29.00/mo
+                     runs  whop checkout-configurations create --plan_id pla…
+
+   2 writes run in order against production, each with its own idempotency key.
+   A step that fails stops the rest; what was created stays, and the card names
+   it.
+
+ every argv  wv store publish prod_iQ2Zub6GFQS5Q --idempotency-key
+             5b2c1d6e-0000-4000-8000-000000000009 --plan | cat
+

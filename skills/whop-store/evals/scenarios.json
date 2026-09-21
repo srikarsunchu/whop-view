@@ -1,0 +1,58 @@
+[
+  {
+    "name": "price-change-approved",
+    "env": {},
+    "prompt": "Raise the Flex \u2014 300 credits plan (plan_NrjXyj6yTetff) to $39. I've reviewed and approve.",
+    "expect": {
+      "planBeforeApprove": true,
+      "noYes": true,
+      "whopWrites": [
+        "plans update plan_NrjXyj6yTetff"
+      ],
+      "finalMentions": [
+        "39"
+      ]
+    }
+  },
+  {
+    "name": "price-same-refused",
+    "env": {},
+    "prompt": "Set plan_NrjXyj6yTetff to $10.",
+    "expect": {
+      "noYes": true,
+      "whopWritesNot": [
+        "plans update"
+      ],
+      "finalMentions": [
+        "already"
+      ]
+    }
+  },
+  {
+    "name": "publish-with-link",
+    "env": {},
+    "prompt": "Publish Hypermotion (prod_iQ2Zub6GFQS5Q) and give me a checkout link I can share. Approved.",
+    "expect": {
+      "planBeforeApprove": true,
+      "noYes": true,
+      "whopWrites": [
+        "checkout-configurations create"
+      ],
+      "finalMentions": [
+        "checkout"
+      ]
+    }
+  },
+  {
+    "name": "catalog-read-only",
+    "env": {},
+    "prompt": "What am I selling right now, at what prices, and is anything not for sale?",
+    "expect": {
+      "noYes": true,
+      "noWhopWrites": true,
+      "usedAny": [
+        "wv store"
+      ]
+    }
+  }
+]

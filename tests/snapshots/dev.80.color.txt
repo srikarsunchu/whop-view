@@ -19,7 +19,7 @@
 
  [2mdeploy[22m  [2mwhop apps deploy[22m
  [2mlogs[22m  [2mwv apps logs app_HKnLpw6UGGEqk6 --follow[22m
- [2mfix[22m  [2mwhop auth switch sandbox[22m
+ [2mfix[22m  [2mwv auth switch sandbox[22m
  [2mwebhook[22m  [2mwv dev hook 'https://<your host>/hooks' --plan[22m
  [2mjson[22m  [2mwhop apps list --format json[22m
  [2mjson[22m  [2mwhop auth list --format json[22m

@@ -547,7 +547,7 @@ test("dev: the screen as data names why webhooks are unreadable on an oauth logi
   const d = JSON.parse(r.stdout) as { app: { id: string }; webhookAccess: { ok: boolean; fix: string[] }; builds: unknown[]; domains: unknown[] };
   assert.equal(d.app.id, "app_HKnLpw6UGGEqk6");
   assert.equal(d.webhookAccess.ok, false);
-  assert.deepEqual(d.webhookAccess.fix, ["whop", "auth", "switch", "sandbox"]);
+  assert.deepEqual(d.webhookAccess.fix, ["wv", "auth", "switch", "sandbox"]);
   assert.equal(d.builds.length, 2);
   assert.equal(d.domains.length, 1);
   const blocked = wv(["dev", "hook", "https://example.com/hooks"], gateEnv());
@@ -572,4 +572,35 @@ test("dev hook: on an api-key profile the approved rerun creates the webhook, th
   const dup = envelopeOf(wv(["dev", "hook", "https://hypermotion.art/hooks"], env));
   assert.equal(dup.error?.code, "HOOK_BLOCKED");
   assert.match(dup.error?.hint ?? "", /already exists: hook_1/);
+});
+
+// `wv store`: the catalog as data, and the price and publish recipes.
+test("store: the catalog as data marks what is for sale; a price change reads the plan and shows before and after", () => {
+  const r = wv(["store"], gateEnv());
+  assert.equal(r.status, 0, r.stdout);
+  const d = JSON.parse(r.stdout) as { products: { id: string; forSale: { ok: boolean }; plans: { id: string }[] }[] };
+  assert.equal(d.products.find((p) => p.id === "prod_iQ2Zub6GFQS5Q")?.forSale.ok, true);
+  const asked = envelopeOf(wv(["store", "price", "plan_NrjXyj6yTetff", "--to", "39", "--idempotency-key", "base"], gateEnv()));
+  assert.equal(asked.error?.code, "CONFIRMATION_REQUIRED", JSON.stringify(asked));
+  assert.deepEqual((asked.plan as { changes: { change: string }[] }).changes[0].change, "$10.00 → $39.00");
+  const ran = wv(asked.rerun!.slice(1), gateEnv());
+  assert.equal(ran.status, 0, ran.stdout + ran.stderr);
+  assert.match(ran.stderr, /^ARGS: plans update plan_NrjXyj6yTetff --initial_price 39 --idempotency-key base-price/m);
+  const same = envelopeOf(wv(["store", "price", "plan_NrjXyj6yTetff", "--to", "10"], gateEnv()));
+  assert.equal(same.error?.code, "PRICE_BLOCKED");
+});
+
+test("store publish: on a visible product the publish is skipped and only the checkout link runs", () => {
+  const asked = envelopeOf(wv(["store", "publish", "prod_iQ2Zub6GFQS5Q", "--idempotency-key", "base"], gateEnv()));
+  assert.equal(asked.error?.code, "CONFIRMATION_REQUIRED", JSON.stringify(asked));
+  const steps = (asked.plan as { steps: { key: string; skipped?: string }[] }).steps;
+  assert.equal(steps[0].skipped, "already visible");
+  assert.equal(steps[1].skipped, undefined);
+  const ran = wv(asked.rerun!.slice(1), gateEnv());
+  assert.equal(ran.status, 0, ran.stdout + ran.stderr);
+  assert.equal(wroteTo(ran, "products publish"), false);
+  assert.match(ran.stderr, /^ARGS: checkout-configurations create --plan_id plan_ozEZmitgc8tjB/m);
+  const done = envelopeOf(ran) as ReturnType<typeof envelopeOf> & { results: Record<string, { purchase_url?: string }>; next: { run: string[] }[] };
+  assert.equal(done.results.link.purchase_url, "https://whop.com/checkout/chk_1");
+  assert.ok(done.next.some((n) => n.run[0] === "open"));
 });

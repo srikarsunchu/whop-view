@@ -19,7 +19,7 @@
     "fixtures": "node --experimental-strip-types --no-warnings scripts/fixtures.ts",
     "demo": "pnpm build && rm -rf demo/*.frames && for t in demo/*.tape; do case $t in *_common*) ;; *) vhs \"$t\";; esac; done && sh scripts/gif.sh",
     "render": "node --experimental-strip-types --no-warnings tests/render.ts",
-    "skill": "node --experimental-strip-types --no-warnings scripts/skill.ts && mkdir -p ~/.claude/skills && for s in whop-gtm whop-money whop-support whop-dev; do rm -rf ~/.claude/skills/$s && cp -R skills/$s ~/.claude/skills/$s && echo installed ~/.claude/skills/$s; done",
+    "skill": "node --experimental-strip-types --no-warnings scripts/skill.ts && mkdir -p ~/.claude/skills && for s in whop-gtm whop-money whop-support whop-dev whop-store; do rm -rf ~/.claude/skills/$s && cp -R skills/$s ~/.claude/skills/$s && echo installed ~/.claude/skills/$s; done",
     "eval": "node --experimental-strip-types --no-warnings scripts/eval-skill.ts",
     "demo:mock": "node --experimental-strip-types --no-warnings scripts/mock-api.ts"
   },

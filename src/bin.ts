@@ -32,6 +32,7 @@ import { rankData, rankView, type RankInput } from "./views/rank.ts";
 import { balanceOf, buildClose, moneyData, moneyView, parseCloseArgs, type MoneyInput } from "./views/money.ts";
 import { buildDispute, buildRefund, classifyKey, disputesFor, lookupData, lookupView, parseDisputeArgs, parseRefundArgs, userFrom, type LookupInput } from "./views/support.ts";
 import { buildHook, devData, devView, parseHookArgs, WEBHOOK_ACTION, type DevInput } from "./views/dev.ts";
+import { buildPrice, buildPublish, parsePriceArgs, parsePublishArgs, storeData, storeView, type StoreInput } from "./views/store.ts";
 import { recipeData, recipeDoneView, recipeView, substitute, type RecipePlan } from "./views/recipe.ts";
 import { randomUUID } from "node:crypto";
 import { homeView } from "./views/home.ts";
@@ -47,7 +48,7 @@ import type { Parsed, Rec } from "./envelope.ts";
 const print = (lines: string[]) => process.stdout.write(lines.join("\n") + "\n");
 
 /** Words that are wv's, not whop's. */
-const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox", "agent", "money", "support", "dev"]);
+const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox", "agent", "money", "support", "dev", "store"]);
 
 export interface Outcome {
   code: number;
@@ -168,7 +169,7 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
     print(lines!);
     process.exit(0);
   }
-  if ((argv[0] === "gtm" && (argv[1] === "launch" || argv[1] === "winback")) || (argv[0] === "money" && argv[1] === "close") || (argv[0] === "support" && (argv[1] === "refund" || argv[1] === "dispute")) || (argv[0] === "dev" && argv[1] === "hook")) return recipePiped(argv, mode, env, plan);
+  if ((argv[0] === "gtm" && (argv[1] === "launch" || argv[1] === "winback")) || (argv[0] === "money" && argv[1] === "close") || (argv[0] === "support" && (argv[1] === "refund" || argv[1] === "dispute")) || (argv[0] === "dev" && argv[1] === "hook") || (argv[0] === "store" && (argv[1] === "price" || argv[1] === "publish"))) return recipePiped(argv, mode, env, plan);
   if (argv[0] === "support" && argv[1] === "lookup") process.exit(await lookupJson(argv, mode, env));
   if (argv[0] === "gtm" && argv[1] === "rank") process.exit(await rankJson(argv, mode, env));
   // Two screens are data as well as pictures. The rest draw and need a terminal.
@@ -289,6 +290,18 @@ async function winbackReads(opts: NonNullable<ReturnType<typeof parseWinbackArgs
 
 /** One recipe by name: parse its flags, gather its reads, build its plan. `error` is a refusal in words before any read. */
 async function buildRecipe(argv: string[], env: NodeJS.ProcessEnv, mode: Mode, live: boolean): Promise<{ plan?: RecipePlan; error?: string }> {
+  if (argv[0] === "store" && argv[1] === "price") {
+    const parsed = parsePriceArgs(argv);
+    if (!parsed.opts) return { error: parsed.error };
+    const [acct, plan] = await Promise.all([identity(env), run(["plans", "get", parsed.opts.plan], env)]);
+    return { plan: buildPrice(argv, parsed.opts, { plan: recordOf(plan.parsed), planError: plan.parsed.ok ? undefined : plan.parsed.error.message.split("\n")[0], accountTitle: acct?.title, accountId: acct?.id, mode }) };
+  }
+  if (argv[0] === "store" && argv[1] === "publish") {
+    const parsed = parsePublishArgs(argv);
+    if (!parsed.opts) return { error: parsed.error };
+    const [acct, product, plans] = await Promise.all([identity(env), run(["products", "get", parsed.opts.product], env), run(["plans", "list", "--product_ids", parsed.opts.product], env)]);
+    return { plan: buildPublish(argv, parsed.opts, { product: recordOf(product.parsed), productError: product.parsed.ok ? undefined : product.parsed.error.message.split("\n")[0], plans: rowsOf(plans.parsed), accountTitle: acct?.title, accountId: acct?.id, mode }) };
+  }
   if (argv[0] === "dev" && argv[1] === "hook") {
     const parsed = parseHookArgs(argv);
     if (!parsed.opts) return { error: parsed.error };
@@ -352,7 +365,7 @@ async function recipeTerminal(argvIn: string[], theme: Theme, mode: Mode, env: N
   }
   const approved = yesFlag || split.token !== undefined;
   const live = mode !== "sandbox" && !planOnly;
-  const spin = spinner(argv[0] === "dev" ? copy.spinner.hook : argv[0] === "support" ? (argv[1] === "refund" ? copy.spinner.refund : copy.spinner.dispute) : argv[0] === "money" ? copy.spinner.close : argv[1] === "winback" ? copy.spinner.winback : copy.spinner.launch, theme);
+  const spin = spinner(argv[0] === "store" ? (argv[1] === "price" ? copy.spinner.price : copy.spinner.publish) : argv[0] === "dev" ? copy.spinner.hook : argv[0] === "support" ? (argv[1] === "refund" ? copy.spinner.refund : copy.spinner.dispute) : argv[0] === "money" ? copy.spinner.close : argv[1] === "winback" ? copy.spinner.winback : copy.spinner.launch, theme);
   const built = await buildRecipe(argv, env, mode, live).finally(() => spin.stop());
   if (!built.plan) {
     print(errorView({ code: "VALIDATION_ERROR", message: built.error ?? "" }, theme));
@@ -532,6 +545,21 @@ async function lookupJson(argv: string[], mode: Mode, env: NodeJS.ProcessEnv): P
   return input.user ? 0 : 1;
 }
 
+/** `wv store`: products, every plan, the active promo codes, and the checkout links, at once. */
+async function gatherStore(theme: Theme, env: NodeJS.ProcessEnv, mode: Mode): Promise<StoreInput> {
+  const spin = spinner(copy.spinner.store, theme);
+  const cmds = [["products", "list"], ["plans", "list"], ["promo-codes", "list", "--status", "active"], ["checkout-configurations", "list"]];
+  const [acct, products, plans, promoCodes, checkouts] = await Promise.all([identity(env), ...cmds.map((c) => run(c, env))]);
+  spin.stop();
+  return { accountTitle: acct?.title, accountId: acct?.id, mode, products: products.parsed, plans: plans.parsed, promoCodes: promoCodes.parsed, checkouts: checkouts.parsed, commands: cmds };
+}
+
+async function storeScreen(theme: Theme, mode: Mode): Promise<Outcome> {
+  const input = await gatherStore(theme, whopEnv(mode), mode);
+  print(storeView(input, theme));
+  return { code: input.products.ok ? 0 : 1, group: "store" };
+}
+
 /** `wv dev [app_id]`: the apps, then the named or first app's builds, domains, and last day of errors, plus the account's webhooks and the credential. */
 async function gatherDev(appId: string | undefined, theme: Theme, env: NodeJS.ProcessEnv, mode: Mode): Promise<DevInput> {
   const spin = spinner(copy.spinner.dev, theme);
@@ -563,12 +591,18 @@ async function devScreen(argv: string[], theme: Theme, mode: Mode): Promise<Outc
 }
 
 /** wv screens that have a JSON face: `--format json`, or any pipe. */
-const DATA_SCREENS = new Set(["doctor", "gtm", "money", "dev"]);
+const DATA_SCREENS = new Set(["doctor", "gtm", "money", "dev", "store"]);
 const wantsJson = (argv: string[]) => argv.some((a, i) => a === "--format=json" || (a === "--format" && argv[i + 1] === "json"));
 
 /** Prints a screen's data as JSON and returns the exit code the screen would have used. */
 async function screenJson(screen: string, mode: Mode, env: NodeJS.ProcessEnv, argv: string[] = []): Promise<number> {
   const theme = makeTheme({});
+  if (screen === "store") {
+    const input = await gatherStore(theme, env, mode);
+    const data = storeData(input);
+    process.stdout.write(JSON.stringify({ ...data, meta: { command: "store", wrapper: "wv", mode } }, null, 2) + "\n");
+    return data.ok ? 0 : 1;
+  }
   if (screen === "dev") {
     const input = await gatherDev(argv[1] && !argv[1].startsWith("--") ? argv[1] : undefined, theme, env, mode);
     const data = devData(input);
@@ -709,8 +743,9 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
     return { code: 0 };
   }
   if (group === "home") return home(theme, mode);
-  if ((group === "gtm" && (verb === "launch" || verb === "winback")) || (group === "money" && verb === "close") || (group === "support" && (verb === "refund" || verb === "dispute")) || (group === "dev" && verb === "hook")) return recipeTerminal(argv, theme, mode, env, !!opts.plan);
+  if ((group === "gtm" && (verb === "launch" || verb === "winback")) || (group === "money" && verb === "close") || (group === "support" && (verb === "refund" || verb === "dispute")) || (group === "dev" && verb === "hook") || (group === "store" && (verb === "price" || verb === "publish"))) return recipeTerminal(argv, theme, mode, env, !!opts.plan);
   if (group === "dev") return devScreen(argv, theme, mode);
+  if (group === "store") return storeScreen(theme, mode);
   if (group === "support") return lookup(argv, theme, mode, env);
   if (group === "money") return moneyScreen(theme, mode);
   if (group === "gtm" && verb === "rank") return rank(argv, theme, mode, env);

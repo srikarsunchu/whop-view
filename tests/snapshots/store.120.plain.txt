@@ -1,0 +1,24 @@
+ Hypermotion › biz_VraUMckluH8dzV › production › store
+
+ ── Frame  prod_DQf7IZAtveRoK ──────────────────────────────────────────────────────────────────────────────────────────
+   visible             for sale · 0 members · whop.com/frame-97
+   plan_oLCTaWVWJc79O  — · one time · visible · 0 members · plan_oLCTaWVWJc79O
+
+ ── Hypermotion  prod_iQ2Zub6GFQS5Q ────────────────────────────────────────────────────────────────────────────────────
+   visible                  for sale · 2 members · whop.com/frame-creator
+   Flex — 300 credits       $10.00 · one time · hidden · 2 members · plan_NrjXyj6yTetff
+   Creator — 1,000 credits  — · renewal · visible · 0 members · plan_ozEZmitgc8tjB
+
+ Offers
+ code      off  who                        uses  expires  id
+ LAUNCH20  20%  new buyers only  12 of 200 used  Sep 28   promo_x1
+
+ Checkout links
+   plan_ozEZmitgc8tjB  https://whop.com/checkout/chk_x1 · campaign=launch-20260921
+
+ price  wv store price plan_oLCTaWVWJc79O --to <amount> --plan
+ json  whop products list --format json
+ json  whop plans list --format json
+ json  whop promo-codes list --status active --format json
+ json  whop checkout-configurations list --format json
+

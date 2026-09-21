@@ -1,0 +1,24 @@
+ [1mHypermotion[22m[2m › [22m[2mbiz_VraUMckluH8dzV[22m[2m › [22m[33mproduction[39m[2m › [22m[1mstore[22m
+
+ [2m── [22m[1mFrame  prod_DQf7IZAtveRoK[22m[2m ──────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2mvisible           [22m  [32mfor sale · 0 members · whop.com/frame-97[39m
+   [2mplan_oLCTaWVWJc79O[22m  — · one time · visible · 0 members · plan_oLCTaWVWJc79O
+
+ [2m── [22m[1mHypermotion  prod_iQ2Zub6GFQS5Q[22m[2m ────────────────────────────────────────────────────────────────────────────────────[22m
+   [2mvisible                [22m  [32mfor sale · 2 members · whop.com/frame-creator[39m
+   [2mFlex — 300 credits     [22m  [2m$10.00 · one time · hidden · 2 members · plan_NrjXyj6yTetff[22m
+   [2mCreator — 1,000 credits[22m  — · renewal · visible · 0 members · plan_ozEZmitgc8tjB
+
+ [1mOffers[22m
+ [2mcode    [22m  [2moff[22m  [2mwho            [22m  [2m          uses[22m  [2mexpires[22m  [2mid[22m
+ LAUNCH20  20%  [2mnew buyers only[22m  [2m12 of 200 used[22m  [2mSep 28 [22m  [2mpromo_x1[22m
+
+ [1mCheckout links[22m
+   [2mplan_ozEZmitgc8tjB[22m  [2mhttps://whop.com/checkout/chk_x1 · campaign=launch-20260921[22m
+
+ [2mprice[22m  [2mwv store price plan_oLCTaWVWJc79O --to <amount> --plan[22m
+ [2mjson[22m  [2mwhop products list --format json[22m
+ [2mjson[22m  [2mwhop plans list --format json[22m
+ [2mjson[22m  [2mwhop promo-codes list --status active --format json[22m
+ [2mjson[22m  [2mwhop checkout-configurations list --format json[22m
+

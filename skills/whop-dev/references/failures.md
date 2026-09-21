@@ -13,7 +13,7 @@ Every refusal and error a dev command returns, and what to do. Part of the whop-
 | 3 | `HTTP_422` on `domains create` | the hostname is claimed by another account | `--replace_existing true` after publishing the TXT proof the error names |
 | 3 | `HTTP_422` on `app-builds promote` | the build is not `approved` | `app-builds list --app_id` for `status` and `review_message` |
 | 3 | `UNKNOWN` · "Unknown flag: --yes" or "--approve" | the command ran through `whop`, not `wv` | rerun it as `wv …` |
-| 4 | `HTTP_403` · "OAuth token is not authorized for the developer:manage_webhook scope. This resource requires an API-key login (`whop login --api-key`)." | webhooks need an API-key profile | `whop auth switch <saved api-key profile>`, else `whop auth login --method api-key --apiKey whop_…`; `wv dev` names the profile |
+| 4 | `HTTP_403` · "OAuth token is not authorized for the developer:manage_webhook scope. This resource requires an API-key login (`whop login --api-key`)." | webhooks need an API-key profile | `wv auth switch <saved api-key profile>`, else `whop auth login --method api-key --apiKey whop_…`; `wv dev` names the profile |
 | 4 | `HTTP_403` on `apps logs` or `app-builds` | the key lacks the app's scope, or the app belongs to another account | `whop api-keys permissions` for the catalog; `wv doctor` for what is missing |
 | 4 | `HTTP_401` · "Authentication failed" in sandbox mode | wrong or missing sandbox key | `wv sandbox status` |
 | 5 | `HTTP_404` on an `app_`, `hook_`, `dom_`, or `apbd_` id | wrong id or another account's | `wv dev --format json` lists the account's |

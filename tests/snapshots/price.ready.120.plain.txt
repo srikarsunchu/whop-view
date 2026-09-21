@@ -1,0 +1,22 @@
+ ▌ Change a price                                                                                   writes to production
+
+   wv store price plan_NrjXyj6yTetff --to 15 --idempotency-key 5b2c1d6e-0000-4000-8000-000000000008
+
+   product    Hypermotion  prod_iQ2Zub6GFQS5Q
+   plan       Flex — 300 credits · $10.00 · one time · hidden · plan_NrjXyj6yTetff
+   on it now  2 members
+   price      $10.00 → $15.00
+   from       Hypermotion  biz_VraUMckluH8dzV
+
+ ── Steps ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1  price  price $10.00 → $15.00
+             runs  whop plans update plan_NrjXyj6yTetff --initial_price 15 --idempotency-key 5b2c1d6e-0000-4000-8000…
+
+   ! 2 members have bought this plan at the old price; that does not change.
+
+   1 write runs in order against production, each with its own idempotency key. A step that fails stops the rest; what
+   was created stays, and the card names it.
+
+ every argv  wv store price plan_NrjXyj6yTetff --to 15 --idempotency-key 5b2c1d6e-0000-4000-8000-000000000008 --plan |
+             cat
+

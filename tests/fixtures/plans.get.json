@@ -1,0 +1,51 @@
+{
+  "ok": true,
+  "data": {
+    "id": "plan_NrjXyj6yTetff",
+    "created_at": "2026-09-13T10:13:22.288Z",
+    "updated_at": "2026-09-16T00:06:43.999Z",
+    "visibility": "hidden",
+    "plan_type": "one_time",
+    "release_method": "buy_now",
+    "currency": "usd",
+    "account": {
+      "id": "biz_VraUMckluH8dzV",
+      "title": "Hypermotion"
+    },
+    "product": {
+      "id": "prod_iQ2Zub6GFQS5Q",
+      "title": "Hypermotion"
+    },
+    "invoice": null,
+    "billing_period": null,
+    "title": "Flex \u2014 300 credits",
+    "description": "300 credits for Hypermotion. One-time purchase. No subscription or automatic top-ups. Does not unlock Creator-only features.",
+    "purchase_url": "https://whop.com/checkout/plan_NrjXyj6yTetff",
+    "expiration_days": null,
+    "initial_price": 10,
+    "renewal_price": 0,
+    "formatted_price": "$10.00",
+    "trial_period_days": null,
+    "three_ds_level": null,
+    "member_count": 2,
+    "internal_notes": null,
+    "metadata": {},
+    "stock": 0,
+    "unlimited_stock": true,
+    "split_pay_required_payments": null,
+    "adaptive_pricing_enabled": false,
+    "strike_through_initial_price": null,
+    "strike_through_renewal_price": null,
+    "checkout_styling": null,
+    "offer_cancel_discount": false,
+    "cancel_discount_percentage": null,
+    "cancel_discount_intervals": null,
+    "payment_method_configuration": null,
+    "image": null,
+    "custom_fields": []
+  },
+  "meta": {
+    "command": "plans get",
+    "duration": "1ms"
+  }
+}

@@ -5,7 +5,7 @@
  [2mfix[22m  [2mwhop verifications create --account_id biz_VraUMckluH8dzV[22m
  [33m![39m [1mapi key     [22m  [33mThis oauth login lacks developer:manage_webhook. The api-key profile sandbox is saved; switch to it for[39m
                  [33mthose.[39m
- [2mfix[22m  [2mwhop auth switch sandbox[22m
+ [2mfix[22m  [2mwv auth switch sandbox[22m
  [33m![39m [1mpixel       [22m  [33mNo visit carries a source: the pixel is not installed on your pages, so nothing is attributed.[39m
  [2mfix[22m  [2mwhop events validate_pixel[22m
  [33m![39m [1mmeta page   [22m  [33mNo Meta page is connected, so every ad command will refuse.[39m
@@ -16,7 +16,7 @@
  [2mfix[22m  [2mwhop accounts update-preferences --economic_intelligence true[22m
  [32m✓[39m [1mproducts    [22m  2 for sale · Frame · Free · 1 more
  [33m![39m [1mwebhooks    [22m  [33mWebhooks refuse an oauth login. Sign in with an API key to list, create, or test them.[39m
- [2mfix[22m  [2mwhop auth switch sandbox[22m
+ [2mfix[22m  [2mwv auth switch sandbox[22m
 
  [31m1 blocking[39m[2m · [22m[33m6 warnings[39m[2m · [22m[32m2 ok[39m
 

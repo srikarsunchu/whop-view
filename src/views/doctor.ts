@@ -127,7 +127,7 @@ export function checks(input: DoctorInput): Check[] {
     out.push({ key: "apikey", label: c.labels.apiKey, level: missing.length ? "warn" : "ok", detail: missing.length ? c.keyLacks(profiles.active ?? "", missing) : c.keyActive(profiles.active ?? ""), dashboard: missing.length ? dashboardUrl(input.accountId) : undefined, blocking: false });
   } else if (profiles.apiKey.length) {
     const alt = profiles.apiKey[0].name;
-    out.push({ key: "apikey", label: c.labels.apiKey, level: missing.length ? "warn" : "ok", detail: missing.length ? c.oauthLacks(missing, alt) : c.oauthFine(alt), fix: missing.length ? ["whop", "auth", "switch", alt] : undefined, blocking: false });
+    out.push({ key: "apikey", label: c.labels.apiKey, level: missing.length ? "warn" : "ok", detail: missing.length ? c.oauthLacks(missing, alt) : c.oauthFine(alt), fix: missing.length ? ["wv", "auth", "switch", alt] : undefined, blocking: false });
   } else {
     out.push({ key: "apikey", label: c.labels.apiKey, level: "warn", detail: missing.length ? c.noKeyLacks(missing) : c.noKey, fix: ["whop", "auth", "login", "--method", "api-key", "--api-key", "<whop_key>", "--profile", "prod"], dashboard: dashboardUrl(input.accountId), blocking: false });
   }
@@ -175,7 +175,7 @@ export function checks(input: DoctorInput): Check[] {
   if (!input.webhooks.ok) {
     const scope = input.webhooks.error.code === "HTTP_403";
     const alt = profiles.apiKey[0]?.name;
-    out.push({ key: "webhooks", label: c.labels.webhooks, level: "warn", detail: scope ? c.webhooksScope : errLine(input.webhooks), fix: scope ? (alt ? ["whop", "auth", "switch", alt] : ["whop", "auth", "login", "--method", "api-key", "--api-key", "<whop_key>", "--profile", "prod"]) : undefined, blocking: false });
+    out.push({ key: "webhooks", label: c.labels.webhooks, level: "warn", detail: scope ? c.webhooksScope : errLine(input.webhooks), fix: scope ? (alt ? ["wv", "auth", "switch", alt] : ["whop", "auth", "login", "--method", "api-key", "--api-key", "<whop_key>", "--profile", "prod"]) : undefined, blocking: false });
   } else if (!hooks?.length) {
     out.push({ key: "webhooks", label: c.labels.webhooks, level: "warn", detail: c.noWebhooks, fix: ["whop", "webhooks", "create", "--url", "<url>", "--events", '["payment.succeeded"]'], blocking: false });
   } else {

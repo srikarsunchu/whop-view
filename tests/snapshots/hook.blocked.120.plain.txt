@@ -14,7 +14,7 @@
    2  test event  send a payment.succeeded test payload and read the response
                   runs  whop webhooks test '{hook.id}' --event payment.succeeded
 
-   ✗ This login is an OAuth token, which cannot manage webhooks. Fix: whop auth switch sandbox.
+   ✗ This login is an OAuth token, which cannot manage webhooks. Fix: wv auth switch sandbox.
 
    2 writes run in order against production, each with its own idempotency key. A step that fails stops the rest; what
    was created stays, and the card names it.

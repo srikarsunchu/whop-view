@@ -4,7 +4,7 @@ Part of the whop-dev skill; `references/gate.md` has the rules. This playbook is
 
 ```bash
 wv dev --format json                                                # webhookAccess says whether this credential can
-whop auth switch <api-key profile>                                  # when it cannot; or whop auth login --method api-key
+wv auth switch <api-key profile>                                  # when it cannot; or whop auth login --method api-key
 wv dev hook https://example.com/hooks --plan                        # the plan and nothing else
 wv dev hook https://example.com/hooks --events payment.succeeded,membership.activated --test payment.succeeded
 wv dev hook https://example.com/app-hooks --app app_x               # a webhook on the app instead of the account

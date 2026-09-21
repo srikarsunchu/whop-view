@@ -23,9 +23,9 @@ test("doctor: an oauth login that lacks a scope points at the saved api-key prof
   const c = byKey(checks(DOCTOR));
   assert.equal(c.apikey.level, "warn");
   assert.match(c.apikey.detail, /lacks developer:manage_webhook/);
-  assert.deepEqual(c.apikey.fix, ["whop", "auth", "switch", "sandbox"]);
+  assert.deepEqual(c.apikey.fix, ["wv", "auth", "switch", "sandbox"]);
   assert.equal(c.webhooks.level, "warn");
-  assert.deepEqual(c.webhooks.fix, ["whop", "auth", "switch", "sandbox"], "the 403 on webhooks list is the same missing scope");
+  assert.deepEqual(c.webhooks.fix, ["wv", "auth", "switch", "sandbox"], "the 403 on webhooks list is the same missing scope");
 });
 
 test("doctor: the launch gaps come from the same reads gtm uses", () => {

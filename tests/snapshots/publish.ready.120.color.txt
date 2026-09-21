@@ -1,0 +1,21 @@
+ [33m▌[39m [1mPublish a product[22m                                                                                [33mwrites to production[39m
+
+   [2mwv store publish prod_iQ2Zub6GFQS5Q --idempotency-key 5b2c1d6e-0000-4000-8000-000000000009[22m
+
+   [2mproduct [22m  [33mHypermotion  prod_iQ2Zub6GFQS5Q · hidden[39m
+   [2mplans   [22m  Flex — 300 credits $10.00 (hidden) · plan_oLCTaWVWJc79O — · Creator — 1,000 credits —
+   [2mlink for[22m  [2mCreator — 1,000 credits · $29.00/mo[22m
+   [2mpage    [22m  [2mwhop.com/frame-creator[22m
+   [2mfrom    [22m  Hypermotion  biz_VraUMckluH8dzV
+
+ [2m── [22m[1mSteps[22m[2m ──────────────────────────────────────────────────────────────────────────────────────────────────────────────[22m
+   [2m1  publish      [22m  Hypermotion goes visible on the store and the marketplace
+                     [2mruns[22m  whop products publish prod_iQ2Zub6GFQS5Q --idempotency-key 5b2c1d6e-0000-4000-8000-000000…
+   [2m2  checkout link[22m  a shareable checkout for Creator — 1,000 credits · $29.00/mo
+                     [2mruns[22m  whop checkout-configurations create --plan_id plan_ozEZmitgc8tjB --metadata '{"source":"w…
+
+   [2m2 writes run in order against production, each with its own idempotency key. A step that fails stops the rest; what[22m
+   [2mwas created stays, and the card names it.[22m
+
+ [2mevery argv[22m  [2mwv store publish prod_iQ2Zub6GFQS5Q --idempotency-key 5b2c1d6e-0000-4000-8000-000000000009 --plan | cat[22m
+

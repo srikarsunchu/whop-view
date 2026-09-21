@@ -5,7 +5,7 @@
  fix  whop verifications create --account_id biz_VraUMckluH8dzV
  ! api key       This oauth login lacks developer:manage_webhook. The api-key profile sandbox is saved; switch to it for
                  those.
- fix  whop auth switch sandbox
+ fix  wv auth switch sandbox
  ! pixel         No visit carries a source: the pixel is not installed on your pages, so nothing is attributed.
  fix  whop events validate_pixel
  ! meta page     No Meta page is connected, so every ad command will refuse.
@@ -16,7 +16,7 @@
  fix  whop accounts update-preferences --economic_intelligence true
  ✓ products      2 for sale · Frame · Free · 1 more
  ! webhooks      Webhooks refuse an oauth login. Sign in with an API key to list, create, or test them.
- fix  whop auth switch sandbox
+ fix  wv auth switch sandbox
 
  1 blocking · 6 warnings · 2 ok
 

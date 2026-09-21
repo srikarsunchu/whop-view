@@ -16,6 +16,7 @@ const SKILLS: Record<string, string[]> = {
   "whop-money": ["payouts", "ledgers", "transfers", "swaps", "deposits", "cards", "verifications", "exports", "accounts"],
   "whop-support": ["memberships", "members", "people", "payments", "refunds", "disputes", "dispute-alerts", "resolution-center-cases", "files", "users"],
   "whop-dev": ["apps", "app-builds", "domains", "webhooks", "api-keys", "events", "permissions"],
+  "whop-store": ["products", "plans", "promo-codes", "checkout-configurations", "memberships", "members", "payment-method-domains", "shipments"],
 };
 const START = "<!-- wv agent:start -->";
 const END = "<!-- wv agent:end -->";
