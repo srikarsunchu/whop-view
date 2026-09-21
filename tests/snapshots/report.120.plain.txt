@@ -1,0 +1,44 @@
+ Hypermotion › biz_VraUMckluH8dzV › production › report › Sep 14 to Sep 20 vs Sep 7 to Sep 13
+
+ metric         this week  last week  change
+ visits                 0          0       —
+ new users              1          0       —
+ gross revenue     $10.00      $0.00       —
+ net revenue       $18.56      $9.28   +100%
+ ad spend           $0.00      $0.00       —
+ churn               2.0%       5.0%    -60%
+
+ ── Status ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   money   $18.56 available · payouts blocked (identity)
+   store   2 of 2 products for sale · 1 active code
+   people  2 people · 2 customers · 2 contactable · 0 attributed to a source
+
+ ── Blockers ───────────────────────────────────────────────────────────────────────────────────────────────────────────
+   identity      Payouts are blocked: Please complete identity verification before requesting a withdrawal.
+   api key       This oauth login lacks developer:manage_webhook. The api-key profile sandbox is saved; switch to it for
+                 those.
+   pixel         No visit carries a source: the pixel is not installed on your pages, so nothing is attributed.
+   meta page     No Meta page is connected, so every ad command will refuse.
+   ads payment   No ads payment method on the account, so ads will not deliver.
+   intelligence  Economic Intelligence is off, so `whop economic-intelligence` returns 403.
+   webhooks      Webhooks refuse an oauth login. Sign in with an API key to list, create, or test them.
+   gap           No visit carries a source: the pixel is not installed on your pages, so nothing is attributed.
+   gap           No Meta page is connected, so every ad command will refuse.
+   gap           No ads payment method on the account, so ads will not deliver.
+   gap           Economic Intelligence is off, so `whop economic-intelligence` returns 403.
+
+ Campaigns
+   Launch · Hypermotion  4 groups · 1 scale · 1 pause · 1 wait · 1 not delivering · pause: lal 3%
+
+ Recommendations
+   reca_x1  Launch a 20% winback code for visitors who did not buy · promo code
+
+ fix identity  whop verifications create --account_id biz_VraUMckluH8dzV
+ gap  whop events validate_pixel
+ gap  whop social-accounts connect --platform meta_business --scopes advertise --redirect_url <url>
+ gap  whop accounts update-preferences --economic_intelligence true
+ pause  wv ad-groups pause adgrp_c1
+ approve  wv economic-intelligence update reca_x1 --status executed
+ unblock payouts  whop verifications create --account_id biz_VraUMckluH8dzV
+ markdown  wv report --md
+

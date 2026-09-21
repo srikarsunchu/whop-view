@@ -30,8 +30,11 @@ case "$1 $2" in
   "payouts list") fx payouts.list.json ;;
   "apps list") fx apps.list.json ;;
   "plans list") fx plans.list.json ;;
-  "plans get") sed "s/plan_NrjXyj6yTetff/${3:-plan_NrjXyj6yTetff}/" "${WV_FAKE_FIXTURES}/plans.get.json"; exit 0 ;;
-  "plans update") echo '{"ok":true,"data":{"id":"'"$3"'","title":"Flex — 300 credits","initial_price":39,"renewal_price":0,"plan_type":"one_time"},"meta":{"command":"plans update","duration":"1ms"}}'; exit 0 ;;
+  "plans get") price=10; [ -n "$WV_FAKE_LOG" ] && [ -f "$WV_FAKE_LOG.price" ] && price=$(cat "$WV_FAKE_LOG.price"); sed "s/plan_NrjXyj6yTetff/${3:-plan_NrjXyj6yTetff}/; s/\"initial_price\": 10/\"initial_price\": $price/" "${WV_FAKE_FIXTURES}/plans.get.json"; exit 0 ;;
+  "plans update") new=39; i=0; for a in "$@"; do i=$((i+1)); [ "$a" = "--initial_price" ] || [ "$a" = "--renewal_price" ] && eval "new=\${$((i+1))}"; done; [ -n "$WV_FAKE_LOG" ] && echo "$new" > "$WV_FAKE_LOG.price"; echo '{"ok":true,"data":{"id":"'"$3"'","title":"Flex — 300 credits","initial_price":'"$new"',"renewal_price":0,"plan_type":"one_time"},"meta":{"command":"plans update","duration":"1ms"}}'; exit 0 ;;
+  "stats get") [ -f "${WV_FAKE_FIXTURES}/stats.$3.json" ] && fx "stats.$3.json"; echo '{"ok":true,"data":{"data":{"points":[]}},"meta":{"command":"stats get","duration":"1ms"}}'; exit 0 ;;
+  "economic-intelligence list") [ -n "$WV_FAKE_READY" ] && { echo '{"ok":true,"data":{"data":[{"id":"reca_1","status":"ready","title":"Launch a 20% winback code for visitors who did not buy","action_type":"promo_code","reasoning":"41 visitors in 30 days, 2 purchases."}],"page_info":{"start_cursor":null,"end_cursor":null,"has_next_page":false,"has_previous_page":false}},"meta":{"command":"economic-intelligence list","duration":"1ms"}}'; exit 0; }; fx error.gated.json ;;
+  "economic-intelligence update") echo '{"ok":true,"data":{"id":"'"$3"'","status":"executed"},"meta":{"command":"economic-intelligence update","duration":"1ms"}}'; exit 0 ;;
   "products publish") echo '{"ok":true,"data":{"id":"'"$3"'","title":"Hypermotion","visibility":"visible"},"meta":{"command":"products publish","duration":"1ms"}}'; exit 0 ;;
   "promo-codes list") fx promo-codes.list.json ;;
   "checkout-configurations list") echo '{"ok":true,"data":{"data":[],"page_info":{"start_cursor":null,"end_cursor":null,"has_next_page":false,"has_previous_page":false}},"meta":{"command":"checkout-configurations list","duration":"1ms"}}'; exit 0 ;;

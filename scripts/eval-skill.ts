@@ -113,8 +113,9 @@ function judge(s: Scenario, run: Run): { name: string; pass: boolean; detail: st
     out.push({ name: "doctor before any write", pass: doctor >= 0 && (firstWrite < 0 || doctor < firstWrite), detail: `doctor at ${doctor}, first write at ${firstWrite}` });
   }
   if (e.planBeforeApprove) {
-    const plan = cmdIndex(/\bwv (gtm (launch|winback)|money close|support (refund|dispute)|dev hook|store (price|publish))\b(?!.*--approve)/);
-    const approve = cmdIndex(/--approve\b/);
+    const recipe = /\bwv (gtm (launch|winback)|money close|support (refund|dispute)|dev hook|store (price|publish)|economic-intelligence update|[a-z-]+ (create|update|delete|pause|publish|refund))\b/;
+    const plan = run.commands.findIndex((c) => recipe.test(c) && !/--approve\b/.test(c));
+    const approve = run.commands.findIndex((c) => recipe.test(c) && /--approve\b/.test(c));
     out.push({ name: "plan shown before the approved rerun", pass: plan >= 0 && approve >= 0 && plan < approve, detail: `plan at ${plan}, rerun at ${approve}` });
   }
   // Every scenario: a write typed as `whop …` bypassed the gate, whatever the prompt said.

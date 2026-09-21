@@ -63,6 +63,14 @@ Every skill has the same shape, so an agent that has run one knows the others:
 
 The evals are where that contract meets a model. The gtm, money, and support runs pass their checks; the dev run does not yet, and its `results.md` says why: asked to add a webhook on an OAuth login, the agent guessed at `whop auth switch` and four other spellings instead of reading the fix `wv dev --format json` had already handed it. That transcript is the reason the dev rules now open with the API-key rule. The store skill is newest and has no run yet.
 
+### `report`
+
+The Monday brief as one read. `wv report` shows six numbers this week against last with the change, what blocks a sale or a launch with each fix, the money and whether payouts are allowed, the store, every live campaign ranked by the decide rubric, Whop's recommendations waiting for a yes, and a `next` list of the `wv` commands all of that implies. `--format json` is the same as data; `--md` is Markdown for a schedule to post. It writes nothing, so it can run unattended.
+
+![report](demo/report.gif)
+
+The recording is live on the demo account: the identity block and the missing pixel are real, and the recommendations section shows the Economic Intelligence 403 with its fix in `next`.
+
 ## What agents see
 
 Reads: the bytes are whop's. `wv products list | cat` is byte-identical to `whop products list`, and there is a test for it, so a script or a skill written against `whop` works unchanged with `wv` in its place. What changes is around the bytes:

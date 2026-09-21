@@ -1,0 +1,53 @@
+ [1mHypermotion[22m[2m › [22m[2mbiz_VraUMckluH8dzV[22m[2m › [22m[33mproduction[39m[2m › [22m[1mreport[22m
+ [2mSep 14 to Sep 20 vs Sep 7 to Sep 13[22m
+
+ [2mmetric       [22m  [2mthis week[22m  [2mlast week[22m  [2mchange[22m
+ visits         [2m        0[22m  [2m        0[22m  [2m     —[22m
+ new users              1  [2m        0[22m  [2m     —[22m
+ gross revenue     $10.00  [2m    $0.00[22m  [2m     —[22m
+ net revenue       $18.56  [2m    $9.28[22m  [32m +100%[39m
+ ad spend       [2m    $0.00[22m  [2m    $0.00[22m  [2m     —[22m
+ churn               2.0%  [2m     5.0%[22m  [32m  -60%[39m
+
+ [2m── [22m[1mStatus[22m[2m ─────────────────────────────────────────────────────────────────────[22m
+   [2mmoney [22m  [33m$18.56 available · payouts blocked (identity)[39m
+   [2mstore [22m  2 of 2 products for sale · 1 active code
+   [2mpeople[22m  [2m2 people · 2 customers · 2 contactable · 0 attributed to a source[22m
+
+ [2m── [22m[1mBlockers[22m[2m ───────────────────────────────────────────────────────────────────[22m
+   [2midentity    [22m  [31mPayouts are blocked: Please complete identity verification[39m
+                 [31mbefore requesting a withdrawal.[39m
+   [2mapi key     [22m  [33mThis oauth login lacks developer:manage_webhook. The api-key[39m
+                 [33mprofile sandbox is saved; switch to it for those.[39m
+   [2mpixel       [22m  [33mNo visit carries a source: the pixel is not installed on your[39m
+                 [33mpages, so nothing is attributed.[39m
+   [2mmeta page   [22m  [33mNo Meta page is connected, so every ad command will refuse.[39m
+   [2mads payment [22m  [33mNo ads payment method on the account, so ads will not deliver.[39m
+   [2mintelligence[22m  [33mEconomic Intelligence is off, so `whop economic-intelligence`[39m
+                 [33mreturns 403.[39m
+   [2mwebhooks    [22m  [33mWebhooks refuse an oauth login. Sign in with an API key to[39m
+                 [33mlist, create, or test them.[39m
+   [2mgap         [22m  [33mNo visit carries a source: the pixel is not installed on your[39m
+                 [33mpages, so nothing is attributed.[39m
+   [2mgap         [22m  [33mNo Meta page is connected, so every ad command will refuse.[39m
+   [2mgap         [22m  [33mNo ads payment method on the account, so ads will not deliver.[39m
+   [2mgap         [22m  [33mEconomic Intelligence is off, so `whop economic-intelligence`[39m
+                 [33mreturns 403.[39m
+
+ [1mCampaigns[22m
+   [2mLaunch · Hypermotion[22m  [31m4 groups · 1 scale · 1 pause · 1 wait · 1 not[39m
+                         [31mdelivering · pause: lal 3%[39m
+
+ [1mRecommendations[22m
+   [2mreca_x1[22m  Launch a 20% winback code for visitors who did not buy · promo code
+
+ [2mfix identity[22m  [2mwhop verifications create --account_id biz_VraUMckluH8dzV[22m
+ [2mgap[22m  [2mwhop events validate_pixel[22m
+ [2mgap[22m  [2mwhop social-accounts connect --platform meta_business --scopes advertise[22m
+      [2m--redirect_url <url>[22m
+ [2mgap[22m  [2mwhop accounts update-preferences --economic_intelligence true[22m
+ [2mpause[22m  [2mwv ad-groups pause adgrp_c1[22m
+ [2mapprove[22m  [2mwv economic-intelligence update reca_x1 --status executed[22m
+ [2munblock payouts[22m  [2mwhop verifications create --account_id biz_VraUMckluH8dzV[22m
+ [2mmarkdown[22m  [2mwv report --md[22m
+

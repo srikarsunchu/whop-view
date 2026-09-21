@@ -604,3 +604,19 @@ test("store publish: on a visible product the publish is skipped and only the ch
   assert.equal(done.results.link.purchase_url, "https://whop.com/checkout/chk_1");
   assert.ok(done.next.some((n) => n.run[0] === "open"));
 });
+
+// `wv report`: the brief as JSON in a pipe, and as Markdown with --md.
+test("report: a pipe gets the brief as data; --md gets Markdown; nothing is written", () => {
+  const r = wv(["report"], gateEnv({ WV_FAKE_READY: "1" }));
+  assert.equal(r.status, 0, r.stdout.slice(0, 400) + r.stderr.slice(-400));
+  const d = JSON.parse(r.stdout) as { kpis: { key: string }[]; next: { run: string[] }[]; recommendations: { id: string }[] };
+  assert.equal(d.kpis.length, 6);
+  assert.equal(d.recommendations[0]?.id, "reca_1");
+  assert.ok(d.next.some((n) => n.run.join(" ").includes("economic-intelligence update reca_1 --status executed")));
+  const writes = r.stderr.split("\n").filter((l) => /^ARGS: [a-z-]+ (create|update|delete|pause|publish|refund)\b/.test(l));
+  assert.deepEqual(writes, [], "the brief writes nothing");
+  const md = wv(["report", "--md"], gateEnv({ WV_FAKE_READY: "1" }));
+  assert.equal(md.status, 0);
+  assert.match(md.stdout, /^# .* · weekly brief$/m);
+  assert.match(md.stdout, /^## Next$/m);
+});

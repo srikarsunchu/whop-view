@@ -16,6 +16,7 @@ import { balanceOf, buildClose, moneyView, parseCloseArgs } from "../src/views/m
 import { buildDispute, buildRefund, lookupView, parseDisputeArgs, parseRefundArgs } from "../src/views/support.ts";
 import { buildHook, devView, parseHookArgs } from "../src/views/dev.ts";
 import { buildPrice, buildPublish, parsePriceArgs, parsePublishArgs, storeView } from "../src/views/store.ts";
+import { reportView, type ReportInput } from "../src/views/report.ts";
 import { errorView } from "../src/views/error.ts";
 import { helpView, parseHelp } from "../src/views/help.ts";
 import { homeView } from "../src/views/home.ts";
@@ -253,6 +254,29 @@ export const LOG_ROWS: Rec[] = [
   { app_id: "app_HKnLpw6UGGEqk6", app_build_id: "abld_x1AbCdEfGh", request_id: "req_1", created_at: "2026-09-18T09:00:01.000Z", source: "console", level: "info", message: "booted", request_method: null, request_path: null, response_status: null },
 ];
 
+const PREV = (name: string) => synth({ data: { points: [{ timestamp: 1788912000, value: 9.28 }], currency: "usd" } }) && (name === "net_revenue" ? synth({ data: { points: [{ timestamp: 1788912000, value: 9.28 }], currency: "usd" } }) : synth({ data: { points: [] } }));
+export const REPORT: ReportInput = {
+  accountTitle: "Hypermotion",
+  accountId: "biz_VraUMckluH8dzV",
+  window: { from: "2026-09-14", to: "2026-09-20", prevFrom: "2026-09-07", prevTo: "2026-09-13", days: 7 },
+  metrics: [
+    { key: "page_visits", unit: "count", now: envelope("stats.page_visits"), prev: PREV("page_visits") },
+    { key: "new_users", unit: "count", now: envelope("stats.new_users"), prev: PREV("new_users") },
+    { key: "gross_revenue", unit: "currency", now: envelope("stats.gross_revenue"), prev: PREV("gross_revenue") },
+    { key: "net_revenue", unit: "currency", now: envelope("stats.net_revenue"), prev: PREV("net_revenue") },
+    { key: "ad_spend", unit: "currency", now: envelope("stats.ad_spend"), prev: PREV("ad_spend") },
+    { key: "churn_rate", unit: "percent", now: synth({ data: { points: [{ timestamp: 1789516800, value: 0.02 }] } }), prev: synth({ data: { points: [{ timestamp: 1788912000, value: 0.05 }] } }) },
+  ],
+  doctor: DOCTOR,
+  gtm: GTM,
+  money: MONEY,
+  store: STORE,
+  ranks: [RANK],
+  recommendations: synthPage([{ id: "reca_x1", status: "ready", title: "Launch a 20% winback code for visitors who did not buy", action_type: "promo_code", reasoning: "41 visitors in 30 days, 2 purchases." }]),
+  generatedAt: "2026-09-21 12:00 UTC",
+  commands: [["stats", "get", "net_revenue", "--from", "2026-09-14", "--to", "2026-09-20", "--interval", "day"], ["economic-intelligence", "list", "--status", "ready"]],
+};
+
 export const SCENES: Record<string, (t: Theme) => string[]> = {
   "sandbox.status": (t) => sandboxStatusView({ url: "https://sandbox-api.whop.com/api/v1", urlSource: "default", key: "whop_sandbox_key_abcdef1234", keySource: "config", configPath: CONFIG_PATH, account: synth({ id: "biz_sandboxAb12", title: "Frame (sandbox)", route: "frame-sandbox" }) }, t),
   "sandbox.status.nokey": (t) => sandboxStatusView({ url: "https://sandbox-api.whop.com/api/v1", urlSource: "default", keySource: "none", configPath: CONFIG_PATH, account: envelope("error.sandbox_oauth") }, t),
@@ -354,6 +378,7 @@ export const SCENES: Record<string, (t: Theme) => string[]> = {
   "confirm.payout.sandbox": (t) => confirmView({ ...PAYOUT, mode: "sandbox", destination: "Chase checking ••••4242  potk_x1", balance: { available: 418.56, currency: "usd" } }, t),
   "confirm.payout.over_cap": (t) => refusedView({ ...PAYOUT, argv: ["payouts", "create", "--amount", "2000", "--currency", "usd", "--payout_method_id", "potk_x1"], reason: "cap", destination: "Chase checking ••••4242  potk_x1", balance: { available: 2418.56, currency: "usd" }, cap: 500 }, t),
   "confirm.payout.over_balance": (t) => refusedView({ ...PAYOUT, reason: "balance", destination: "Chase checking ••••4242  potk_x1", balance: { available: 18.56, currency: "usd" }, cap: 500 }, t),
+  report: (t) => reportView(REPORT, t),
   store: (t) => storeView(STORE, t),
   "price.ready": (t) => recipeView(PRICE_READY, t),
   "publish.ready": (t) => recipeView(PUBLISH_READY, t),

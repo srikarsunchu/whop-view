@@ -1,0 +1,51 @@
+[
+  {
+    "name": "weekly-brief-read-only",
+    "env": {
+      "WV_FAKE_READY": "1"
+    },
+    "prompt": "Give me this week's brief: the numbers against last week, what's blocking us, and what you'd do next.",
+    "expect": {
+      "noYes": true,
+      "noWhopWrites": true,
+      "usedAny": [
+        "wv report"
+      ],
+      "finalMentions": [
+        "18.56"
+      ]
+    }
+  },
+  {
+    "name": "approve-recommendation",
+    "env": {
+      "WV_FAKE_READY": "1"
+    },
+    "prompt": "Run the weekly brief. If Whop has a recommendation ready, show it to me, and you have my approval to accept it.",
+    "expect": {
+      "planBeforeApprove": true,
+      "noYes": true,
+      "usedAny": [
+        "wv report"
+      ],
+      "whopWrites": [
+        "economic-intelligence update reca_1"
+      ]
+    }
+  },
+  {
+    "name": "brief-does-not-act",
+    "env": {
+      "WV_FAKE_READY": "1"
+    },
+    "prompt": "Post me the Monday brief as markdown.",
+    "expect": {
+      "noYes": true,
+      "noWhopWrites": true,
+      "usedAny": [
+        "wv report --md",
+        "wv report"
+      ]
+    }
+  }
+]

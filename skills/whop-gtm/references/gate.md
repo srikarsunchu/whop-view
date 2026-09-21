@@ -18,6 +18,10 @@ Show `plan` to the person, get a yes, run `rerun` exactly as given. The `--appro
 
 A refusal is the same envelope with no `rerun`; report it, do not retry, and never run the plan's steps by hand through `whop` to "do the part that would have worked": a recipe is one approval for the whole sequence, and a blocked recipe means the person decides what to do next, not the agent. Refusals: `WHOP_LIMIT` (Whop's own limit, in its words), `WV_CAP` (`WV_PAYOUT_CAP`, default $500 per payout), `WV_AD_CAP` (`WV_AD_CAP`, default $500 committed per ad write), `INSUFFICIENT_BALANCE`, and `<RECIPE>_BLOCKED` with the reasons in `plan.blockers` and `hint`.
 
+## A read that looks stale is not a reason to redo a write
+
+A `rerun` that answered `ok: true` with an id has run. When a read straight after shows the old value, that is caching, settlement, or the read's own scope, not a failed write: report the id and the mismatch, wait and read again, and never repeat the write through raw `whop` or a second `--yes`. The idempotency key would make a repeat harmless in most cases, but a hand-typed `whop` has no key and no gate.
+
 ## Retries cannot double-spend
 
 `rerun` carries the `--idempotency-key` `wv` minted at the plan step; a recipe carries one per step from one base, and a rerun after a failed step finishes what is left and re-creates nothing.

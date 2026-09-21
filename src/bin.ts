@@ -33,6 +33,7 @@ import { balanceOf, buildClose, moneyData, moneyView, parseCloseArgs, type Money
 import { buildDispute, buildRefund, classifyKey, disputesFor, lookupData, lookupView, parseDisputeArgs, parseRefundArgs, userFrom, type LookupInput } from "./views/support.ts";
 import { buildHook, devData, devView, parseHookArgs, WEBHOOK_ACTION, type DevInput } from "./views/dev.ts";
 import { buildPrice, buildPublish, parsePriceArgs, parsePublishArgs, storeData, storeView, type StoreInput } from "./views/store.ts";
+import { REPORT_METRICS, reportData, reportMarkdown, reportView, type ReportInput } from "./views/report.ts";
 import { recipeData, recipeDoneView, recipeView, substitute, type RecipePlan } from "./views/recipe.ts";
 import { randomUUID } from "node:crypto";
 import { homeView } from "./views/home.ts";
@@ -48,7 +49,7 @@ import type { Parsed, Rec } from "./envelope.ts";
 const print = (lines: string[]) => process.stdout.write(lines.join("\n") + "\n");
 
 /** Words that are wv's, not whop's. */
-const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox", "agent", "money", "support", "dev", "store"]);
+const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox", "agent", "money", "support", "dev", "store", "report"]);
 
 export interface Outcome {
   code: number;
@@ -64,12 +65,13 @@ export interface Outcome {
 }
 
 /** Splits wv's own flags out of argv. */
-export function ownFlags(argvIn: string[]): { argv: string[]; width?: number; sandbox: boolean; plan: boolean; follow: boolean; all: boolean } {
+export function ownFlags(argvIn: string[]): { argv: string[]; width?: number; sandbox: boolean; plan: boolean; follow: boolean; all: boolean; md: boolean } {
   let width: number | undefined;
   let sandbox = false;
   let plan = false;
   let follow = false;
   let all = false;
+  let md = false;
   const argv: string[] = [];
   for (let i = 0; i < argvIn.length; i++) {
     const a = argvIn[i];
@@ -79,9 +81,10 @@ export function ownFlags(argvIn: string[]): { argv: string[]; width?: number; sa
     else if (a === "--plan") plan = true;
     else if (a === "--follow" || a === "-f") follow = true;
     else if (a === "--all") all = true;
+    else if (a === "--md") md = true;
     else argv.push(a);
   }
-  return { argv, width: width !== undefined && Number.isFinite(width) && width > 0 ? Math.floor(width) : undefined, sandbox, plan, follow, all };
+  return { argv, width: width !== undefined && Number.isFinite(width) && width > 0 ? Math.floor(width) : undefined, sandbox, plan, follow, all, md };
 }
 
 /** Per-payout cap from `WV_PAYOUT_CAP`, in whole currency units. `none` turns it off. Default $500, like Link. */
@@ -115,7 +118,7 @@ export function timeoutFrom(env: NodeJS.ProcessEnv = process.env): number | unde
 
 async function main(argvIn: string[]) {
   const own = ownFlags(argvIn);
-  const { width, sandbox, plan, follow, all } = own;
+  const { width, sandbox, plan, follow, all, md } = own;
   const theme = makeTheme({ width });
   // Date presets are wv's flags too: resolve them before a pipe execs `whop`, and refuse a range Whop would.
   const dates = resolveDates(own.argv);
@@ -124,11 +127,12 @@ async function main(argvIn: string[]) {
   // whop's own write list, so the gate knows a verb the hand list has never heard of. Cached a day; empty is fine.
   if (own.argv.length >= 2 && !own.argv[1].startsWith("--")) loadWhopWrites(cachedLlmsFull());
   // No terminal: an agent or a script. Errors and the gate come back as JSON on stdout; everything else execs `whop`.
-  if (!process.stdout.isTTY) return agentMain(own.argv, dates, mode, env, plan, all);
+  if (!process.stdout.isTTY) return agentMain(own.argv, dates, mode, env, plan, all, md);
   const json = assembleFor(dates.argv);
   const argv = json.argv;
 
   // `wv doctor --format json` in a terminal is the agent face on purpose. `--format` would otherwise exec `whop doctor`, which is not a command.
+  if (argv[0] === "report" && (md || wantsJson(argv))) process.exit(await reportRun(theme, env, mode, md ? "md" : "json"));
   if (DATA_SCREENS.has(argv[0]) && wantsJson(argv)) process.exit(await screenJson(argv[0], mode, env, argv.filter((a, i) => !(a === "--format" || a.startsWith("--format=") || argv[i - 1] === "--format"))));
   if (argv[0] === "agent" && wantsJson(argv)) process.exit((await execute(argv, theme, { mode })).code);
   if (argv[0] === "gtm" && argv[1] === "rank" && wantsJson(argv)) process.exit(await rankJson(argv, mode, env));
@@ -157,7 +161,7 @@ const emit = (e: AgentEnvelope, code: number): never => {
  * gated exactly as in a terminal, but the card is data and the prompt is exit 2 with `rerun`; `--plan` is
  * the data alone, exit 0. `--yes`, `WV_RAW`, and every read exec `whop` with the argv it expects.
  */
-async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates>, mode: Mode, env: NodeJS.ProcessEnv, plan: boolean, all = false): Promise<never> {
+async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates>, mode: Mode, env: NodeJS.ProcessEnv, plan: boolean, all = false, md = false): Promise<never> {
   if (dates.error) emit(wvErrorEnvelope(argvIn, mode, dates.error), 2);
   const json = assembleFor(dates.argv);
   if (json.error) emit(wvErrorEnvelope(argvIn, mode, json.error), 2);
@@ -172,6 +176,7 @@ async function agentMain(argvIn: string[], dates: ReturnType<typeof resolveDates
   if ((argv[0] === "gtm" && (argv[1] === "launch" || argv[1] === "winback")) || (argv[0] === "money" && argv[1] === "close") || (argv[0] === "support" && (argv[1] === "refund" || argv[1] === "dispute")) || (argv[0] === "dev" && argv[1] === "hook") || (argv[0] === "store" && (argv[1] === "price" || argv[1] === "publish"))) return recipePiped(argv, mode, env, plan);
   if (argv[0] === "support" && argv[1] === "lookup") process.exit(await lookupJson(argv, mode, env));
   if (argv[0] === "gtm" && argv[1] === "rank") process.exit(await rankJson(argv, mode, env));
+  if (argv[0] === "report") process.exit(await reportRun(makeTheme({}), env, mode, md ? "md" : "json"));
   // Two screens are data as well as pictures. The rest draw and need a terminal.
   if (DATA_SCREENS.has(argv[0])) process.exit(await screenJson(argv[0], mode, env, argv));
   if (OURS.has(argv[0])) emit(wvErrorEnvelope(argv, mode, { code: "NEEDS_TERMINAL", message: copy.agent.needsTerminal(argv[0]) }), 2);
@@ -545,6 +550,49 @@ async function lookupJson(argv: string[], mode: Mode, env: NodeJS.ProcessEnv): P
   return input.user ? 0 : 1;
 }
 
+/**
+ * `wv report`: the brief. Six metrics over this week and last, then the four screens' reads in turn (each has its
+ * own spinner), then a rank per live campaign, then the recommendations. Read-only; about forty calls.
+ */
+async function gatherReport(theme: Theme, env: NodeJS.ProcessEnv, mode: Mode): Promise<ReportInput> {
+  const acct = await identity(env);
+  const from = isoDay(daysAgo(7));
+  const to = isoDay(daysAgo(1));
+  const prevFrom = isoDay(daysAgo(14));
+  const prevTo = isoDay(daysAgo(8));
+  const spin = spinner(copy.spinner.report, theme);
+  const metricCmds = REPORT_METRICS.flatMap((m) => [["stats", "get", m.key, "--from", from, "--to", to, "--interval", "day"], ["stats", "get", m.key, "--from", prevFrom, "--to", prevTo, "--interval", "day"]]);
+  const recCmd = ["economic-intelligence", "list", "--status", "ready"];
+  const [metricResults, recs] = await Promise.all([Promise.all(metricCmds.map((c) => run(c, env))), run(recCmd, env)]);
+  spin.stop();
+  const doctor = await gatherDoctor(theme, env, mode);
+  const { input: gtm } = await gatherGtm(theme, env, mode);
+  const money = await gatherMoney(theme, env, mode);
+  const store = await gatherStore(theme, env, mode);
+  const live = (rowsOf(gtm.campaigns) ?? []).filter((c) => c.status === "active").slice(0, 3);
+  const ranks: RankInput[] = [];
+  for (const c of live) {
+    const r = await rankReads(["gtm", "rank", String(c.id)], env, mode);
+    if (!("error" in r)) ranks.push(r);
+  }
+  return {
+    accountTitle: acct?.title, accountId: acct?.id, mode,
+    window: { from, to, prevFrom, prevTo, days: 7 },
+    metrics: REPORT_METRICS.map((m, i) => ({ key: m.key, unit: m.unit, now: metricResults[i * 2].parsed, prev: metricResults[i * 2 + 1].parsed })),
+    doctor, gtm, money, store, ranks, recommendations: recs.parsed,
+    generatedAt: new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC",
+    commands: [...metricCmds, recCmd, ...doctor.commands, ...gtm.commands, ...money.commands, ...store.commands, ...ranks.flatMap((r) => r.commands)],
+  };
+}
+
+async function reportRun(theme: Theme, env: NodeJS.ProcessEnv, mode: Mode, face: "tty" | "json" | "md"): Promise<number> {
+  const input = await gatherReport(theme, env, mode);
+  if (face === "md") print(reportMarkdown(input));
+  else if (face === "json") process.stdout.write(JSON.stringify({ ...reportData(input), meta: { command: "report", wrapper: "wv", mode } }, null, 2) + "\n");
+  else print(reportView(input, theme));
+  return reportData(input).ok ? 0 : 1;
+}
+
 /** `wv store`: products, every plan, the active promo codes, and the checkout links, at once. */
 async function gatherStore(theme: Theme, env: NodeJS.ProcessEnv, mode: Mode): Promise<StoreInput> {
   const spin = spinner(copy.spinner.store, theme);
@@ -746,6 +794,7 @@ export async function execute(argvIn: string[], theme: Theme, opts: ExecuteOptio
   if ((group === "gtm" && (verb === "launch" || verb === "winback")) || (group === "money" && verb === "close") || (group === "support" && (verb === "refund" || verb === "dispute")) || (group === "dev" && verb === "hook") || (group === "store" && (verb === "price" || verb === "publish"))) return recipeTerminal(argv, theme, mode, env, !!opts.plan);
   if (group === "dev") return devScreen(argv, theme, mode);
   if (group === "store") return storeScreen(theme, mode);
+  if (group === "report") return { code: await reportRun(theme, whopEnv(mode), mode, "tty") };
   if (group === "support") return lookup(argv, theme, mode, env);
   if (group === "money") return moneyScreen(theme, mode);
   if (group === "gtm" && verb === "rank") return rank(argv, theme, mode, env);
