@@ -1,6 +1,6 @@
 {
   "name": "whop-view",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "wv: a human view layer for the Whop CLI. Unofficial design prototype, not affiliated with Whop.",
   "author": "srikarsunchu",
   "license": "MIT",

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // wv: human view layer for the Whop CLI. Renders when a person is looking, execs `whop` otherwise.
-import { realpathSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
+import { join } from "node:path";
 import { makeTheme, paint, type Theme } from "./tokens.ts";
 import { cachedHelpText, cachedLlmsFull, helpText, modeFrom, schema, passthrough, passthroughPiped, run as runRaw, sandboxKey, sandboxUrl, shouldPassthrough, whopEnv, type Mode, type RunResult } from "./runner.ts";
 import { approveSecret, configPath, maskKey, saveSandboxKey } from "./config.ts";
@@ -179,7 +180,21 @@ export function timeoutFrom(env: NodeJS.ProcessEnv = process.env): number | unde
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : DEFAULT_TIMEOUT_SECONDS;
 }
 
+/** wv's own version, from package.json. `--version` is whop's and passes through; this one is ours. */
+export function wvVersion(): string {
+  try {
+    return String((JSON.parse(readFileSync(join(import.meta.dirname, "..", "package.json"), "utf8")) as { version?: string }).version ?? "0.0.0");
+  } catch {
+    return "0.0.0";
+  }
+}
+
 async function main(argvIn: string[]) {
+  // `wv --wv-version`: this wrapper's version, for a host (Whop Desktop) that needs a floor. `--version` stays whop's.
+  if (argvIn[0] === "--wv-version") {
+    process.stdout.write(wvVersion() + "\n");
+    return;
+  }
   // `wv --mcp`: the agent face as an MCP stdio server. Same gate, same envelopes, tools instead of argv.
   if (argvIn[0] === "--mcp") return serveMcp();
   // `wv mcp add` registers wv, not whop, through whop's own installer; `wv mcp doctor` starts this server and lists its tools.

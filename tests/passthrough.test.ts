@@ -110,6 +110,14 @@ test("piped stdout: wv store --from asks Whop the price from that country and pu
   assert.match(r.stderr, /^ARGS: plans calculate_tax plan_NrjXyj6yTetff --address \{"country":"DE"\} --format json --full-output$/m);
 });
 
+test("wv --wv-version prints this wrapper's version and never reaches whop", () => {
+  const fake = fakeWhop();
+  const r = wv(["--wv-version"], { WV_WHOP_BIN: fake });
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /^\d+\.\d+\.\d+\n$/);
+  assert.doesNotMatch(r.stderr, /^ARGS:/m);
+});
+
 test("piped stdout: --sandbox is stripped before the exec and the child sees the sandbox host and key", () => {
   const fake = fakeWhop();
   const r = wv(["--sandbox", "products", "list"], { WV_WHOP_BIN: fake, WV_SANDBOX_KEY: "whop_test", WHOP_API_BASE_URL: "", WHOP_API_KEY: "" });

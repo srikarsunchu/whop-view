@@ -119,7 +119,7 @@ Reads: the bytes are whop's. `wv products list | cat` is byte-identical to `whop
 
 `wv` execs `whop` with the original argv whenever `--format`, `--full-output`, `--filter-output`, `--llms`, `--schema`, `--help`, or any `--token-*` flag is present, when `WV_RAW=1`, or when the command owns the terminal itself: `login`, `logout`, `quickstart`, `upgrade`, `apps dev|deploy|init|pull`. Only the exit status is mapped even then; `WV_EXIT=whop` keeps whop's.
 
-`--sandbox`, `--width`, `--plan`, `--all`, `--yes`, and `--format human` are `wv`'s own flags and are stripped before the exec, so `wv --sandbox products list | cat` is `whop products list` against the sandbox host.
+`--sandbox`, `--width`, `--plan`, `--all`, `--yes`, `--account_id` on a screen, `--format human`, and `--wv-version` (this wrapper's version; `--version` stays whop's) are `wv`'s own flags and are stripped before the exec, so `wv --sandbox products list | cat` is `whop products list` against the sandbox host.
 
 `--format human` is the sixth format beside whop's `toon`, `json`, `yaml`, `md`, and `jsonl`: the terminal rendering, asked for by name. It is the one flag that turns rule 1 around, so `wv products list --format human | less` gets the table, at `--width` or 80 columns, with no color unless `FORCE_COLOR` is set. whop never sees the flag; it is asked for `--format json --full-output` as always.
 
