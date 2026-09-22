@@ -140,6 +140,10 @@ $ wv payouts create --amount 5 --payout_method_id potk_x | cat
 
 ![agent gate refusing a payout](demo/agent-plan.gif)
 
+The same plan in [Whop Desktop](https://github.com/srikarsunchu/whop-desktop): the assistant asks wv for the write, the envelope renders as a card with before → after, and Approve runs the rerun. Recorded on the demo business.
+
+![the gate as a card in Whop Desktop](demo/desktop-gate.gif)
+
 `rerun` carries `--approve <token>`, not `--yes`. The token is a signature over that exact command and host with a ten minute expiry, minted with a secret only this machine holds, so the write that runs is the one the person saw: an edited command, a stale approval, or a token from another machine is refused with `APPROVAL_INVALID` or `APPROVAL_EXPIRED` and nothing runs. `--yes` still works for a person at a keyboard, or for a script that chooses the honor system on purpose.
 
 ![approval bound to the plan](demo/approve.gif)
