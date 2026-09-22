@@ -62,6 +62,11 @@ const OURS = new Set(["home", "help", "gtm", "doctor", "sandbox", "agent", "mone
  * 2026-09-21), so the flag is the only way.
  */
 let accountScope: string | undefined;
+/** `--format <x>` and `--format=<x>` out of an argv whose answer has one shape anyway. */
+export function dropFormat(argv: string[]): string[] {
+  return argv.filter((a, i) => !(a === "--format" || a.startsWith("--format=") || argv[i - 1] === "--format"));
+}
+
 export function takeScope(argv: string[]): string[] {
   if (!(OURS.has(argv[0]) || isRecipe(argv))) return argv;
   const out: string[] = [];
@@ -286,7 +291,8 @@ export async function agentReply(argvIn: string[], opts: AgentOptions): Promise<
     if (!lines) return textReply(wvErrorEnvelope(argv, mode, { code: "COMMAND_NOT_FOUND", message: copy.manifest.unknownGroup(argv[1] ?? "") }), 2);
     return { kind: "text", text: lines.join("\n") + "\n", code: 0 };
   }
-  if (isRecipe(argv)) return recipeReply(argv, mode, env, plan);
+  // A recipe's answer on a pipe is JSON whatever `--format` said, and its parser knows only its own flags.
+  if (isRecipe(argv)) return recipeReply(dropFormat(argv), mode, env, plan);
   if (argv[0] === "support" && argv[1] === "lookup") return lookupReply(argv, mode, env);
   if (argv[0] === "gtm" && argv[1] === "rank") return rankReply(argv, mode, env);
   if (argv[0] === "report") return reportReply(env, mode, md ? "md" : "json");
