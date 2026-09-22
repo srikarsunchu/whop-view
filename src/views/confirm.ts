@@ -124,8 +124,11 @@ export function changesFor(verb: string, argv: string[], current: Rec): Change[]
   const out: Change[] = [];
   if (verb === "delete") return [{ key: copy.confirm.record, before: describeRecord(current), after: copy.confirm.deleted, changed: true }];
   const flags = flagsToRecord(argv);
+  // `extend --days N` moves the period end; `days` is not a field on the membership, the end date is.
+  const extended = verb === "extend" && typeof flags.days === "number" && Number.isFinite(flags.days) ? periodEndAfter(current, flags.days) : undefined;
+  if (extended) out.push(extended);
   for (const [k, raw] of Object.entries(flags)) {
-    if (NOT_A_FIELD.has(k)) continue;
+    if (NOT_A_FIELD.has(k) || (extended && k === "days")) continue;
     const after = parseJsonish(raw);
     const before = current[k];
     out.push({ key: k, before, after, changed: !same(before, after) });
@@ -133,6 +136,15 @@ export function changesFor(verb: string, argv: string[], current: Rec): Change[]
   const implied = IMPLIED_STATUS[verb];
   if (implied && implied.field in current) out.push({ key: implied.field, before: current[implied.field], after: implied.value, changed: current[implied.field] !== implied.value });
   return out;
+}
+
+/** The period-end field a membership carries and where `--days` moves it. Undefined when the record has none. */
+export function periodEndAfter(current: Rec, days: number): Change | undefined {
+  const key = ["current_period_end", "renewal_period_end"].find((k) => typeof current[k] === "string" && !Number.isNaN(Date.parse(current[k] as string)));
+  if (!key) return undefined;
+  const before = current[key] as string;
+  const after = new Date(Date.parse(before) + days * 86_400_000).toISOString();
+  return { key, before, after, changed: days !== 0 };
 }
 
 /** `Title  id`, or `code  id`, or the id, for the record a write targets. */

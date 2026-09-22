@@ -151,6 +151,10 @@ test("changes: flags against the record, implied statuses, a delete as one row, 
   assert.deepEqual(changesFor("publish", ["products", "publish", "prod_1"], rec), [{ key: "visibility", before: "visible", after: "visible", changed: false }]);
   assert.deepEqual(changesFor("pause", ["memberships", "pause", "mem_1"], { id: "mem_1", status: "active" }), [{ key: "status", before: "active", after: "paused", changed: true }]);
   assert.deepEqual(changesFor("pause", ["x", "pause", "id"], { id: "id" }), [], "no status field, nothing implied");
+  assert.deepEqual(changesFor("extend", ["memberships", "extend", "mem_1", "--days", "7"], { id: "mem_1", status: "active", current_period_end: "2026-09-14T23:26:52.000Z" }), [
+    { key: "current_period_end", before: "2026-09-14T23:26:52.000Z", after: "2026-09-21T23:26:52.000Z", changed: true },
+  ], "extend moves the period end; days is not a field");
+  assert.deepEqual(changesFor("extend", ["memberships", "extend", "mem_1", "--days", "7"], { id: "mem_1", status: "active" }), [{ key: "days", before: undefined, after: 7, changed: true }], "no period end on the record: the flag stands");
   const del = changesFor("delete", ["products", "delete", "prod_1"], rec);
   assert.equal(del.length, 1);
   assert.equal(del[0].before, "Hypermotion  prod_iQ2Zub6GFQS5Q");
