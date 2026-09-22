@@ -21,7 +21,7 @@ A view layer for every command group, including the ones Whop ships tomorrow, do
 - Screens, one JSON call each: money, store, doctor, setup, report, gtm, dev. Recipes, several writes under one approval: money close, money swap, store price, store publish, support refund, support dispute, dev hook, gtm launch and winback.
 - Seven skills with evals (`pnpm eval <skill>`) against `tests/fake-whop.sh`; money is 30 of 30.
 - `wv --mcp` serves four tools. `--format human` is the sixth format. Screens take `--account_id` for a caller that switches businesses.
-- Whop Desktop: the assistant's `whop` is a shim that hands writes to wv; a plan renders as a card with Approve and Decline, money asks for the amount typed back, a refusal is red with no button, and the outcome goes back to Claude. Every panel action dialog goes through the same gate.
+- Whop Desktop: the assistant's `whop` is a shim that hands writes to wv; a plan renders as a card with Approve and Decline, money asks for the amount typed back, a refusal is red with no button, and the outcome goes back to Claude. Every panel action dialog goes through the same gate. The seven skills ride along with each assistant run. A Support view is `wv support lookup` on one screen with refund, extend, cancel, dispute, and case reply as plans; `wv doctor` sits in the sidebar footer with every failing check and its fix; Curfew's payments open in Support. The demo business (Northwind Picks) is gated the same way, so every plan can be shown without touching a real account.
 
 ## Two decisions to make
 

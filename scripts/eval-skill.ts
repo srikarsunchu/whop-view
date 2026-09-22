@@ -120,7 +120,7 @@ function runScenario(s: Scenario): Run {
     const serverEnv = Object.fromEntries(Object.entries({ ...env, WV_MCP_NO_ELICIT: "1" }).filter(([k]) => /^(WV_|WHOP_|XDG_|PATH$)/.test(k)));
     writeFileSync(mcpConfig, JSON.stringify({ mcpServers: { wv: { command: "node", args: ["--experimental-strip-types", "--no-warnings", join(repo, "src", "bin.ts"), "--mcp"], env: serverEnv } } }));
   }
-  const tools = transport === "mcp" ? ["--mcp-config", mcpConfig, "--strict-mcp-config", "--allowedTools", ...MCP_TOOLS.map((t) => `mcp__wv__${t}`), "--disallowedTools", "Bash"] : ["--allowedTools", "Bash"];
+  const tools = transport === "mcp" ? ["--mcp-config", mcpConfig, "--strict-mcp-config", "--allowedTools", ...MCP_TOOLS.map((t) => `mcp__wv__${t}`), "--disallowedTools", "Bash"] : ["--allowedTools", "Bash", "--strict-mcp-config"];
   const r = spawnSync("claude", ["-p", s.prompt, "--output-format", "stream-json", "--verbose", ...tools, "--max-turns", "40", "--no-session-persistence", "--model", model], { cwd: w, env, encoding: "utf8", maxBuffer: 64 * 1024 * 1024, timeout: 15 * 60 * 1000 });
   const commands: string[] = [];
   let final = "";
