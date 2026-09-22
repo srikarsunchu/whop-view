@@ -103,7 +103,8 @@ export const IMPLIED_STATUS: Record<string, { field: string; value: string }> = 
 };
 
 /** Flags that scope or protect the call and change nothing on the record. */
-const NOT_A_FIELD = new Set(["yes", "idempotency-key", "account_id", "user_id"]);
+// Flags that shape the call or the output, never the record: a change row for `--format json` would be a lie.
+const NOT_A_FIELD = new Set(["yes", "idempotency-key", "account_id", "user_id", "format", "full-output", "filter-output", "token-limit", "profile", "approve", "plan"]);
 
 const parseJsonish = (v: unknown): unknown => {
   if (typeof v !== "string" || !/^[[{]/.test(v)) return v;
